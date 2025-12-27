@@ -103,8 +103,9 @@ function showLoading(message = '加载中...') {
     }
 
     const loading = document.getElementById('loading');
-    const messageEl = loading.querySelector('p');
-    messageEl.textContent = message;
+    const messageEl = loading.querySelector('p') || loading.querySelector('.loading-text');
+    if (messageEl) messageEl.textContent = message;
+    loading.classList.remove('hidden');
     loading.style.display = 'flex';
 
     // 设置30秒后自动关闭loading，防止无限loading
@@ -227,18 +228,18 @@ function renderSearchHistory() {
 
     // 创建一个包含标题和清除按钮的行
     historyContainer.innerHTML = `
-        <div class="flex justify-between items-center w-full mb-2">
-            <div class="text-gray-500">最近搜索:</div>
-            <button id="clearHistoryBtn" class="text-gray-500 hover:text-white transition-colors"
+        <div class="flex justify-between items-center w-full mb-3">
+            <div class="text-xs font-bold tracking-widest text-cyan-400 uppercase opacity-70">Recent Logs</div>
+            <button id="clearHistoryBtn" class="text-xs text-gray-500 hover:text-red-400 transition-colors uppercase font-bold"
                     onclick="clearSearchHistory()" aria-label="清除搜索历史">
-                清除搜索历史
+                Clear All
             </button>
         </div>
     `;
 
     history.forEach(item => {
         const tag = document.createElement('button');
-        tag.className = 'search-tag flex items-center gap-1';
+        tag.className = 'recent-search-tag flex items-center gap-1';
         const textSpan = document.createElement('span');
         textSpan.textContent = item.text;
         tag.appendChild(textSpan);
@@ -247,7 +248,7 @@ function renderSearchHistory() {
         const deleteButton = document.createElement('span');
         deleteButton.className = 'pl-1 text-gray-500 hover:text-red-500 transition-colors';
         deleteButton.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>';
-        deleteButton.onclick = function(e) {
+        deleteButton.onclick = function (e) {
             // 阻止事件冒泡，避免触发搜索
             e.stopPropagation();
             // 删除对应历史记录
@@ -263,7 +264,7 @@ function renderSearchHistory() {
             tag.title = `搜索于: ${date.toLocaleString()}`;
         }
 
-        tag.onclick = function() {
+        tag.onclick = function () {
             document.getElementById('searchInput').value = item.text;
             search();
         };
@@ -656,7 +657,7 @@ async function playFromHistory(url, title, episodeIndex, playbackPosition = 0) {
                 if (idForUrl) playerUrl += `&id=${encodeURIComponent(idForUrl)}`;
             }
         } else {
-             // This case should ideally not happen if 'url' is always a player.html link from history
+            // This case should ideally not happen if 'url' is always a player.html link from history
             // console.warn("Playing from history with a non-player.html URL structure. This might be an issue.");
             const playUrl = new URL(url, window.location.origin);
             if (!playUrl.searchParams.has('index') && episodeIndex > 0) {
@@ -779,7 +780,7 @@ function clearViewingHistory() {
 
 // 更新toggleSettings函数以处理历史面板互动
 const originalToggleSettings = toggleSettings;
-toggleSettings = function(e) {
+toggleSettings = function (e) {
     if (e) e.stopPropagation();
 
     // 原始设置面板切换逻辑
@@ -793,8 +794,8 @@ toggleSettings = function(e) {
 };
 
 // 点击外部关闭历史面板
-document.addEventListener('DOMContentLoaded', function() {
-    document.addEventListener('click', function(e) {
+document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('click', function (e) {
         const historyPanel = document.getElementById('historyPanel');
         const historyButton = document.querySelector('button[onclick="toggleHistory(event)"]');
 
