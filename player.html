@@ -17,9 +17,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&family=Inter:wght@400;700&display=swap"
         rel="stylesheet">
     <script src="libs/tailwindcss.min.js"></script>
-    <script src="js/version-check.js"></script>
-    <link rel="stylesheet" href="css/styles.css">
-    <link rel="stylesheet" href="css/player.css">
+    <link rel="stylesheet" href="css/styles.css?v=1.2">
+    <link rel="stylesheet" href="css/player.css?v=1.2">
 
     <meta http-equiv="Cache-Control" content="no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -27,50 +26,63 @@
 </head>
 
 <body class="page-bg">
-    <header class="player-header-fixed p-4 flex items-center border-b border-[#333] gap-2">
-        <div class="flex items-center min-w-0">
-            <button id="homeButton" type="button" class="flex items-center min-w-0 cursor-pointer home-button">
-                <svg class="w-8 h-8 mr-2 text-cyan-400 group-hover:rotate-12 transition-transform logo-icon" fill="none"
-                    stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z">
-                    </path>
-                </svg>
-                <h1 class="text-xl font-bold gradient-text logo-text">南方许</h1>
+    <header class="player-header-fixed p-6 flex items-center manga-divider-top gap-6 bg-black/80 backdrop-blur-xl">
+        <div class="flex items-center">
+            <button id="homeButton" type="button"
+                class="manga-text manga-impact text-3xl transform -rotate-2 px-4 py-1">
+                南方许
             </button>
         </div>
-        <h2 id="videoTitle"
-            class="text-xl font-black flex-1 text-center overflow-x-auto whitespace-nowrap truncate gradient-text tracking-tight px-4">
-        </h2>
-        <a href="#" id="goBack" onclick="goBack(event)"
-            class="px-4 py-2 bg-[#222] hover:bg-[#333] border border-[#333] rounded-lg transition-colors flex items-center min-w-0 home-btn">
-            <svg class="w-5 h-5 mr-1" viewBox="0 0 24 24" fill="#ffffff" xmlns="http://www.w3.org/2000/svg">
-                <path d="M5.25 11h15a1.5 1.5 0 1 1 0 3H5.25a1.5 1.5 0 0 1 0-3z" />
-                <path d="M5.55 12 11.3 17.3a1.5 1.5 0 1 1-2.12 2.12L3 12l6.18-6.18a1.5 1.5 0 1 1 2.12 2.12L5.55 12z" />
-            </svg>
-            <span class="home-btn-text">上一页</span>
-        </a>
+
+        <div class="flex-1 flex justify-center px-4">
+            <div class="relative group">
+                <h2 id="videoTitle"
+                    class="text-2xl font-black manga-text tracking-tight truncate max-w-2xl px-4 border-l-4 border-r-4 border-white shadow-[6px_0_0_var(--tech-blue),-6px_0_0_var(--tech-blue)]">
+                </h2>
+                <div
+                    class="absolute -top-10 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:-translate-y-2">
+                    <div class="manga-signature text-xs whitespace-nowrap">NOW_VIEWING_CHAPTER</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex items-center">
+            <a href="#" id="goBack" onclick="goBack(event)" class="manga-bubble-btn scale-90">
+                BACK
+            </a>
+        </div>
     </header>
 
-    <!-- 密码验证弹窗 -->
     <div id="passwordModal"
-        class="fixed inset-0 bg-black/95 hidden items-center justify-center z-[65] transition-opacity duration-300">
-        <div class="bg-[#111] p-8 rounded-lg w-11/12 max-w-md border border-[#333] max-h-[90vh] flex flex-col">
-            <div class="flex justify-between items-center mb-6 flex-none border-b border-cyan-800/30 pb-2">
-                <h2 class="text-2xl font-bold gradient-text tracking-widest">认证验证</h2>
-            </div>
-            <div class="mb-6">
-                <p class="text-gray-300 mb-4">请输入密码继续访问</p>
-                <form id="passwordForm" onsubmit="handlePasswordSubmit(); return false;">
-                    <input type="text" name="username" id="username" autocomplete="username" style="display:none"
-                        tabindex="-1" aria-hidden="true">
-                    <input type="password" id="passwordInput"
-                        class="w-full bg-[#111] border border-[#333] text-white px-4 py-3 rounded-lg focus:outline-none focus:border-white transition-colors"
-                        placeholder="密码..." autocomplete="new-password">
-                    <button id="passwordSubmitBtn" type="submit"
-                        class="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">提交</button>
-                </form>
-                <p id="passwordError" class="text-red-500 mt-2 hidden">密码错误，请重试</p>
+        class="fixed inset-0 bg-black/98 hidden items-center justify-center z-[65] transition-opacity duration-300 backdrop-blur-md overflow-hidden">
+        <div class="manga-speed-lines"></div>
+        <div class="manga-border-vibrant p-1.5 w-11/12 max-w-md manga-slam">
+            <div class="bg-[#050505] p-8 flex flex-col items-center">
+                <div class="manga-signature text-xs mb-6 transform rotate-0">RESTRICTED_ACCESS</div>
+
+                <h2 class="text-4xl font-black manga-text manga-impact mb-8">
+                    访问验证
+                </h2>
+
+                <div class="w-full">
+                    <p class="text-white font-bold mb-6 text-center italic opacity-80 uppercase tracking-widest">
+                        请输入确认密钥继续...
+                    </p>
+                    <form id="passwordForm" onsubmit="handlePasswordSubmit(); return false;" class="space-y-6">
+                        <input type="text" name="username" id="username" autocomplete="username" style="display:none"
+                            tabindex="-1" aria-hidden="true">
+                        <input type="password" id="passwordInput"
+                            class="manga-input w-full text-center text-2xl tracking-[0.5em]" placeholder="******"
+                            autocomplete="new-password">
+                        <button id="passwordSubmitBtn" type="submit" class="manga-bubble-btn w-full text-xl py-3 group">
+                            CONFIRM_ACCESS <span
+                                class="group-hover:translate-x-2 inline-block transition-transform">▶</span>
+                        </button>
+                    </form>
+                    <p id="passwordError" class="text-red-500 mt-6 font-black text-center animate-pulse hidden">
+                        [ ERROR: INVALID_KEY ]
+                    </p>
+                </div>
             </div>
         </div>
     </div>
@@ -81,20 +93,32 @@
                 <div id="player" class="player-placeholder">
                     <!-- Initial loading state before JavaScript loads -->
                     <div class="player-loading-overlay">
-                        <div class="player-loading-spinner"></div>
-                        <div class="player-loading-text" id="loading-title">正在加载视频...</div>
+                        <div class="flex items-center gap-4">
+                            <div class="manga-badge text-sm py-0.5">
+                                <span class="text-[10px] opacity-70">LIBRE</span>
+                                南方许
+                            </div>
+                            <div class="sys-stamp hidden sm:block">
+                                CREDITS: BESTZWEI / 2025
+                            </div>
+                        </div>
+                        <h1 class="logo-text">南方许</h1>
                     </div>
-                </div>
-                <div class="loading-container" id="player-loading" style="display: none;">
-                    <div class="loading-spinner"></div>
-                    <div>正在加载视频...</div>
-                </div>
-                <div class="error-container" id="error">
-                    <div class="error-icon">⚠️</div>
-                    <div id="error-message">视频加载失败</div>
-                    <div class="error-message-sub">请尝试其他视频源或稍后重试</div>
+                    <div class="player-loading-spinner"></div>
+                    <div class="player-loading-text">正在加载播放器...</div>
+                    <div id="player-loading-status" class="player-loading-status">准备视频数据中，请稍候...</div>
                 </div>
             </div>
+            <div class="loading-container" id="player-loading" style="display: none;">
+                <div class="loading-spinner"></div>
+                <div>正在加载视频...</div>
+            </div>
+            <div class="error-container" id="error">
+                <div class="error-icon">⚠️</div>
+                <div id="error-message">视频加载失败</div>
+                <div class="error-message-sub">请尝试其他视频源或稍后重试</div>
+            </div>
+        </div>
         </div>
 
         <!-- 源信息 -->
@@ -201,15 +225,10 @@
         <div class="container mx-auto px-4">
             <div class="flex flex-col md:flex-row justify-between items-center">
                 <div class="mb-4 md:mb-0">
-                    <div class="flex items-center justify-center md:justify-start">
-                        <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z">
-                            </path>
-                        </svg>
-                        <span class="gradient-text font-bold">南方许TV</span>
+                    <div class="manga-signature text-xl mb-3">
+                        南方许 / NF_X_SYS
                     </div>
-                    <p class="text-gray-500 text-sm mt-2 text-center md:text-left">© 2025 南方许TV - 自由观影，畅享精彩</p>
+                    <p class="text-gray-500 text-sm mt-2 text-center md:text-left">© 2025 南方许 - 少年观影，燃动全网</p>
                 </div>
 
                 <div class="text-center md:text-right">
@@ -262,14 +281,13 @@
     <script src="libs/hls.min.js" crossorigin="anonymous"></script>
     <script src="libs/artplayer.min.js" crossorigin="anonymous"></script>
 
-    <script src="js/config.js"></script>
-    <script src="js/proxy-auth.js"></script>
-    <script src="js/customer_site.js"></script>
-    <script src="js/password.js"></script>
-    <script src="js/ui.js"></script>
-    <script src="js/api.js"></script>
-    <script src="js/search.js"></script>
-    <script src="js/player.js"></script>
+    <script src="js/config.js?v=1.2"></script>
+    <script src="js/proxy-auth.js?v=1.2"></script>
+    <script src="js/password.js?v=1.2"></script>
+    <script src="js/ui.js?v=1.2"></script>
+    <script src="js/api.js?v=1.2"></script>
+    <script src="js/search.js?v=1.2"></script>
+    <script src="js/player.js?v=1.2"></script>
 
     <script>
         // 创建全局环境变量对象

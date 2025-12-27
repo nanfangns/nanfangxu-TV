@@ -1,5 +1,35 @@
 /* 主页特定样式 */
 
+/* 骨架屏闪烁动画 */
+@keyframes skeleton-loading {
+    0% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+.skeleton {
+    background: linear-gradient(90deg,
+            rgba(255, 255, 255, 0.03) 25%,
+            rgba(255, 255, 255, 0.08) 37%,
+            rgba(255, 255, 255, 0.03) 63%);
+    background-size: 400% 100%;
+    animation: skeleton-loading 1.4s ease infinite;
+}
+
+/* 图片平滑加载过程 */
+.smooth-img {
+    opacity: 0;
+    transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.smooth-img.loaded {
+    opacity: 1;
+}
+
 /* 历史记录和设置按钮定位样式 */
 .top-corner-button {
     position: fixed;

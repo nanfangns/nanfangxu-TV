@@ -59,6 +59,57 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // 初始检查成人API选中状态
     setTimeout(checkAdultAPIsSelected, 100);
+
+    // --- 页面功能初始化 (原本在 index-page.js) ---
+    // 1. 免责声明弹窗
+    const hasSeenDisclaimer = localStorage.getItem('hasSeenDisclaimer');
+    if (!hasSeenDisclaimer) {
+        const disclaimerModal = document.getElementById('disclaimerModal');
+        if (disclaimerModal) {
+            disclaimerModal.style.display = 'flex';
+            const acceptBtn = document.getElementById('acceptDisclaimerBtn');
+            if (acceptBtn) {
+                acceptBtn.addEventListener('click', function () {
+                    localStorage.setItem('hasSeenDisclaimer', 'true');
+                    disclaimerModal.style.display = 'none';
+                });
+            }
+        }
+    }
+
+    // 2. URL 搜索参数处理 (/s=keyword 或 ?s=keyword)
+    const path = window.location.pathname;
+    const searchPrefix = '/s=';
+    const urlParams = new URLSearchParams(window.location.search);
+    const searchQuery = urlParams.get('s');
+
+    let targetKeyword = '';
+    if (path.startsWith(searchPrefix)) {
+        targetKeyword = decodeURIComponent(path.substring(searchPrefix.length));
+    } else if (searchQuery) {
+        targetKeyword = searchQuery;
+    }
+
+    if (targetKeyword) {
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.value = targetKeyword;
+            if (typeof toggleClearButton === 'function') toggleClearButton();
+            setTimeout(() => {
+                if (typeof search === 'function') search();
+                // 规范化 URL 路径
+                try {
+                    window.history.replaceState(
+                        { search: targetKeyword },
+                        `搜索: ${targetKeyword} - 南方许`,
+                        `/s=${encodeURIComponent(targetKeyword)}`
+                    );
+                } catch (e) {
+                    console.error('更新 URL 失败:', e);
+                }
+            }, 300);
+        }
+    }
 });
 
 // 初始化API复选框
@@ -620,10 +671,11 @@ function createVideoCardHtml(item, hasCover) {
              onclick="showDetails('${safeId}','${safeName}','${sourceCode}')" ${apiUrlAttr}>
             <div class="flex h-full">
                 ${hasCover ? `
-                <div class="relative flex-shrink-0 search-card-img-container">
+                <div class="relative flex-shrink-0 search-card-img-container bg-[#1a1c22] overflow-hidden skeleton" style="width: 100px; height: 140px;">
                     <img src="${item.vod_pic}" alt="${safeName}" 
-                         class="h-full w-full object-cover transition-transform hover:scale-110" 
-                         onerror="this.onerror=null; this.src='https://via.placeholder.com/300x450?text=无封面'; this.classList.add('object-contain');" 
+                         class="h-full w-full object-cover smooth-img" 
+                         onload="this.classList.add('loaded'); this.parentElement.classList.remove('skeleton');"
+                         onerror="this.onerror=null; this.src='https://via.placeholder.com/300x450?text=无封面'; this.classList.add('object-contain','loaded'); this.parentElement.classList.remove('skeleton');" 
                          loading="lazy">
                     <div class="absolute inset-0 bg-gradient-to-r from-black/30 to-transparent"></div>
                 </div>` : ''}
@@ -936,12 +988,12 @@ function playVideo(url, vod_name, sourceCode, episodeIndex = 0, vodId = '') {
     // 获取当前路径作为返回页面
     let currentPath = window.location.href;
 
-    // 构建播放页面URL，使用watch.html作为中间跳转页
-    let watchUrl = `watch.html?id=${vodId || ''}&source=${sourceCode || ''}&url=${encodeURIComponent(url)}&index=${episodeIndex}&title=${encodeURIComponent(vod_name || '')}`;
+    // 构建播放页面URL，直接跳转至 player.html 以消除回退历史陷阱
+    let playerUrl = `player.html?id=${vodId || ''}&source=${sourceCode || ''}&url=${encodeURIComponent(url)}&index=${episodeIndex}&title=${encodeURIComponent(vod_name || '')}`;
 
-    // 添加返回URL参数
-    if (currentPath.includes('index.html') || currentPath.endsWith('/')) {
-        watchUrl += `&back=${encodeURIComponent(currentPath)}`;
+    // 添加返回URL参数 (直接传递给播放器)
+    if (currentPath) {
+        playerUrl += `&returnUrl=${encodeURIComponent(currentPath)}`;
     }
 
     // 保存当前状态到localStorage
@@ -958,7 +1010,7 @@ function playVideo(url, vod_name, sourceCode, episodeIndex = 0, vodId = '') {
     }
 
     // 在当前标签页中打开播放页面
-    window.location.href = watchUrl;
+    window.location.href = playerUrl;
 }
 
 // 弹出播放器页面

@@ -11,15 +11,15 @@ function goBack(event) {
     const returnUrl = urlParams.get('returnUrl');
 
     if (returnUrl) {
-        // 如果URL中有returnUrl参数，优先使用
-        window.location.href = decodeURIComponent(returnUrl);
+        // 如果URL中有returnUrl参数，优先进入（使用replace避免回退循环）
+        window.location.replace(decodeURIComponent(returnUrl));
         return;
     }
 
     // 2. 检查localStorage中保存的lastPageUrl
     const lastPageUrl = localStorage.getItem('lastPageUrl');
     if (lastPageUrl && lastPageUrl !== window.location.href) {
-        window.location.href = lastPageUrl;
+        window.location.replace(lastPageUrl);
         return;
     }
 
@@ -29,7 +29,7 @@ function goBack(event) {
     // 检查 referrer 是否包含搜索参数
     if (referrer && (referrer.includes('/s=') || referrer.includes('?s='))) {
         // 如果是从搜索页面来的，返回到搜索页面
-        window.location.href = referrer;
+        window.location.replace(referrer);
         return;
     }
 
@@ -96,10 +96,39 @@ Artplayer.FULLSCREEN_WEB_IN_BODY = true;
 
 // 页面加载
 document.addEventListener('DOMContentLoaded', function () {
-    // 先检查用户是否已通过密码验证
+    // 状态文本动画 (迁移自 watch.js)
+    const statusElement = document.getElementById('player-loading-status');
+    const statusMessages = ["资源同步中...", "正在提取流媒体信息...", "即将进入播放界面...", "正在初始化核心系统..."];
+    let currentStatus = 0;
+
+    const statusInterval = setInterval(() => {
+        if (statusElement) {
+            statusElement.style.opacity = 0;
+            setTimeout(() => {
+                statusElement.textContent = statusMessages[currentStatus % statusMessages.length];
+                statusElement.style.opacity = 1;
+                currentStatus++;
+            }, 300);
+        }
+    }, 1500);
+
+    // 存储 interval 引用以便后续清除
+    window._loadingInterval = statusInterval;
+
+    // 强制显示加载层
+    const overlay = document.querySelector('.player-loading-overlay');
+    if (overlay) {
+        overlay.style.display = 'flex';
+        overlay.style.opacity = '1';
+    }
+
     if (!isPasswordVerified()) {
-        // 隐藏加载提示
-        document.getElementById('player-loading').style.display = 'none';
+        // 隐藏加载提示 (密码框显示时不需要加载图)
+        const placeholder = document.querySelector('.player-placeholder');
+        if (placeholder) {
+            const overlay = placeholder.querySelector('.player-loading-overlay');
+            if (overlay) overlay.style.display = 'none';
+        }
         return;
     }
 

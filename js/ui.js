@@ -122,8 +122,23 @@ function hideLoading() {
         loadingTimeoutId = null;
     }
 
+    // 清除播放器循环加载消息计时器
+    if (window._loadingInterval) {
+        clearInterval(window._loadingInterval);
+        window._loadingInterval = null;
+    }
+
     const loading = document.getElementById('loading');
-    loading.style.display = 'none';
+    if (loading) loading.style.display = 'none';
+
+    // 同时隐藏播放器占位区域的 overlay
+    const playerOverlay = document.querySelector('.player-loading-overlay');
+    if (playerOverlay) {
+        playerOverlay.style.opacity = '0';
+        setTimeout(() => {
+            playerOverlay.style.display = 'none';
+        }, 300);
+    }
 }
 
 function updateSiteStatus(isAvailable) {
@@ -622,8 +637,8 @@ async function playFromHistory(url, title, episodeIndex, playbackPosition = 0) {
 
         // 保存当前页面URL作为返回地址
         let currentPath;
-        if (window.location.pathname.startsWith('/player.html') || window.location.pathname.startsWith('/watch.html')) {
-            currentPath = localStorage.getItem('lastPageUrl') || '/';
+        if (window.location.pathname.startsWith('/player.html')) {
+            currentPath = '/';
         } else {
             currentPath = window.location.origin + window.location.pathname + window.location.search;
         }
@@ -636,7 +651,7 @@ async function playFromHistory(url, title, episodeIndex, playbackPosition = 0) {
         const idForUrl = historyItem ? historyItem.vod_id : '';
 
 
-        if (url.includes('player.html') || url.includes('watch.html')) {
+        if (url.includes('player.html')) {
             // console.log('检测到嵌套播放链接，解析真实URL');
             try {
                 const nestedUrl = new URL(url, window.location.origin);

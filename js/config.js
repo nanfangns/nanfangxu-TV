@@ -98,6 +98,10 @@ const API_SITES = {
         api: 'https://api.apibdzy.com/api.php/provide/vod',
         name: '百度云资源'
     },
+    qiqi: {
+        api: 'https://www.qiqidys.com/api.php/provide/vod',
+        name: '七七资源',
+    },
     wujin: {
         api: 'https://api.wujinapi.me/api.php/provide/vod',
         name: '无尽资源'
