@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', function () {
             searchInput.value = targetKeyword;
             if (typeof toggleClearButton === 'function') toggleClearButton();
             setTimeout(() => {
-                if (typeof search === 'function') search();
+                if (typeof search === 'function') search(true); // 使用 true 表示是初始化或历史导航，不 pushState
                 // 规范化 URL 路径
                 try {
                     window.history.replaceState(
@@ -110,6 +110,22 @@ document.addEventListener('DOMContentLoaded', function () {
             }, 300);
         }
     }
+
+    // 3. 处理浏览器前进后退
+    window.addEventListener('popstate', function (event) {
+        if (event.state && event.state.search) {
+            // 如果历史记录中有搜索关键词，执行搜索但不推送新历史
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.value = event.state.search;
+                if (typeof toggleClearButton === 'function') toggleClearButton();
+                search(true);
+            }
+        } else {
+            // 否则返回首页状态
+            resetSearchArea(true);
+        }
+    });
 });
 
 // 初始化API复选框
@@ -610,7 +626,7 @@ function setupEventListeners() {
 }
 
 // 重置搜索区域
-function resetSearchArea() {
+function resetSearchArea(skipPushState = false) {
     // 清理搜索结果
     document.getElementById('results').innerHTML = '';
     document.getElementById('searchInput').value = '';
@@ -632,17 +648,18 @@ function resetSearchArea() {
     }
 
     // 重置URL为主页
-    try {
-        window.history.pushState(
-            {},
-            `南方许 - 免费在线视频搜索与观看平台`,
-            `/`
-        );
-        // 更新页面标题
-        document.title = `南方许 - 免费在线视频搜索与观看平台`;
-    } catch (e) {
-        console.error('更新浏览器历史失败:', e);
+    if (!skipPushState) {
+        try {
+            window.history.pushState(
+                {},
+                `南方许 - 免费在线视频搜索与观看平台`,
+                `/`
+            );
+        } catch (e) {
+            console.error('更新浏览器历史失败:', e);
+        }
     }
+    document.title = `南方许 - 免费在线视频搜索与观看平台`;
 }
 
 // 获取自定义API信息
@@ -707,7 +724,7 @@ function createVideoCardHtml(item, hasCover) {
 }
 
 // 搜索功能 - 极致优化版：分段增量渲染
-async function search() {
+async function search(isHistoryNav = false) {
     // 密码保护校验
     try {
         if (window.ensurePasswordProtection) {
@@ -740,11 +757,13 @@ async function search() {
     if (doubanArea) doubanArea.classList.add('hidden');
 
     // 更新URL
-    try {
-        const encodedQuery = encodeURIComponent(query);
-        window.history.pushState({ search: query }, `搜索: ${query} - 南方许`, `/s=${encodedQuery}`);
-        document.title = `搜索: ${query} - 南方许`;
-    } catch (e) { }
+    if (!isHistoryNav) {
+        try {
+            const encodedQuery = encodeURIComponent(query);
+            window.history.pushState({ search: query }, `搜索: ${query} - 南方许`, `/s=${encodedQuery}`);
+        } catch (e) { }
+    }
+    document.title = `搜索: ${query} - 南方许`;
 
     let totalResultsCount = 0;
     let completedAPIs = 0;
