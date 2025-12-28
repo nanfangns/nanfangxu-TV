@@ -24,6 +24,9 @@ html {
 }
 
 .logo-brand {
+    display: flex;
+    align-items: center;
+    gap: 2px;
     background: linear-gradient(90deg, #4285F4 0%, #DB4437 25%, #F4B400 50%, #0F9D58 75%, #4285F4 100%);
     background-size: 200% auto;
     -webkit-background-clip: text;
@@ -33,6 +36,36 @@ html {
     filter: drop-shadow(0 0 15px rgba(66, 133, 244, 0.25));
     font-family: 'Orbitron', sans-serif;
     transition: transform 0.3s ease;
+}
+
+.logo-char {
+    display: inline-block;
+    animation: tech-wave-jump 3s ease-in-out infinite;
+    animation-delay: calc(var(--char-index) * 0.15s);
+    transform-origin: bottom center;
+}
+
+@keyframes tech-wave-jump {
+
+    0%,
+    100% {
+        transform: translateY(0) scale(1);
+        filter: drop-shadow(0 0 5px rgba(66, 133, 244, 0.2));
+    }
+
+    10% {
+        transform: translateY(-8px) scale(1.1);
+        filter: drop-shadow(0 0 15px rgba(66, 133, 244, 0.6));
+    }
+
+    20% {
+        transform: translateY(2px) scale(0.95);
+        filter: drop-shadow(0 0 8px rgba(66, 133, 244, 0.3));
+    }
+
+    30% {
+        transform: translateY(0) scale(1);
+    }
 }
 
 .logo-brand:hover {
