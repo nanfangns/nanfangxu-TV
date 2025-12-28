@@ -989,3 +989,18 @@ function showImportBox(fun) {
         fun(fileInput.files[0]);
     });
 }
+
+// 页面加载完成后触发角落按钮的 Q 弹动画
+document.addEventListener('DOMContentLoaded', function () {
+    // 稍微延迟一下，确保 CSS 已完全加载
+    requestAnimationFrame(function () {
+        const wrappers = document.querySelectorAll('.corner-wrapper');
+        wrappers.forEach((wrapper, index) => {
+            // 错开每个按钮的动画时间
+            setTimeout(() => {
+                wrapper.classList.add('animate');
+            }, index * 200); // 200ms 延迟，让两个按钮依次炸出来
+        });
+    });
+});
+

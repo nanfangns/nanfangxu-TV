@@ -54,7 +54,10 @@ let doubanPageStart = 0;
 const doubanPageSize = 16; // 一次显示的项目数量
 
 // 初始化豆瓣功能
+let isDoubanInitialized = false;
 function initDouban() {
+    if (isDoubanInitialized) return;
+    isDoubanInitialized = true;
     // 设置豆瓣开关的初始状态
     const doubanToggle = document.getElementById('doubanToggle');
     if (doubanToggle) {
