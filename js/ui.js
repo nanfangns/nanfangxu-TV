@@ -847,7 +847,7 @@ function clearLocalStorage() {
                 <div class="text-sm font-medium text-gray-300 mb-4">此功能会删除你的观看记录、自定义 API 接口和 Cookie，<scan class="text-red-500 font-bold">此操作不可恢复！</scan></div>
                 <div class="flex justify-end space-x-2">
                     <button id="confirmBoxModal" class="ml-2 bg-gray-600 hover:bg-gray-700 text-white px-4 py-1 rounded">确定</button>
-                    <button id="cancelBoxModal" class="ml-2 bg-pink-600 hover:bg-pink-700 text-white px-4 py-1 rounded">取消</button>
+                    <button id="cancelBoxModal" class="ml-2 google-bg-active hover:bg-red-600 text-white px-4 py-1 rounded">取消</button>
                 </div>
             </div>
         </div>`;
@@ -943,7 +943,7 @@ function showImportBox(fun) {
                     <div class="flex items-center justify-center gap-2">
                         <label>
                             <input type="file" id="ChooseFile" hidden />
-                            <div class="flex w-28 h-9 px-2 flex-col bg-pink-600 rounded-full shadow text-white text-xs font-semibold leading-4 items-center justify-center cursor-pointer focus:outline-none">选择文件</div>
+                            <div class="flex w-28 h-9 px-2 flex-col google-bg-active rounded-full shadow text-white text-xs font-semibold leading-4 items-center justify-center cursor-pointer focus:outline-none">选择文件</div>
                         </label>
                         <button onclick="importConfigFromUrl()" class="flex w-28 h-9 px-2 flex-col bg-blue-600 rounded-full shadow text-white text-xs font-semibold leading-4 items-center justify-center cursor-pointer focus:outline-none">从URL导入</button>
                     </div>

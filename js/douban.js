@@ -68,7 +68,7 @@ function initDouban() {
         const toggleBg = doubanToggle.nextElementSibling;
         const toggleDot = toggleBg.nextElementSibling;
         if (isEnabled) {
-            toggleBg.classList.add('bg-pink-600');
+            toggleBg.classList.add('google-bg-active');
             toggleDot.classList.add('translate-x-6');
         }
 
@@ -79,10 +79,10 @@ function initDouban() {
 
             // 更新开关外观
             if (isChecked) {
-                toggleBg.classList.add('bg-pink-600');
+                toggleBg.classList.add('google-bg-active');
                 toggleDot.classList.add('translate-x-6');
             } else {
-                toggleBg.classList.remove('bg-pink-600');
+                toggleBg.classList.remove('google-bg-active');
                 toggleDot.classList.remove('translate-x-6');
             }
 
@@ -237,10 +237,10 @@ function renderDoubanMovieTvSwitch() {
     movieToggle.addEventListener('click', function () {
         if (doubanMovieTvCurrentSwitch !== 'movie') {
             // 更新按钮样式
-            movieToggle.classList.add('bg-pink-600', 'text-white');
+            movieToggle.classList.add('google-bg-active', 'text-white');
             movieToggle.classList.remove('text-gray-300');
 
-            tvToggle.classList.remove('bg-pink-600', 'text-white');
+            tvToggle.classList.remove('google-bg-active', 'text-white');
             tvToggle.classList.add('text-gray-300');
 
             doubanMovieTvCurrentSwitch = 'movie';
@@ -263,10 +263,10 @@ function renderDoubanMovieTvSwitch() {
     tvToggle.addEventListener('click', function () {
         if (doubanMovieTvCurrentSwitch !== 'tv') {
             // 更新按钮样式
-            tvToggle.classList.add('bg-pink-600', 'text-white');
+            tvToggle.classList.add('google-bg-active', 'text-white');
             tvToggle.classList.remove('text-gray-300');
 
-            movieToggle.classList.remove('bg-pink-600', 'text-white');
+            movieToggle.classList.remove('google-bg-active', 'text-white');
             movieToggle.classList.add('text-gray-300');
 
             doubanMovieTvCurrentSwitch = 'tv';
@@ -381,11 +381,14 @@ function renderRecommend(tag, pageLimit, pageStart) {
     if (!container) return;
 
     const loadingOverlayHTML = `
-        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-10">
-            <div class="flex items-center justify-center">
-                <div class="w-6 h-6 border-2 border-pink-500 border-t-transparent rounded-full animate-spin inline-block"></div>
-                <span class="text-pink-500 ml-4">加载中...</span>
+        <div class="absolute inset-0 bg-black/90 backdrop-blur-md flex flex-col items-center justify-center z-10">
+            <div class="bouncing-loader">
+                <div class="bouncing-ball ball-1"></div>
+                <div class="bouncing-ball ball-2"></div>
+                <div class="bouncing-ball ball-3"></div>
+                <div class="bouncing-ball ball-4"></div>
             </div>
+            <span class="loading-text-tech">SYSTEM_PROCESSING</span>
         </div>
     `;
 
@@ -478,7 +481,7 @@ function renderDoubanCards(data, container) {
         const emptyEl = document.createElement("div");
         emptyEl.className = "col-span-full text-center py-8";
         emptyEl.innerHTML = `
-            <div class="text-pink-500">❌ 暂无数据，请尝试其他分类或刷新</div>
+            <div class="google-text-accent">❌ 暂无数据，请尝试其他分类或刷新</div>
         `;
         fragment.appendChild(emptyEl);
     } else {
@@ -524,7 +527,7 @@ function renderDoubanCards(data, container) {
                 </div>
                 <div class="p-2 text-center bg-[#111]">
                     <button onclick="fillAndSearchWithDouban('${safeTitle}')" 
-                            class="text-sm font-medium text-white truncate w-full hover:text-pink-400 transition"
+                            class="text-sm font-medium text-white truncate w-full hover:text-blue-400 transition"
                             title="${safeTitle}">
                         ${safeTitle}
                     </button>
@@ -604,8 +607,8 @@ function showTagManageModal() {
                 <h4 class="text-lg font-medium text-gray-300 mb-3">添加新标签</h4>
                 <form id="addTagForm" class="flex items-center">
                     <input type="text" id="newTagInput" placeholder="输入标签名称..." 
-                           class="flex-1 bg-[#222] text-white border border-gray-700 rounded px-3 py-2 focus:outline-none focus:border-pink-500">
-                    <button type="submit" class="ml-2 bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 rounded">添加</button>
+                           class="flex-1 bg-[#222] text-white border border-gray-700 rounded px-3 py-2 focus:outline-none google-input-focus">
+                    <button type="submit" class="ml-2 google-bg-active hover:bg-blue-600 text-white px-4 py-2 rounded">添加</button>
                 </form>
                 <p class="text-xs text-gray-500 mt-2">提示：标签名称不能为空，不能重复，不能包含特殊字符</p>
             </div>

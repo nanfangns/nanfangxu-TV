@@ -207,27 +207,22 @@ a:active {
 }
 
 /* 中文 Logo - Google AI 彩虹渐变 */
+/* 中文 Logo - Google AI 彩虹渐变 - FORCED PERMANENT */
 .logo-text-cn {
     display: block;
     background: linear-gradient(90deg,
             #4285F4 0%,
-            /* Google Blue */
             #DB4437 25%,
-            /* Google Red */
             #F4B400 50%,
-            /* Google Yellow */
             #0F9D58 75%,
-            /* Google Green */
-            #4285F4 100%
-            /* Back to Blue */
-        );
-    background-size: 200% auto;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+            #4285F4 100%) !important;
+    background-size: 200% auto !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
     filter: drop-shadow(0 0 40px rgba(66, 133, 244, 0.4));
     transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-    animation: rainbow-shift 8s ease-in-out infinite;
+    animation: rainbow-shift 8s ease-in-out infinite, tech-breath 3s ease-in-out infinite !important;
 }
 
 @keyframes rainbow-shift {
@@ -242,6 +237,20 @@ a:active {
     }
 }
 
+@keyframes tech-breath {
+
+    0%,
+    100% {
+        filter: drop-shadow(0 0 20px rgba(66, 133, 244, 0.4));
+        transform: scale(1);
+    }
+
+    50% {
+        filter: drop-shadow(0 0 30px rgba(66, 133, 244, 0.6));
+        transform: scale(1.01);
+    }
+}
+
 /* 英文 Logo - 更炫的渐变 */
 .logo-text-en {
     position: absolute;
@@ -252,21 +261,14 @@ a:active {
     opacity: 0;
     background: linear-gradient(135deg,
             #667eea 0%,
-            /* Purple */
             #764ba2 20%,
-            /* Deep Purple */
             #f093fb 40%,
-            /* Pink */
             #f5576c 60%,
-            /* Red */
             #ffa726 80%,
-            /* Orange */
-            #ffd54f 100%
-            /* Yellow */
-        );
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+            #ffd54f 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
     filter: drop-shadow(0 0 50px rgba(102, 126, 234, 0.6));
     transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
@@ -333,16 +335,86 @@ a:active {
     }
 }
 
+/* Reusable Tech Gradient Class */
+.tech-gradient-text {
+    background: linear-gradient(90deg, #4285F4 0%, #DB4437 25%, #F4B400 50%, #0F9D58 75%, #4285F4 100%) !important;
+    background-size: 200% auto !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+    animation: rainbow-shift 8s linear infinite !important;
+    font-weight: 800;
+}
+
 /* Hero 标语 - 多彩渐变 */
 .hero-slogan {
     font-size: 1.1rem;
     font-weight: 800;
     letter-spacing: 4px;
-    background: linear-gradient(90deg, #4285F4, #DB4437, #F4B400, #0F9D58);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    background: linear-gradient(90deg, #4285F4, #DB4437, #F4B400, #0F9D58) !important;
+    background-size: 200% auto !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
     text-transform: uppercase;
+    animation: rainbow-shift 8s linear infinite !important;
+}
+
+/* ============================================ */
+/*     Google High-End Color System Utilities   */
+/* ============================================ */
+
+/* 1. Google Gradient Button (Blue/Red/Yellow/Green) */
+.google-btn-gradient {
+    background: linear-gradient(90deg, #4285F4, #DB4437, #F4B400, #0F9D58);
+    background-size: 300% 100%;
+    color: white !important;
+    border: none;
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    box-shadow: 0 4px 15px rgba(66, 133, 244, 0.3);
+}
+
+.google-btn-gradient:hover {
+    background-position: 100% 0;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(15, 157, 88, 0.4);
+}
+
+.google-btn-gradient:active {
+    transform: scale(0.98);
+}
+
+/* 2. Google Active Background (Blue) */
+.google-bg-active {
+    background-color: #4285F4 !important;
+    /* Google Blue */
+    color: white !important;
+    box-shadow: 0 0 15px rgba(66, 133, 244, 0.5);
+}
+
+/* 3. Google Accent Text (Red for Warning/Important) */
+.google-text-accent {
+    color: #DB4437 !important;
+    /* Google Red */
+    text-shadow: 0 0 10px rgba(219, 68, 55, 0.2);
+}
+
+/* 4. Google Green Text (Success/Safe) */
+.google-text-success {
+    color: #0F9D58 !important;
+    /* Google Green */
+}
+
+/* 5. Google Input Focus */
+.google-input-focus:focus {
+    border-color: #4285F4 !important;
+    box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.3) !important;
+}
+
+/* 6. Google Toggle Active (Green or Blue) */
+.google-toggle-active {
+    background-color: #0F9D58 !important;
+    /* Google Green for toggles usually looks safe */
 }
 
 /* 旧版 manga-text - 也用彩虹色 */
@@ -1678,5 +1750,90 @@ body {
     50% {
         opacity: 1;
         transform: scale(1.02);
+    }
+}
+
+/* ============================================ */
+/*     Premium Bouncing Ball Loader             */
+/* ============================================ */
+
+.bouncing-loader {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    height: 100%;
+    min-height: 200px;
+}
+
+.bouncing-ball {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    animation: bounce 0.6s cubic-bezier(0.19, 0.57, 0.3, 0.98) infinite alternate;
+}
+
+/* Google Colors for the balls */
+.ball-1 {
+    background: #4285F4;
+    /* Blue */
+    animation-delay: 0s;
+    box-shadow: 0 0 15px rgba(66, 133, 244, 0.6);
+}
+
+.ball-2 {
+    background: #DB4437;
+    /* Red */
+    animation-delay: 0.1s;
+    box-shadow: 0 0 15px rgba(219, 68, 55, 0.6);
+}
+
+.ball-3 {
+    background: #F4B400;
+    /* Yellow */
+    animation-delay: 0.2s;
+    box-shadow: 0 0 15px rgba(244, 180, 0, 0.6);
+}
+
+.ball-4 {
+    background: #0F9D58;
+    /* Green */
+    animation-delay: 0.3s;
+    box-shadow: 0 0 15px rgba(15, 157, 88, 0.6);
+}
+
+@keyframes bounce {
+    from {
+        transform: translateY(0) scale(1);
+        opacity: 0.8;
+    }
+
+    to {
+        transform: translateY(-25px) scale(1.1);
+        opacity: 1;
+    }
+}
+
+.loading-text-tech {
+    display: block;
+    margin-top: 20px;
+    text-align: center;
+    font-family: var(--font-tech);
+    font-size: 0.8rem;
+    letter-spacing: 3px;
+    color: rgba(255, 255, 255, 0.5);
+    text-transform: uppercase;
+    animation: pulse-text 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-text {
+
+    0%,
+    100% {
+        opacity: 0.4;
+    }
+
+    50% {
+        opacity: 0.8;
     }
 }
