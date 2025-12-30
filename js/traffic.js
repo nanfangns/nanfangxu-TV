@@ -19,9 +19,8 @@
     // Helper: Use a FIXED Global Key so all users share the same counter room.
     // Do NOT generate this randomly client-side, or everyone gets their own room of 1.
     function getSiteKey() {
-        // Use a valid 12-char alphanumeric key (standard format for this service)
-        // Static key ensures all users join the same "room"
-        return 'libretvcount';
+        // Use a unique 12-char key to ensure a fresh, collision-free room
+        return 'lv8s92mx1q4z';
     }
 
     const SITE_KEY = getSiteKey();
