@@ -413,13 +413,7 @@ div.player-loading-text {
     border-radius: 10px !important;
 }
 
-.episode-item:hover {
-    background: rgba(0, 242, 255, 0.1) !important;
-    border-color: var(--tech-mint) !important;
-    color: white !important;
-    transform: translateY(-2px);
-    box-shadow: 0 0 15px rgba(0, 255, 170, 0.3);
-}
+/* Redundant hover removed to avoid conflicts */
 
 .episode-active {
     background: linear-gradient(135deg, #4285F4 0%, #3367D6 100%) !important;
