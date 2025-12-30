@@ -436,46 +436,7 @@
         </div>
     </div>
 
-    <div id="passwordModal"
-        class="fixed inset-0 bg-black/98 hidden items-center justify-center z-[65] transition-opacity duration-300 backdrop-blur-md overflow-hidden">
-        <div class="manga-speed-lines"></div>
-        <div class="manga-border-vibrant p-1.5 w-11/12 max-w-md manga-slam">
-            <div class="bg-[#050505] p-8 flex flex-col items-center">
-                <div class="manga-signature text-xs mb-6 transform rotate-0">RESTRICTED_ACCESS</div>
-
-                <h2 class="text-4xl font-black manga-text manga-impact mb-8">
-                    访问验证
-                </h2>
-
-                <div class="w-full">
-                    <p class="text-white font-bold mb-6 text-center italic opacity-80 uppercase tracking-widest">
-                        请输入确认密钥继续...
-                    </p>
-                    <form id="passwordForm" onsubmit="handlePasswordSubmit(); return false;" class="space-y-6">
-                        <input type="text" name="username" id="username" autocomplete="username" style="display:none"
-                            tabindex="-1" aria-hidden="true">
-                        <input type="password" id="passwordInput"
-                            class="manga-input w-full text-center text-2xl tracking-[0.5em]" placeholder="******"
-                            autocomplete="new-password">
-                        <div class="flex gap-4">
-                            <button id="passwordSubmitBtn" type="submit"
-                                class="manga-bubble-btn flex-1 text-xl py-3 group">
-                                CONFIRM <span
-                                    class="group-hover:translate-x-1 inline-block transition-transform">▶</span>
-                            </button>
-                            <button id="passwordCancelBtn" type="button" onclick="hidePasswordModal()"
-                                class="manga-bubble-btn flex-1 text-xl py-3 group !bg-[#151515] !text-white/40 !border-[#333]">
-                                CANCEL
-                            </button>
-                        </div>
-                    </form>
-                    <p id="passwordError" class="text-red-500 mt-6 font-black text-center animate-pulse hidden">
-                        [ ERROR: INVALID_KEY ]
-                    </p>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- 旧密码验证模态框已移除 -->
 
     <!-- 版权声明弹窗 -->
     <div id="disclaimerModal" class="fixed inset-0 bg-black/90 hidden items-center justify-center z-[60]">
@@ -534,33 +495,21 @@
     }
     </script>
 
-    <!-- 引入纯 JS sha256（HTTP 下依然可用） -->
-    <script src="libs/sha256.min.js"></script>
-    <script>
-        // 保存原始 js‑sha256 实现，避免被 password.js 覆盖
-        window._jsSha256 = window.sha256;
-    </script>
     <script src="js/config.js?v=1.5"></script>
     <script src="js/proxy-auth.js?v=1.5"></script>
     <script src="js/ui.js?v=1.5"></script>
     <script src="js/api.js?v=1.5"></script>
     <script src="js/app.js?v=1.5"></script>
     <script src="js/douban.js?v=1.5"></script>
-    <script src="js/password.js?v=1.5"></script>
     <script src="js/search.js?v=1.5"></script>
     <script src="js/auth.js?v=1.5"></script>
 
     <!-- PWA 注册 -->
     <script src="js/pwa-register.js?v=1.5"></script>
 
-    <!-- 环境变量注入脚本 -->
+    <!-- 账号系统注入脚本 -->
     <script>
-        // 创建全局环境变量对象
         window.__ENV__ = window.__ENV__ || {};
-
-        // 注入服务器端环境变量 (将由服务器端替换)
-        // PASSWORD 变量将在这里被服务器端注入
-        window.__ENV__.PASSWORD = "{{PASSWORD}}";
     </script>
 
 
