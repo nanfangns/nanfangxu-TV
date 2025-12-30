@@ -4,26 +4,18 @@
  */
 
 /**
- * Real-Time Visitor Counter (whos.amung.us JSONP)
- * Injects a Premium Glassmorphism Widget and fetches real-time "Right Now" users.
+ * Real-Time Activity Counter (Busuanzi)
+ * Tracks "Real-time Heat" (PV) to provide immediate, satisfying feedback.
+ * More robust than IP-based concurrent counters for static sites.
  */
 
 (function () {
     // Configuration
     const WIDGET_ID = 'live-visitor-widget';
-    const COUNT_ID = 'live-visitor-count';
-    const REFRESH_INTERVAL = 15000; // 15 seconds
-    const STORAGE_KEY = 'whos_amung_us_key';
-    const API_BASE = '//whos.amung.us/pingjs/';
-
-    // Helper: Use a FIXED Global Key so all users share the same counter room.
-    // Do NOT generate this randomly client-side, or everyone gets their own room of 1.
-    function getSiteKey() {
-        // Use a unique 12-char key to ensure a fresh, collision-free room
-        return 'lv8s92mx1q4z';
-    }
-
-    const SITE_KEY = getSiteKey();
+    // Busuanzi uses specific IDs to inject data
+    const B_CONTAINER_ID = 'busuanzi_container_site_pv';
+    const B_VALUE_ID = 'busuanzi_value_site_pv';
+    const SCRIPT_URL = '//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js';
 
     // 1. Create and Inject Widget HTML
     function createWidget() {
@@ -32,94 +24,67 @@
         const widget = document.createElement('div');
         widget.id = WIDGET_ID;
         widget.className = 'live-viewer-widget';
+        // Hide initially until data loads
+        widget.style.opacity = '0';
+
         widget.innerHTML = `
             <div class="live-dot-container">
                 <div class="live-dot-pulse"></div>
                 <div class="live-dot-center"></div>
             </div>
-            <div class="live-text-container">
-                <span class="live-label">当前在线人数</span>
-                <span id="${COUNT_ID}" class="live-count">...</span>
+            <div class="live-text-container" id="${B_CONTAINER_ID}" style="display:flex; flex-direction:column;">
+                <span class="live-label">实时热度</span>
+                <span class="live-count">
+                    <!-- Busuanzi will inject the number here -->
+                    <span id="${B_VALUE_ID}">...</span>
+                </span>
             </div>
         `;
         document.body.appendChild(widget);
     }
 
-    // 2. Define Callback Function
-    // whos.amung.us returns `whos({ count: "..." })`
-    window.whos = function (data) {
-        if (window.trafficTimer) clearTimeout(window.trafficTimer);
-
-        const countElement = document.getElementById(COUNT_ID);
-        // Valid data: has count
-        if (countElement && data && data.count) {
-            updateCount(countElement, data.count);
-        } else {
-            console.warn('Invalid traffic data received:', data);
-        }
-    };
-
-    // 3. Animation Logic
-    function updateCount(element, newValue) {
-        // Convert k/m to numbers if needed, practically for small sites it's just int
-        // If it's "1,234", parse it
-        const numericStr = newValue.toString().replace(/,/g, '');
-        const target = parseInt(numericStr) || 1;
-
-        const currentStr = element.innerText === '...' ? '0' : element.innerText.replace(/,/g, '');
-        const current = parseInt(currentStr) || 0;
-
-        if (current !== target || element.innerText === '...') {
-            element.innerText = target.toLocaleString();
-
-            // Trigger a flash effect
-            element.classList.remove('update-flash');
-            void element.offsetWidth; // trigger reflow
-            element.classList.add('update-flash');
-        }
+    // 2. Inject Busuanzi Script
+    function loadBusuanzi() {
+        const script = document.createElement('script');
+        script.src = SCRIPT_URL;
+        script.async = true;
+        // Fix for Busuanzi sometimes getting stuck: 
+        // We manually observe the element change to trigger our animation
+        script.onload = () => {
+            watchForUpdates();
+        };
+        document.head.appendChild(script);
     }
 
-    // 4. Fetch Function (JSONP Injection)
-    function fetchCount() {
-        // Set a fallback timer: if request hangs (common on localhost), show "1"
-        window.trafficTimer = setTimeout(() => {
-            const el = document.getElementById(COUNT_ID);
-            if (el && (el.innerText === '...' || el.innerText === '-')) {
-                // Localhost default: Just YOU are online
-                updateCount(el, 1);
+    // 3. Watch for Data Load & Updates
+    function watchForUpdates() {
+        const valueEl = document.getElementById(B_VALUE_ID);
+        const widget = document.getElementById(WIDGET_ID);
+
+        // Polling to check when Busuanzi populates the data
+        const checkInterval = setInterval(() => {
+            if (valueEl && valueEl.innerText !== '...' && valueEl.innerText.length > 0) {
+                // Data Loaded! Show widget
+                widget.style.opacity = '1';
+                widget.classList.add('fade-in-up'); // Ensure we have this animation or just use transition
+
+                // Add flash effect whenever it changes (optional, but Busuanzi updates on refresh usually)
+                valueEl.parentElement.classList.add('update-flash');
+
+                clearInterval(checkInterval);
             }
-        }, 3000);
-
-        const script = document.createElement('script');
-        // Use the generated key explicitly
-        script.src = `${API_BASE}?k=${SITE_KEY}&t=${Date.now()}`;
-        script.async = true;
-
-        script.onerror = function () {
-            // On error (blocked?), fallback to 1
-            if (window.trafficTimer) clearTimeout(window.trafficTimer);
-            const el = document.getElementById(COUNT_ID);
-            if (el) updateCount(el, 1);
-        };
-
-        document.head.appendChild(script);
-
-        script.onload = function () {
-            setTimeout(() => { script.remove(); }, 1000);
-        };
+        }, 500);
     }
 
     // Initialize
-    function init() {
-        createWidget();
-        fetchCount();
-        setInterval(fetchCount, REFRESH_INTERVAL);
-    }
-
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
+        document.addEventListener('DOMContentLoaded', () => {
+            createWidget();
+            loadBusuanzi();
+        });
     } else {
-        init();
+        createWidget();
+        loadBusuanzi();
     }
 
 })();
