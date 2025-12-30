@@ -23,48 +23,68 @@ html {
     transition: all 0.4s ease;
 }
 
+/* Fix: Move gradient to children for better cross-browser compatibility */
 .logo-brand {
     display: flex;
     align-items: center;
     gap: 2px;
+    /* Background removed from parent */
+    font-family: 'Orbitron', sans-serif;
+    transition: transform 0.3s ease;
+    /* Optional: Global filter if needed, but per-char is safer for animations */
+    /* filter: drop-shadow(0 0 15px rgba(66, 133, 244, 0.25)); */
+}
+
+.logo-char {
+    display: inline-block;
+    /* Gradient applied to each character individually */
     background: linear-gradient(90deg, #4285F4 0%, #DB4437 25%, #F4B400 50%, #0F9D58 75%, #4285F4 100%) !important;
     background-size: 200% auto !important;
     -webkit-background-clip: text !important;
     -webkit-text-fill-color: transparent !important;
     background-clip: text !important;
-    animation: rainbow-shift 12s linear infinite !important;
-    filter: drop-shadow(0 0 15px rgba(66, 133, 244, 0.25));
-    font-family: 'Orbitron', sans-serif;
-    transition: transform 0.3s ease;
-}
+    color: transparent !important;
 
-.logo-char {
-    display: inline-block;
-    animation: tech-wave-jump 3s ease-in-out infinite;
-    animation-delay: calc(var(--char-index) * 0.15s);
+    color: transparent !important;
+
+    /* Animations: Split into longhand to strict control delay */
+    animation-name: tech-wave-jump, rainbow-shift;
+    animation-duration: 3s, 8s;
+    animation-timing-function: ease-in-out, linear;
+    animation-iteration-count: infinite, infinite;
+
+    /* "一个跳完到一个" - Strict delay calculation */
+    /* Jump delay: index * 0.6s. Gradient: no delay */
+    animation-delay: calc(var(--char-index) * 0.6s), 0s;
+
     transform-origin: bottom center;
 }
 
 @keyframes tech-wave-jump {
 
     0%,
+    80%,
     100% {
         transform: translateY(0) scale(1);
         filter: drop-shadow(0 0 5px rgba(66, 133, 244, 0.2));
     }
 
     10% {
-        transform: translateY(-8px) scale(1.1);
+        transform: translateY(-12px) scale(1.1);
+        /* Jump higher */
         filter: drop-shadow(0 0 15px rgba(66, 133, 244, 0.6));
     }
 
     20% {
         transform: translateY(2px) scale(0.95);
+        /* Land/Squash */
         filter: drop-shadow(0 0 8px rgba(66, 133, 244, 0.3));
     }
 
     30% {
         transform: translateY(0) scale(1);
+        /* Recover */
+        filter: drop-shadow(0 0 5px rgba(66, 133, 244, 0.2));
     }
 }
 
@@ -79,46 +99,80 @@ html {
     max-width: 100%;
 }
 
-.video-title-text {
-    font-size: clamp(1.1rem, 4vw, 1.6rem);
-    font-weight: 900;
-    background: linear-gradient(135deg, #fff 0%, #a5b4fc 50%, #4facfe 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    filter: drop-shadow(0 0 12px rgba(79, 172, 254, 0.3));
-    letter-spacing: -0.5px;
-    line-height: 1.2;
+/* Tech-Chrome Premium Title */
+.movie-title-wrapper {
+    position: relative;
+    padding: 6px 20px;
+    background: rgba(255, 255, 255, 0.03);
+    /* Extremely subtle glass */
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    /* Fine border */
+    border-radius: 99px;
+    /* Pill shape */
+    backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+    /* Float effect */
+    transition: all 0.3s ease;
+}
+
+.movie-title-wrapper:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.15);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
 .title-tech-accent-left,
 .title-tech-accent-right {
-    width: 2px;
-    height: 20px;
-    background: linear-gradient(to bottom, transparent, #4285F4, transparent);
-    position: relative;
-    flex-shrink: 0;
+    width: 4px;
+    height: 18px;
+    border-radius: 2px;
+    /* Neon Gels */
+    background: linear-gradient(180deg, #4285F4, #DB4437, #F4B400, #0F9D58);
+    box-shadow: 0 0 12px rgba(66, 133, 244, 0.5);
+    /* Glow */
+    opacity: 0.9;
 }
+
+.video-title-text {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(1.2rem, 4vw, 1.7rem);
+    font-weight: 800;
+    letter-spacing: 1px;
+    position: relative;
+
+    /* Silver Chrome Gradient */
+    background: linear-gradient(180deg,
+            #FFFFFF 0%,
+            #E6E9F0 45%,
+            #B0C4DE 50%,
+            #FFFFFF 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+
+    /* Metallic Drop Shadow for Depth/Thickness */
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+
+    /* Optional: Subtle iridescence on top */
+}
+
+/* Shimmer Animation via clip-path mask could be cleaner, 
+   but let's use a moving gradient overlay if needed. 
+   For now, the Chrome gradient itself looks very premium. */
 
 .title-tech-accent-left::before,
 .title-tech-accent-right::before {
-    content: '';
-    position: absolute;
-    width: 5px;
-    height: 5px;
-    background: #4285F4;
-    border-radius: 50%;
-    left: -1.5px;
-    box-shadow: 0 0 10px #4285F4;
+    content: none;
 }
 
-.title-tech-accent-left::before {
-    top: -2px;
+@keyframes rainbow-breath {
+    /* Unused for now, clean static neon looks better for "Chrome" style */
 }
 
-.title-tech-accent-right::before {
-    bottom: -2px;
-}
 
 .back-btn-premium {
     background: rgba(255, 255, 255, 0.04);
@@ -368,10 +422,19 @@ div.player-loading-text {
 }
 
 .episode-active {
-    background: var(--gradient-active) !important;
-    border-color: transparent !important;
+    background: linear-gradient(135deg, #4285F4 0%, #3367D6 100%) !important;
+    border: 1px solid rgba(66, 133, 244, 0.5) !important;
     color: white !important;
-    box-shadow: 0 0 20px rgba(112, 0, 255, 0.6);
+    box-shadow: 0 0 15px rgba(66, 133, 244, 0.4) !important;
+    transform: translateY(-2px);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.episode-item:hover:not(.episode-active) {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: white;
+    transform: translateY(-2px);
 }
 
 /* HUD 风格标签 */
