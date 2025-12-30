@@ -16,15 +16,11 @@
     const STORAGE_KEY = 'whos_amung_us_key';
     const API_BASE = '//whos.amung.us/pingjs/';
 
-    // Helper: Generate or Get Key
+    // Helper: Use a FIXED Global Key so all users share the same counter room.
+    // Do NOT generate this randomly client-side, or everyone gets their own room of 1.
     function getSiteKey() {
-        let key = localStorage.getItem(STORAGE_KEY);
-        if (!key) {
-            // Generate a random 12-char string if no key exists
-            key = Math.random().toString(36).substring(2, 14);
-            localStorage.setItem(STORAGE_KEY, key);
-        }
-        return key;
+        // "libretv_stats" - 12 chars
+        return 'libretv_stats';
     }
 
     const SITE_KEY = getSiteKey();
