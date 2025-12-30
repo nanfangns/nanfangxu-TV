@@ -2,6 +2,10 @@
  * 代理请求鉴权模块 (已停用旧版密码鉴权)
  */
 
+async function addAuthToProxyUrl(url) {
+    return url;
+}
+
 function validateProxyAuth() {
     return true;
 }

@@ -567,7 +567,15 @@ function toggleSettings(e) {
     }
 }
 
-// 设置事件监听器
+// 原生 SHA256 实现
+async function sha256(message) {
+    const msgBuffer = new TextEncoder().encode(message);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// 事件监听器
 function setupEventListeners() {
     // 回车搜索
     document.getElementById('searchInput').addEventListener('keypress', function (e) {
@@ -729,15 +737,7 @@ function createVideoCardHtml(item, hasCover) {
 
 // 搜索功能 - 极致优化版：分段增量渲染
 async function search(isHistoryNav = false) {
-    // 密码保护校验
-    try {
-        if (window.ensurePasswordProtection) {
-            window.ensurePasswordProtection();
-        } else if (window.isPasswordProtected && window.isPasswordVerified && window.isPasswordProtected() && !window.isPasswordVerified()) {
-            showPasswordModal && showPasswordModal();
-            return;
-        }
-    } catch (e) { return; }
+    // 搜索功能开始
 
     const query = document.getElementById('searchInput').value.trim();
     if (!query) { showToast('请输入搜索内容', 'info'); return; }
@@ -868,13 +868,6 @@ document.addEventListener('DOMContentLoaded', hookInput);
 
 // 显示详情 - 优化版：客户端直接请求，绕过后端代理
 async function showDetails(id, vod_name, sourceCode) {
-    // 密码保护校验
-    if (window.isPasswordProtected && window.isPasswordVerified) {
-        if (window.isPasswordProtected() && !window.isPasswordVerified()) {
-            showPasswordModal && showPasswordModal();
-            return;
-        }
-    }
     if (!id) {
         showToast('视频ID无效', 'error');
         return;
