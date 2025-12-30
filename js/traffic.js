@@ -19,8 +19,9 @@
     // Helper: Use a FIXED Global Key so all users share the same counter room.
     // Do NOT generate this randomly client-side, or everyone gets their own room of 1.
     function getSiteKey() {
-        // "libretv_stats" - 12 chars
-        return 'libretv_stats';
+        // Use a valid 12-char alphanumeric key (standard format for this service)
+        // Static key ensures all users join the same "room"
+        return 'libretvcount';
     }
 
     const SITE_KEY = getSiteKey();
@@ -38,7 +39,7 @@
                 <div class="live-dot-center"></div>
             </div>
             <div class="live-text-container">
-                <span class="live-label">LIVE VIEWERS</span>
+                <span class="live-label">当前在线人数</span>
                 <span id="${COUNT_ID}" class="live-count">...</span>
             </div>
         `;
