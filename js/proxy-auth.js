@@ -9,7 +9,7 @@ async function addAuthToProxyUrl(url) {
         return url;
     }
     // 转发外部 URL 到代理端
-    return `/proxy/${url}`;
+    return `/proxy/${encodeURIComponent(url)}`;
 }
 
 

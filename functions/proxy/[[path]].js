@@ -176,31 +176,34 @@ export async function onRequest(context) {
 
     // 获取远程内容及其响应
     async function fetchContentWithType(targetUrl) {
+        // 强制伪装 Referer 和 Origin 以绕过防盗链
+        const targetOrigin = new URL(targetUrl).origin;
         const headers = new Headers({
             'User-Agent': getRandomUserAgent(),
             'Accept': '*/*',
-            'Accept-Language': request.headers.get('Accept-Language') || 'zh-CN,zh;q=0.9,en;q=0.8',
-            'Referer': request.headers.get('Referer') || new URL(targetUrl).origin
+            'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+            'Referer': targetOrigin,
+            'Origin': targetOrigin
         });
 
         try {
             logDebug(`开始直接请求: ${targetUrl}`);
             const response = await fetch(targetUrl, { headers, redirect: 'follow' });
 
+            // 移除错误抛出，直接透传响应状态，让前端 Hls.js 处理重试逻辑
             if (!response.ok) {
-                logDebug(`请求失败: ${response.status} ${response.statusText} - ${targetUrl}`);
-                throw new Error(`HTTP error ${response.status}: ${response.statusText}`);
+                logDebug(`上游返回非 200 状态: ${response.status} ${response.statusText} - ${targetUrl}`);
             }
 
             const contentType = response.headers.get('Content-Type') || '';
-            logDebug(`请求成功: ${targetUrl}, Content-Type: ${contentType}`);
+            logDebug(`请求结束: ${targetUrl}, Status: ${response.status}, Content-Type: ${contentType}`);
 
-            // 重要：不再此处读取 body，由调用者决定
             return { response, contentType, responseHeaders: response.headers };
 
         } catch (error) {
-            logDebug(`请求彻底失败: ${targetUrl}: ${error.message}`);
-            throw new Error(`请求目标URL失败 ${targetUrl}: ${error.message}`);
+            logDebug(`请求网络异常: ${targetUrl}: ${error.message}`);
+            // 只有网络层面的彻底失败才抛出错误
+            throw new Error(`网络请求失败 ${targetUrl}: ${error.message}`);
         }
     }
 
