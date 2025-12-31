@@ -174,38 +174,32 @@ export async function onRequest(context) {
         return `/proxy/${encodeURIComponent(targetUrl)}`;
     }
 
-    // 获取远程内容及其类型
+    // 获取远程内容及其响应
     async function fetchContentWithType(targetUrl) {
         const headers = new Headers({
             'User-Agent': getRandomUserAgent(),
             'Accept': '*/*',
-            // 尝试传递一些原始请求的头信息
             'Accept-Language': request.headers.get('Accept-Language') || 'zh-CN,zh;q=0.9,en;q=0.8',
-            // 尝试设置 Referer 为目标网站的域名，或者传递原始 Referer
             'Referer': request.headers.get('Referer') || new URL(targetUrl).origin
         });
 
         try {
-            // 直接请求目标 URL
             logDebug(`开始直接请求: ${targetUrl}`);
-            // Cloudflare Functions 的 fetch 默认支持重定向
             const response = await fetch(targetUrl, { headers, redirect: 'follow' });
 
             if (!response.ok) {
-                const errorBody = await response.text().catch(() => '');
                 logDebug(`请求失败: ${response.status} ${response.statusText} - ${targetUrl}`);
-                throw new Error(`HTTP error ${response.status}: ${response.statusText}. URL: ${targetUrl}. Body: ${errorBody.substring(0, 150)}`);
+                throw new Error(`HTTP error ${response.status}: ${response.statusText}`);
             }
 
-            // 读取响应内容为文本
-            const content = await response.text();
             const contentType = response.headers.get('Content-Type') || '';
-            logDebug(`请求成功: ${targetUrl}, Content-Type: ${contentType}, 内容长度: ${content.length}`);
-            return { content, contentType, responseHeaders: response.headers }; // 同时返回原始响应头
+            logDebug(`请求成功: ${targetUrl}, Content-Type: ${contentType}`);
+
+            // 重要：不再此处读取 body，由调用者决定
+            return { response, contentType, responseHeaders: response.headers };
 
         } catch (error) {
             logDebug(`请求彻底失败: ${targetUrl}: ${error.message}`);
-            // 抛出更详细的错误
             throw new Error(`请求目标URL失败 ${targetUrl}: ${error.message}`);
         }
     }
@@ -384,31 +378,22 @@ export async function onRequest(context) {
         }
 
         logDebug(`选择的子列表 (带宽: ${highestBandwidth}): ${bestVariantUrl}`);
-        const { content: variantContent, contentType: variantContentType } = await fetchContentWithType(bestVariantUrl);
+        const { response: variantResp, contentType: variantContentType } = await fetchContentWithType(bestVariantUrl);
+        const variantContent = await variantResp.text();
 
         if (!isM3u8Content(variantContent, variantContentType)) {
             logDebug(`获取到的子列表 ${bestVariantUrl} 不是 M3U8 内容 (类型: ${variantContentType})。可能直接是媒体文件，返回原始内容。`);
-            // 如果不是M3U8，但看起来像媒体内容，直接返回代理后的内容
-            // 注意：这里可能需要决定是否直接代理这个非 M3U8 的 URL
-            // 为了简化，我们假设如果不是 M3U8，则流程中断或按原样处理
-            // 或者，尝试将其作为媒体列表处理？（当前行为）
-            // return createResponse(variantContent, 200, { 'Content-Type': variantContentType || 'application/octet-stream' });
-            // 尝试按媒体列表处理，以防万一
             return processMediaPlaylist(bestVariantUrl, variantContent);
-
         }
 
         const processedVariant = await processM3u8Content(bestVariantUrl, variantContent, recursionDepth + 1, env);
 
         if (kvNamespace) {
             try {
-                // 使用 waitUntil 异步写入缓存，不阻塞响应返回
-                // 注意 KV 的写入限制 (免费版每天 1000 次)
                 waitUntil(kvNamespace.put(cacheKey, processedVariant, { expirationTtl: CACHE_TTL }));
                 logDebug(`已将处理后的子列表写入缓存: ${bestVariantUrl}`);
             } catch (kvError) {
                 logDebug(`向 KV 写入缓存失败 (${cacheKey}): ${kvError.message}`);
-                // 写入失败不影响返回结果
             }
         }
 
@@ -467,37 +452,35 @@ export async function onRequest(context) {
         }
 
         // --- 实际请求 ---
-        const { content, contentType, responseHeaders } = await fetchContentWithType(targetUrl);
+        const { response: targetResp, contentType, responseHeaders } = await fetchContentWithType(targetUrl);
 
-        // --- 写入缓存 (KV) ---
-        if (kvNamespace) {
-            try {
-                const headersToCache = {};
-                responseHeaders.forEach((value, key) => { headersToCache[key.toLowerCase()] = value; });
-                const cacheValue = { body: content, headers: JSON.stringify(headersToCache) };
-                // 注意 KV 写入限制
-                waitUntil(kvNamespace.put(cacheKey, JSON.stringify(cacheValue), { expirationTtl: CACHE_TTL }));
-                logDebug(`已将原始内容写入缓存: ${targetUrl}`);
-            } catch (kvError) {
-                logDebug(`向 KV 写入缓存失败 (${cacheKey}): ${kvError.message}`);
-                // 写入失败不影响返回结果
-            }
-        }
-
-        // --- 处理响应 ---
-        if (isM3u8Content(content, contentType)) {
+        // --- 处理 M3U8 响应 ---
+        if (isM3u8Content("", contentType)) { // 先通过 Content-Type 初步判断
+            const content = await targetResp.text();
             logDebug(`内容是 M3U8，开始处理: ${targetUrl}`);
+
+            // 写入缓存逻辑 (可选)
+            if (kvNamespace) {
+                const headersToCache = {};
+                responseHeaders.forEach((v, k) => { headersToCache[k.toLowerCase()] = v; });
+                waitUntil(kvNamespace.put(cacheKey, JSON.stringify({ body: content, headers: JSON.stringify(headersToCache) }), { expirationTtl: CACHE_TTL }));
+            }
+
             const processedM3u8 = await processM3u8Content(targetUrl, content, 0, env);
             return createM3u8Response(processedM3u8);
         } else {
-            logDebug(`内容不是 M3U8 (类型: ${contentType})，直接返回: ${targetUrl}`);
+            logDebug(`内容为二进制流或非 M3U8 (类型: ${contentType})，开始透传: ${targetUrl}`);
             const finalHeaders = new Headers(responseHeaders);
             finalHeaders.set('Cache-Control', `public, max-age=${CACHE_TTL}`);
-            // 添加 CORS 头，确保非 M3U8 内容也能跨域访问（例如图片、字幕文件等）
             finalHeaders.set("Access-Control-Allow-Origin", "*");
             finalHeaders.set("Access-Control-Allow-Methods", "GET, HEAD, POST, OPTIONS");
             finalHeaders.set("Access-Control-Allow-Headers", "*");
-            return createResponse(content, 200, finalHeaders);
+
+            // 直接返回原始 body（流式透传）
+            return new Response(targetResp.body, {
+                status: targetResp.status,
+                headers: finalHeaders
+            });
         }
 
     } catch (error) {

@@ -435,7 +435,7 @@ function initPlayer(videoUrl) {
     // 配置HLS.js选项
     const hlsConfig = {
         debug: false,
-        loader: adFilteringEnabled ? CustomHlsJsLoader : Hls.DefaultConfig.loader,
+        loader: Hls.DefaultConfig.loader,
         enableWorker: true,
         lowLatencyMode: false,
         backBufferLength: 90,
