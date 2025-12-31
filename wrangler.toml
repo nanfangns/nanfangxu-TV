@@ -5,4 +5,4 @@ compatibility_date = "2024-01-01"
 [[d1_databases]]
 binding = "DB"
 database_name = "my-tv-db"
-database_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" # Local dev ignores this ID and uses local DB
+database_id = "0d98d364-48b3-4947-88ab-694aef1c1163" # Local dev ignores this ID and uses local DB
