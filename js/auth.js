@@ -125,6 +125,9 @@ class AuthService {
             // 重新刷新 UI 以展示新历史记录
             if (typeof loadViewingHistory === 'function') loadViewingHistory();
             if (typeof renderSearchHistory === 'function') renderSearchHistory();
+            if (window.FavoritesService && typeof window.FavoritesService.renderFavoritesPanel === 'function') {
+                window.FavoritesService.renderFavoritesPanel();
+            }
 
         } catch (e) {
             console.error('拉取云端数据失败:', e);
@@ -149,7 +152,7 @@ class AuthService {
                     </button>
 
                     <h2 id="authTitle" class="text-2xl font-bold text-white mb-2 text-center">欢迎回来</h2>
-                    <p id="authSub" class="text-gray-400 text-sm mb-6 text-center">登录以同步您的播放记录</p>
+                    <p id="authSub" class="text-gray-400 text-sm mb-6 text-center">登录以同步您的播放记录和收藏夹</p>
 
                     <div class="space-y-4">
                         <div class="relative group">
@@ -191,6 +194,10 @@ class AuthService {
                         <p class="text-gray-500 text-xs mb-6">云端数据已同步</p>
 
                         <div class="space-y-3">
+                            <button onclick="document.getElementById('authModal').remove(); toggleFavorites()" class="w-full bg-gray-800 hover:bg-gray-700 text-white py-2 rounded-lg transition-colors flex items-center justify-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                                我的收藏
+                            </button>
                             <button onclick="authService.pullSync(); showToast('同步成功', 'success')" class="w-full bg-gray-800 hover:bg-gray-700 text-white py-2 rounded-lg transition-colors flex items-center justify-center gap-2">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                                 立即手动同步
@@ -251,7 +258,7 @@ function toggleAuthMode() {
         toggle.innerText = '已有账号？点击登录';
     } else {
         title.innerText = '欢迎回来';
-        sub.innerText = '登录以同步您的播放记录';
+        sub.innerText = '登录以同步您的播放记录和收藏夹';
         btn.innerText = '立即登录';
         toggle.innerText = '第一次来？点击注册账号';
     }

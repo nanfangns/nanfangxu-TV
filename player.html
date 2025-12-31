@@ -137,6 +137,17 @@
 
                 <!-- 把各种功能按钮放在右侧 - 在小屏幕上各自占一行 -->
                 <div class="flex flex-wrap justify-end gap-2">
+                    <!-- 收藏按钮 -->
+                    <button id="favoriteBtn" onclick="toggleCurrentFavorite()"
+                        class="px-3 py-1 bg-[#222] hover:bg-[#333] border border-[#333] rounded-lg transition-colors flex items-center space-x-1 flex-shrink-0 text-gray-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                        </svg>
+                        <span>收藏</span>
+                    </button>
+
                     <!-- 倒序排列按钮 -->
                     <button onclick="toggleEpisodeOrder()"
                         class="px-3 py-1 bg-[#222] hover:bg-[#333] border border-[#333] rounded-lg transition-colors flex items-center space-x-1 flex-shrink-0">
@@ -256,6 +267,7 @@
     <script src="js/api.js?v=1.2"></script>
     <script src="js/search.js?v=1.2"></script>
     <script src="js/player.js?v=1.2"></script>
+    <script src="js/favorites.js"></script>
 
 
     <script>

@@ -54,6 +54,17 @@
 
     <!-- 顶部右上角按钮组 -->
     <div class="fixed top-4 right-4 z-40 flex gap-2">
+        <!-- 收藏夹按钮 -->
+        <div class="corner-wrapper" style="animation-delay: 0.05s;">
+            <button onclick="toggleFavorites(event)" class="top-corner-button flex items-center justify-center"
+                aria-label="我的收藏">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z">
+                    </path>
+                </svg>
+            </button>
+        </div>
         <!-- 账号按钮 -->
         <div class="corner-wrapper" style="animation-delay: 0.1s;">
             <button onclick="authService.showAuthModal()" class="top-corner-button flex items-center justify-center"
@@ -101,6 +112,26 @@
             <button onclick="clearViewingHistory()" class="px-4 py-2 w-full douban-refresh-button flex justify-center">
                 清空历史记录
             </button>
+        </div>
+    </div>
+
+    <!-- 收藏夹面板 (类似历史记录) -->
+    <div id="favoritesPanel"
+        class="history-panel fixed left-0 top-0 h-full bg-[#111] border-r border-[#333] p-6 z-40 transform -translate-x-full transition-transform duration-300"
+        aria-label="我的收藏" aria-hidden="true">
+        <div class="flex justify-between items-center mb-6">
+            <button onclick="toggleFavorites()" class="close-btn">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                    </path>
+                </svg>
+            </button>
+            <h3 class="text-xl font-bold gradient-text mx-auto">我的收藏</h3>
+            <div class="w-4"></div>
+        </div>
+        <div id="favoritesList" class="pb-4 space-y-3">
+            <!-- 收藏内容动态加载 -->
+            <div class="text-center text-gray-500 py-8">暂无收藏记录</div>
         </div>
     </div>
 
@@ -503,6 +534,7 @@
     <script src="js/douban.js?v=1.5"></script>
     <script src="js/search.js?v=1.5"></script>
     <script src="js/auth.js?v=1.5"></script>
+    <script src="js/favorites.js"></script>
 
     <!-- PWA 注册 -->
     <script src="js/pwa-register.js?v=1.5"></script>

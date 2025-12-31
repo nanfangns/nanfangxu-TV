@@ -315,6 +315,12 @@ function toggleHistory(e) {
         if (settingsPanel && settingsPanel.classList.contains('show')) {
             settingsPanel.classList.remove('show');
         }
+
+        // 如果收藏夹面板是打开的，则关闭它
+        const favoritesPanel = document.getElementById('favoritesPanel');
+        if (favoritesPanel && favoritesPanel.classList.contains('show')) {
+            favoritesPanel.classList.remove('show');
+        }
     }
 }
 

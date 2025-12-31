@@ -75,6 +75,32 @@ window.addEventListener('load', function () {
 
 
 // =================================
+// ============== FAVORITES =======
+// =================================
+function toggleCurrentFavorite() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const id = urlParams.get('id');
+    const source = urlParams.get('source');
+
+    if (!id) {
+        showToast('无法收藏：缺少视频ID信息', 'warning');
+        return;
+    }
+
+    const videoInfo = {
+        vod_id: id,
+        sourceName: source || '未知来源',
+        title: currentVideoTitle || document.title,
+        url: window.location.href,
+        pic: '' // 暂无图片信息
+    };
+
+    if (window.FavoritesService) {
+        window.FavoritesService.toggleFavorite(videoInfo);
+    }
+}
+
+// =================================
 // ============== PLAYER ==========
 // =================================
 // 全局变量
@@ -261,6 +287,16 @@ async function initializePageContent() {
 
     // 更新排序按钮状态
     updateOrderButton();
+
+    // 初始化收藏按钮状态
+    const favBtn = document.getElementById('favoriteBtn');
+    const currentId = urlParams.get('id');
+    if (favBtn && currentId) {
+        favBtn.dataset.vodId = currentId;
+        if (window.FavoritesService) {
+            window.FavoritesService.updateUI();
+        }
+    }
 
     // 添加对进度条的监听，确保点击准确跳转
     setTimeout(() => {
