@@ -62,6 +62,8 @@ class AuthService {
         this.token = null;
         this.user = null;
         this.isLoggedIn = false;
+
+        this.updateAuthUI(); // 更新UI状态
         showToast('已退出登录', 'info');
         location.reload();
     }
@@ -72,6 +74,33 @@ class AuthService {
         this.isLoggedIn = true;
         localStorage.setItem(AUTH_TOKEN_KEY, token);
         localStorage.setItem(USER_INFO_KEY, JSON.stringify(user));
+        this.updateAuthUI(); // 更新UI状态
+    }
+
+    // 更新右上角按钮UI
+    updateAuthUI() {
+        const btn = document.getElementById('authButton');
+        if (!btn) return;
+
+        if (this.isLoggedIn && this.user && this.user.username) {
+            const firstChar = this.user.username[0].toUpperCase();
+            // 显示头像状态
+            btn.innerHTML = `
+                <div class="w-6 h-6 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-500 flex items-center justify-center text-xs font-bold text-white shadow-md">
+                    ${firstChar}
+                </div>
+            `;
+            btn.classList.add('p-0'); // Remove padding to fit avatar nicely
+        } else {
+            // 显示默认图标状态
+            btn.innerHTML = `
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                </svg>
+            `;
+            btn.classList.remove('p-0');
+        }
     }
 
     // 推送数据到云端
@@ -138,6 +167,12 @@ class AuthService {
     showAuthModal() {
         // 如果已经登录，显示个人信息
         if (this.isLoggedIn) {
+            // 双重检查 user 对象是否存在
+            if (!this.user || !this.user.username) {
+                // 异常状态：有 token 但无 user info，强制登出
+                this.logout();
+                return;
+            }
             this.showUserPanel();
             return;
         }
@@ -179,6 +214,9 @@ class AuthService {
     }
 
     showUserPanel() {
+        const username = this.user.username || 'User';
+        const firstChar = username[0].toUpperCase();
+
         const userHtml = `
             <div id="authModal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in">
                 <div class="w-[90%] max-w-sm p-8 rounded-2xl bg-gray-900 border border-white/10 shadow-2xl relative">
@@ -188,15 +226,19 @@ class AuthService {
 
                     <div class="text-center">
                         <div class="w-20 h-20 bg-gradient-to-tr from-cyan-500 to-blue-500 rounded-full mx-auto mb-4 flex items-center justify-center shadow-lg">
-                            <span class="text-3xl font-bold text-white">${this.user.username[0].toUpperCase()}</span>
+                            <span class="text-3xl font-bold text-white">${firstChar}</span>
                         </div>
-                        <h3 class="text-xl font-bold text-white mb-1">${this.user.username}</h3>
+                        <h3 class="text-xl font-bold text-white mb-1">${username}</h3>
                         <p class="text-gray-500 text-xs mb-6">云端数据已同步</p>
 
                         <div class="space-y-3">
                             <button onclick="document.getElementById('authModal').remove(); toggleFavorites()" class="w-full bg-gray-800 hover:bg-gray-700 text-white py-2 rounded-lg transition-colors flex items-center justify-center gap-2">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
                                 我的收藏
+                            </button>
+                             <button onclick="document.getElementById('authModal').remove(); toggleHistory()" class="w-full bg-gray-800 hover:bg-gray-700 text-white py-2 rounded-lg transition-colors flex items-center justify-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                观看历史
                             </button>
                             <button onclick="authService.pullSync(); showToast('同步成功', 'success')" class="w-full bg-gray-800 hover:bg-gray-700 text-white py-2 rounded-lg transition-colors flex items-center justify-center gap-2">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
@@ -217,6 +259,8 @@ class AuthService {
 // 初始化
 const authService = new AuthService();
 window.authService = authService;
+// 初始化时更新UI
+authService.updateAuthUI();
 
 // 全局提交函数
 let isRegisterMode = false;
@@ -267,6 +311,11 @@ function toggleAuthMode() {
 
 // 自动同步钩子
 window.addEventListener('load', () => {
+    // 再次尝试更新UI，确保DOM已加载
+    if (authService && authService.updateAuthUI) {
+        authService.updateAuthUI();
+    }
+
     if (authService.isLoggedIn) {
         authService.pullSync();
         // 简单拦截 localStorage 变动进行同步（简略实现）
