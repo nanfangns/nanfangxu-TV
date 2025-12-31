@@ -1153,13 +1153,7 @@ function copyLinksForSource(sourceIndex) {
 
 // 更新播放视频函数，修改为使用/watch路径而不是直接打开player.html
 function playVideo(url, vod_name, sourceCode, episodeIndex = 0, vodId = '') {
-    // 密码保护校验
-    if (window.isPasswordProtected && window.isPasswordVerified) {
-        if (window.isPasswordProtected() && !window.isPasswordVerified()) {
-            showPasswordModal && showPasswordModal();
-            return;
-        }
-    }
+
 
     // 获取当前路径作为返回页面
     let currentPath = window.location.href;

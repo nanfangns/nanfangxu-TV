@@ -92,10 +92,10 @@ let adFilteringEnabled = true; // 默认开启广告过滤
 let progressSaveInterval = null; // 定期保存进度的计时器
 let currentVideoUrl = ''; // 记录当前实际的视频URL
 const isWebkit = (typeof window.webkitConvertPointFromNodeToPage === 'function')
-Artplayer.FULLSCREEN_WEB_IN_BODY = true;
+// 已移除顶级 Artplayer 配置以避免加载顺序导致的报错
 
 // 页面加载
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', async () => {
     // 状态文本动画 (迁移自 watch.js)
     const statusElement = document.getElementById('player-loading-status');
     const statusMessages = ["资源同步中...", "正在提取流媒体信息...", "即将进入播放界面...", "正在初始化核心系统..."];
@@ -122,28 +122,13 @@ document.addEventListener('DOMContentLoaded', function () {
         overlay.style.opacity = '1';
     }
 
-    if (!isPasswordVerified()) {
-        // 隐藏加载提示 (密码框显示时不需要加载图)
-        const placeholder = document.querySelector('.player-placeholder');
-        if (placeholder) {
-            const overlay = placeholder.querySelector('.player-loading-overlay');
-            if (overlay) overlay.style.display = 'none';
-        }
-        return;
-    }
-
-    initializePageContent();
+    await initializePageContent();
 });
 
-// 监听密码验证成功事件
-document.addEventListener('passwordVerified', () => {
-    document.getElementById('player-loading').style.display = 'block';
 
-    initializePageContent();
-});
 
 // 初始化页面内容
-function initializePageContent() {
+async function initializePageContent() {
 
     // 解析URL参数
     const urlParams = new URLSearchParams(window.location.search);
@@ -252,10 +237,15 @@ function initializePageContent() {
 
     // 初始化播放器
     if (videoUrl) {
+        // 确保视频链接经过代理转发
+        if (window.ProxyAuth && window.ProxyAuth.addAuthToProxyUrl) {
+            videoUrl = await window.ProxyAuth.addAuthToProxyUrl(videoUrl);
+        }
         initPlayer(videoUrl);
     } else {
         showError('无效的视频链接');
     }
+
 
     // 渲染源信息
     renderResourceInfoBar();
@@ -430,6 +420,11 @@ function initPlayer(videoUrl) {
     if (!videoUrl) {
         return
     }
+
+    if (typeof Artplayer !== 'undefined') {
+        Artplayer.FULLSCREEN_WEB_IN_BODY = true;
+    }
+
 
     // 销毁旧实例
     if (art) {

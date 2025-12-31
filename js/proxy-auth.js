@@ -3,8 +3,15 @@
  */
 
 async function addAuthToProxyUrl(url) {
-    return url;
+    if (!url) return url;
+    // 如果已经是代理 URL 或本地 URL，则不处理
+    if (url.startsWith('/proxy/') || url.startsWith('/') || url.startsWith(window.location.origin)) {
+        return url;
+    }
+    // 转发外部 URL 到代理端
+    return `/proxy/${url}`;
 }
+
 
 function validateProxyAuth() {
     return true;
