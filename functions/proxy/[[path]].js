@@ -170,6 +170,25 @@ export async function onRequest(context) {
 
     // 将目标 URL 重写为内部代理路径 (/proxy/...)
     function rewriteUrlToProxy(targetUrl) {
+        // 检查端口是否支持，不支持则保持原样（直连）
+        try {
+            const urlObj = new URL(targetUrl);
+            const port = urlObj.port;
+            // Cloudflare 仅支持有限的端口
+            // HTTP: 80, 8080, 8880, 2052, 2082, 2086, 2095
+            // HTTPS: 443, 2053, 2083, 2087, 2096, 8443
+            if (port) {
+                const supportedPorts = [
+                    '80', '8080', '8880', '2052', '2082', '2086', '2095',
+                    '443', '2053', '2083', '2087', '2096', '8443'
+                ];
+                if (!supportedPorts.includes(port)) {
+                    logDebug(`目标 URL 端口 ${port} 不受 Cloudflare 支持，跳过代理重写: ${targetUrl}`);
+                    return targetUrl;
+                }
+            }
+        } catch (e) { }
+
         // 确保目标URL被正确编码，以便作为路径的一部分
         return `/proxy/${encodeURIComponent(targetUrl)}`;
     }
@@ -239,7 +258,7 @@ export async function onRequest(context) {
     function processKeyLine(line, baseUrl) {
         return line.replace(/URI="([^"]+)"/, (match, uri) => {
             const absoluteUri = resolveUrl(baseUrl, uri);
-            logDebug(`处理 KEY URI: 原始='${uri}', 绝对='${absoluteUri}'`);
+            // logDebug(`处理 KEY URI: 原始='${uri}', 绝对='${absoluteUri}'`);
             return `URI="${rewriteUrlToProxy(absoluteUri)}"`; // 重写为代理路径
         });
     }
@@ -248,7 +267,7 @@ export async function onRequest(context) {
     function processMapLine(line, baseUrl) {
         return line.replace(/URI="([^"]+)"/, (match, uri) => {
             const absoluteUri = resolveUrl(baseUrl, uri);
-            logDebug(`处理 MAP URI: 原始='${uri}', 绝对='${absoluteUri}'`);
+            // logDebug(`处理 MAP URI: 原始='${uri}', 绝对='${absoluteUri}'`);
             return `URI="${rewriteUrlToProxy(absoluteUri)}"`; // 重写为代理路径
         });
     }
@@ -282,7 +301,7 @@ export async function onRequest(context) {
             }
             if (!line.startsWith('#')) {
                 const absoluteUrl = resolveUrl(baseUrl, line);
-                logDebug(`重写媒体片段: 原始='${line}', 绝对='${absoluteUrl}'`);
+                // logDebug(`重写媒体片段: 原始='${line}', 绝对='${absoluteUrl}'`);
                 output.push(rewriteUrlToProxy(absoluteUrl));
                 continue;
             }

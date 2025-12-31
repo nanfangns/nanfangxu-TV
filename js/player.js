@@ -471,7 +471,7 @@ function initPlayer(videoUrl) {
     // 配置HLS.js选项
     const hlsConfig = {
         debug: false,
-        loader: Hls.DefaultConfig.loader,
+        loader: adFilteringEnabled ? CustomHlsJsLoader : Hls.DefaultConfig.loader,
         enableWorker: true,
         lowLatencyMode: false,
         backBufferLength: 90,
@@ -818,49 +818,49 @@ function initPlayer(videoUrl) {
     }, 10000);
 }
 
-// 自定义M3U8 Loader用于过滤广告
+// 轻量级自定义 M3U8 Loader，仅用于过滤明显广告标记
 class CustomHlsJsLoader extends Hls.DefaultConfig.loader {
     constructor(config) {
         super(config);
         const load = this.load.bind(this);
         this.load = function (context, config, callbacks) {
-            // 拦截manifest和level请求
             if (context.type === 'manifest' || context.type === 'level') {
                 const onSuccess = callbacks.onSuccess;
                 callbacks.onSuccess = function (response, stats, context) {
-                    // 如果是m3u8文件，处理内容以移除广告分段
                     if (response.data && typeof response.data === 'string') {
-                        // 过滤掉广告段 - 实现更精确的广告过滤逻辑
-                        response.data = filterAdsFromM3U8(response.data, true);
+                        // 1. 快速检查：如果都不包含 DISCONTINUITY，直接跳过处理，性能零损耗
+                        if (response.data.indexOf('#EXT-X-DISCONTINUITY') !== -1) {
+                            response.data = filterAdsFromM3U8(response.data);
+                        }
                     }
                     return onSuccess(response, stats, context);
                 };
             }
-            // 执行原始load方法
             load(context, config, callbacks);
         };
     }
 }
 
-// 过滤可疑的广告内容
-function filterAdsFromM3U8(m3u8Content, strictMode = false) {
-    if (!m3u8Content) return '';
-
-    // 按行分割M3U8内容
+// 优化的广告过滤函数：单次遍历，高性能
+function filterAdsFromM3U8(m3u8Content) {
+    // 预分配数组大小，避免扩容开销
     const lines = m3u8Content.split('\n');
-    const filteredLines = [];
+    const len = lines.length;
+    let result = '';
 
-    for (let i = 0; i < lines.length; i++) {
+    // 字符串连接比数组 push 在现代 JS 引擎中往往更快，且内存占用更低
+    for (let i = 0; i < len; i++) {
         const line = lines[i];
-
-        // 只过滤#EXT-X-DISCONTINUITY标识
-        if (!line.includes('#EXT-X-DISCONTINUITY')) {
-            filteredLines.push(line);
+        // 仅剔除 DISCONTINUITY 标签
+        // 有些采集站在广告插入前后会加上这个标签，导致播放卡顿
+        if (line.indexOf('#EXT-X-DISCONTINUITY') === -1) {
+            result += line + '\n';
         }
     }
-
-    return filteredLines.join('\n');
+    return result;
 }
+
+
 
 
 // 显示错误
