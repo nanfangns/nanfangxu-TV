@@ -216,6 +216,7 @@ class AuthService {
 
 // 初始化
 const authService = new AuthService();
+window.authService = authService;
 
 // 全局提交函数
 let isRegisterMode = false;

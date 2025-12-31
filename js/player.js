@@ -117,7 +117,7 @@ let shortcutHintTimeout = null; // 用于控制快捷键提示显示时间
 let adFilteringEnabled = true; // 默认开启广告过滤
 let progressSaveInterval = null; // 定期保存进度的计时器
 let currentVideoUrl = ''; // 记录当前实际的视频URL
-const isWebkit = (typeof window.webkitConvertPointFromNodeToPage === 'function')
+const isWebkit = (typeof window.webkitConvertPointFromNodeToPage === 'function');
 // 已移除顶级 Artplayer 配置以避免加载顺序导致的报错
 
 // 页面加载
