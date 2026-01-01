@@ -196,7 +196,11 @@ export async function onRequest(context) {
     // 获取远程内容及其响应
     async function fetchContentWithType(targetUrl) {
         // 强制伪装 Referer 和 Origin 以绕过防盗链
-        const targetOrigin = new URL(targetUrl).origin;
+        const urlObj = new URL(targetUrl);
+        const targetOrigin = urlObj.origin;
+        // 使用规范化后的 URL (自动处理中文等特殊字符的编码)
+        const normalizedUrl = urlObj.href;
+
         const headers = new Headers({
             'User-Agent': getRandomUserAgent(),
             'Accept': '*/*',
@@ -206,8 +210,8 @@ export async function onRequest(context) {
         });
 
         try {
-            logDebug(`开始直接请求: ${targetUrl}`);
-            const response = await fetch(targetUrl, { headers, redirect: 'follow' });
+            logDebug(`开始直接请求: ${normalizedUrl}`);
+            const response = await fetch(normalizedUrl, { headers, redirect: 'follow' });
 
             // 移除错误抛出，直接透传响应状态，让前端 Hls.js 处理重试逻辑
             if (!response.ok) {

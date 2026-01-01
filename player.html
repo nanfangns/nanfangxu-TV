@@ -50,12 +50,71 @@
             </div>
         </div>
 
-        <div class="flex items-center">
+        <div class="flex items-center gap-2">
             <a href="#" id="goBack" onclick="goBack(event)" class="back-btn-premium scale-90 md:scale-100">
                 BACK
             </a>
         </div>
     </header>
+
+    <!-- 悬浮个人中心按钮 -->
+    <div class="floating-auth-container">
+        <button id="authButton" onclick="authService.showAuthModal()" class="floating-auth-btn" aria-label="个人中心">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+            </svg>
+        </button>
+    </div>
+
+    <!-- 历史记录面板 -->
+    <div id="historyPanel"
+        class="history-panel fixed left-0 top-0 h-full bg-[#111] border-r border-[#333] p-6 z-[10001] transform -translate-x-full transition-transform duration-300 flex flex-col"
+        aria-label="观看历史" aria-hidden="true">
+        <div class="flex justify-between items-center mb-6 flex-none">
+            <button onclick="toggleHistory()" class="close-btn">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                    </path>
+                </svg>
+            </button>
+            <h3 class="text-xl font-bold gradient-text mx-auto">观看历史</h3>
+            <div class="w-4"></div>
+        </div>
+        <div id="historyList" class="flex-1 overflow-y-auto pb-4 custom-scrollbar">
+            <div class="text-center text-gray-500 py-8">暂无观看记录</div>
+        </div>
+        <div class="mt-4 text-center border-t border-[#333] pt-4 flex-none">
+            <button onclick="clearViewingHistory()"
+                class="px-4 py-2.5 w-full bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-500 hover:to-green-500 text-white font-bold rounded-lg transition-all duration-300 shadow-lg hover:shadow-blue-500/20 flex justify-center items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                    </path>
+                </svg>
+                清空历史记录
+            </button>
+        </div>
+    </div>
+
+    <!-- 收藏夹面板 -->
+    <div id="favoritesPanel"
+        class="history-panel fixed left-0 top-0 h-full bg-[#111] border-r border-[#333] p-6 z-[10001] transform -translate-x-full transition-transform duration-300"
+        aria-label="我的收藏" aria-hidden="true">
+        <div class="flex justify-between items-center mb-6">
+            <button onclick="toggleFavorites()" class="close-btn">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                    </path>
+                </svg>
+            </button>
+            <h3 class="text-xl font-bold gradient-text mx-auto">我的收藏</h3>
+            <div class="w-4"></div>
+        </div>
+        <div id="favoritesList" class="pb-4 space-y-3">
+            <div class="text-center text-gray-500 py-8">暂无收藏记录</div>
+        </div>
+    </div>
 
     <!-- 旧密码验证模块已移除 -->
 
@@ -138,8 +197,7 @@
                 <!-- 把各种功能按钮放在右侧 - 在小屏幕上各自占一行 -->
                 <div class="flex flex-wrap justify-end gap-2">
                     <!-- 收藏按钮 -->
-                    <button id="favoriteBtn" onclick="toggleCurrentFavorite()"
-                        class="px-3 py-1 bg-[#222] hover:bg-[#333] border border-[#333] rounded-lg transition-colors flex items-center space-x-1 flex-shrink-0 text-gray-400">
+                    <button id="favoriteBtn" onclick="toggleCurrentFavorite()" class="fav-btn-premium">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -266,6 +324,7 @@
     <script src="js/ui.js?v=1.2"></script>
     <script src="js/api.js?v=1.2"></script>
     <script src="js/search.js?v=1.2"></script>
+    <script src="js/auth.js?v=1.2"></script>
     <script src="js/player.js?v=1.2"></script>
     <script src="js/favorites.js"></script>
 

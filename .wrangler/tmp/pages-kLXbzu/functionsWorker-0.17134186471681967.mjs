@@ -1,7 +1,7 @@
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 
-// ../.wrangler/tmp/bundle-DDehhx/checked-fetch.js
+// ../.wrangler/tmp/bundle-9KcI35/checked-fetch.js
 var urls = /* @__PURE__ */ new Set();
 function checkURL(request, init) {
   const url = request instanceof URL ? request : new URL(
@@ -388,7 +388,9 @@ async function onRequest2(context) {
   }
   __name(rewriteUrlToProxy, "rewriteUrlToProxy");
   async function fetchContentWithType(targetUrl) {
-    const targetOrigin = new URL(targetUrl).origin;
+    const urlObj = new URL(targetUrl);
+    const targetOrigin = urlObj.origin;
+    const normalizedUrl = urlObj.href;
     const headers = new Headers({
       "User-Agent": getRandomUserAgent(),
       "Accept": "*/*",
@@ -397,8 +399,8 @@ async function onRequest2(context) {
       "Origin": targetOrigin
     });
     try {
-      logDebug(`\u5F00\u59CB\u76F4\u63A5\u8BF7\u6C42: ${targetUrl}`);
-      const response = await fetch(targetUrl, { headers, redirect: "follow" });
+      logDebug(`\u5F00\u59CB\u76F4\u63A5\u8BF7\u6C42: ${normalizedUrl}`);
+      const response = await fetch(normalizedUrl, { headers, redirect: "follow" });
       if (!response.ok) {
         logDebug(`\u4E0A\u6E38\u8FD4\u56DE\u975E 200 \u72B6\u6001: ${response.status} ${response.statusText} - ${targetUrl}`);
       }
@@ -1176,7 +1178,7 @@ var jsonError = /* @__PURE__ */ __name(async (request, env, _ctx, middlewareCtx)
 }, "jsonError");
 var middleware_miniflare3_json_error_default = jsonError;
 
-// ../.wrangler/tmp/bundle-DDehhx/middleware-insertion-facade.js
+// ../.wrangler/tmp/bundle-9KcI35/middleware-insertion-facade.js
 var __INTERNAL_WRANGLER_MIDDLEWARE__ = [
   middleware_ensure_req_body_drained_default,
   middleware_miniflare3_json_error_default
@@ -1208,7 +1210,7 @@ function __facade_invoke__(request, env, ctx, dispatch, finalMiddleware) {
 }
 __name(__facade_invoke__, "__facade_invoke__");
 
-// ../.wrangler/tmp/bundle-DDehhx/middleware-loader.entry.ts
+// ../.wrangler/tmp/bundle-9KcI35/middleware-loader.entry.ts
 var __Facade_ScheduledController__ = class ___Facade_ScheduledController__ {
   constructor(scheduledTime, cron, noRetry) {
     this.scheduledTime = scheduledTime;

@@ -169,15 +169,14 @@ const FavoritesService = {
 // 辅助函数：更新按钮视觉状态
 function updateFavoriteButtonState(btn, isFavorite) {
     if (!btn) return;
-    const icon = btn.querySelector('svg');
+    const textSpan = btn.querySelector('span');
+
     if (isFavorite) {
-        btn.classList.add('text-red-500');
-        btn.classList.remove('text-gray-400');
-        if (icon) icon.setAttribute('fill', 'currentColor');
+        btn.classList.add('active');
+        if (textSpan) textSpan.textContent = '已收藏';
     } else {
-        btn.classList.remove('text-red-500');
-        btn.classList.add('text-gray-400');
-        if (icon) icon.setAttribute('fill', 'none');
+        btn.classList.remove('active');
+        if (textSpan) textSpan.textContent = '收藏';
     }
 }
 

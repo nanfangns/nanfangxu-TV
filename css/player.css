@@ -633,3 +633,143 @@ input:checked+.slider:before {
 #username {
     display: none !important;
 }
+
+/* 播放器页面悬浮个人中心按钮 */
+.floating-auth-container {
+    position: fixed;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10000;
+}
+
+.floating-auth-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: rgba(5, 8, 15, 0.75);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(0, 242, 255, 0.3);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5), 0 0 10px rgba(0, 242, 255, 0.2);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.floating-auth-btn:hover {
+    transform: scale(1.1);
+    border-color: var(--tech-blue);
+    box-shadow: 0 8px 25px rgba(0, 242, 255, 0.3);
+    background: rgba(0, 242, 255, 0.1);
+}
+
+.floating-auth-btn:active {
+    transform: scale(0.95);
+}
+
+.floating-auth-btn svg {
+    width: 24px;
+    height: 24px;
+}
+
+/* 侧边栏在播放器页面的层级调整 */
+.history-panel {
+    z-index: 10001 !important;
+}
+
+@media (max-width: 640px) {
+    .floating-auth-container {
+        right: 10px;
+        top: 60%;
+        /* 移动端稍微往下一点，避免遮挡 */
+    }
+
+    .floating-auth-btn {
+        width: 42px;
+        height: 42px;
+    }
+}
+
+/* 极致收藏按钮重构 - 高级感与少年感并存 */
+.fav-btn-premium {
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #94a3b8;
+    padding: 6px 16px;
+    border-radius: 99px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.fav-btn-premium::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transition: 0.5s;
+}
+
+.fav-btn-premium:hover {
+    background: rgba(30, 41, 59, 0.8);
+    border-color: rgba(255, 71, 87, 0.4);
+    transform: translateY(-2px);
+    color: #f1f5f9;
+    box-shadow: 0 6px 15px rgba(255, 71, 87, 0.15);
+}
+
+.fav-btn-premium:hover::before {
+    left: 100%;
+}
+
+.fav-btn-premium svg {
+    width: 18px;
+    height: 18px;
+    transition: transform 0.3s ease;
+}
+
+.fav-btn-premium:active {
+    transform: scale(0.95);
+}
+
+/* 激活状态 (已收藏) */
+.fav-btn-premium.active {
+    background: rgba(255, 71, 87, 0.1);
+    border-color: #ff4757;
+    color: #ff4757;
+    box-shadow: 0 0 15px rgba(255, 71, 87, 0.3);
+    animation: fav-pulse 2s infinite;
+}
+
+.fav-btn-premium.active svg {
+    fill: #ff4757;
+    transform: scale(1.1);
+    filter: drop-shadow(0 0 5px rgba(255, 71, 87, 0.5));
+}
+
+@keyframes fav-pulse {
+    0% {
+        box-shadow: 0 0 15px rgba(255, 71, 87, 0.3);
+    }
+
+    50% {
+        box-shadow: 0 0 25px rgba(255, 71, 87, 0.5);
+    }
+
+    100% {
+        box-shadow: 0 0 15px rgba(255, 71, 87, 0.3);
+    }
+}
