@@ -56,9 +56,24 @@ class AuthService {
     }
 
     // 登出
-    logout() {
+    async logout() {
+        // --- 修复：退出前强制同步数据 ---
+        // 防止用户在产生数据后立即退出（少于防抖时间），导致数据未上传
+        if (this.isLoggedIn) {
+            const btn = document.getElementById('authButton');
+            if (btn) btn.innerHTML = '<span class="text-xs">同步中...</span>';
+            await this.pushSync(); // 强制等待同步完成
+        }
+
         localStorage.removeItem(AUTH_TOKEN_KEY);
         localStorage.removeItem(USER_INFO_KEY);
+
+        // --- 修复：登出时清理所有用户敏感数据，防止隐私泄露 ---
+        localStorage.removeItem('viewingHistory');
+        localStorage.removeItem('searchHistory');
+        localStorage.removeItem('favorites');
+        localStorage.removeItem('settings');
+
         this.token = null;
         this.user = null;
         this.isLoggedIn = false;
@@ -103,19 +118,22 @@ class AuthService {
         }
     }
 
-    // 推送数据到云端
+    // 推送数据到云端 (添加 debounce 逻辑)
     async pushSync() {
         if (!this.isLoggedIn) return;
+        // 如果正在从云端拉取数据，暂停推送，防止覆盖
+        if (this.isPulling) return;
 
+        // 获取最新的本地数据
         const syncData = {
-            viewing_history: JSON.parse(localStorage.getItem('viewingHistory') || '[]'),
-            search_history: JSON.parse(localStorage.getItem('searchHistory') || '[]'),
-            favorites: JSON.parse(localStorage.getItem('favorites') || '[]'),
-            settings: JSON.parse(localStorage.getItem('settings') || '{}')
+            viewing_history: localStorage.getItem('viewingHistory') || '[]',
+            search_history: localStorage.getItem('searchHistory') || '[]',
+            favorites: localStorage.getItem('favorites') || '[]',
+            settings: localStorage.getItem('settings') || '{}'
         };
 
         try {
-            await fetch('/api/user/sync', {
+            const response = await fetch('/api/user/sync', {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${this.token}`,
@@ -123,6 +141,12 @@ class AuthService {
                 },
                 body: JSON.stringify(syncData)
             });
+            const result = await response.json();
+            if (result.success) {
+                // console.log('数据已成功同步至云端');
+            } else if (result.error) {
+                alert('云端同步失败: ' + result.error);
+            }
         } catch (e) {
             console.error('云端同步失败:', e);
         }
@@ -132,17 +156,23 @@ class AuthService {
     async pullSync() {
         if (!this.isLoggedIn) return;
 
+        // 设置拉取状态锁
+        this.isPulling = true;
+
         try {
             const response = await fetch('/api/user/sync', {
                 headers: { 'Authorization': `Bearer ${this.token}` }
             });
             const data = await response.json();
 
+            if (data.error) {
+                alert('从云端拉取数据失败: ' + data.error);
+                return;
+            }
+
+            // 如果拉取成功
             if (data.viewing_history) {
-                const cloudHistory = JSON.parse(data.viewing_history);
-                if (cloudHistory.length > 0) {
-                    localStorage.setItem('viewingHistory', data.viewing_history);
-                }
+                localStorage.setItem('viewingHistory', data.viewing_history);
             }
             if (data.search_history) {
                 localStorage.setItem('searchHistory', data.search_history);
@@ -150,16 +180,24 @@ class AuthService {
             if (data.favorites) {
                 localStorage.setItem('favorites', data.favorites);
             }
+            if (data.settings) {
+                localStorage.setItem('settings', data.settings);
+            }
 
-            // 重新刷新 UI 以展示新历史记录
+            // 重新刷新 UI 以展示新数据
             if (typeof loadViewingHistory === 'function') loadViewingHistory();
             if (typeof renderSearchHistory === 'function') renderSearchHistory();
-            if (window.FavoritesService && typeof window.FavoritesService.renderFavoritesPanel === 'function') {
-                window.FavoritesService.renderFavoritesPanel();
+            if (window.FavoritesService && typeof window.FavoritesService.updateUI === 'function') {
+                window.FavoritesService.updateUI();
             }
 
         } catch (e) {
             console.error('拉取云端数据失败:', e);
+        } finally {
+            // 释放锁，允许后续变动触发推送
+            setTimeout(() => {
+                this.isPulling = false;
+            }, 500); // 延迟释放，确保 UI 更新引发的变动不触发推送
         }
     }
 
@@ -178,7 +216,7 @@ class AuthService {
         }
 
         const modalHtml = `
-            <div id="authModal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in">
+            <div id="authModal" class="fixed inset-0 z-[99999] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in">
                 <div class="w-[90%] max-w-md p-8 rounded-2xl bg-gray-900 border border-white/10 shadow-2xl relative overflow-hidden">
                     <div class="absolute -top-24 -right-24 w-48 h-48 bg-primary/20 blur-[100px] rounded-full"></div>
                     
@@ -218,7 +256,7 @@ class AuthService {
         const firstChar = username[0].toUpperCase();
 
         const userHtml = `
-            <div id="authModal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in">
+            <div id="authModal" class="fixed inset-0 z-[99999] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in">
                 <div class="w-[90%] max-w-sm p-8 rounded-2xl bg-gray-900 border border-white/10 shadow-2xl relative">
                     <button onclick="document.getElementById('authModal').remove()" class="absolute right-4 top-4 text-gray-400 hover:text-white transition-colors">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -283,6 +321,8 @@ async function handleAuthSubmit() {
             toggleAuthMode(); // 切换回登录
         } else {
             document.getElementById('authModal').remove();
+            // 登录成功后自动刷新页面，重置所有组件状态（特别是播放器拦截）
+            location.reload();
         }
     }
     btn.disabled = false;

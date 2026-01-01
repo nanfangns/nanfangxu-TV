@@ -744,8 +744,14 @@ function addToViewingHistory(videoInfo) {
 
         // 保存到本地存储
         localStorage.setItem('viewingHistory', JSON.stringify(history));
+
+        // 触发自动同步 (如果已登录)
+        if (window.authService && window.authService.isLoggedIn) {
+            if (window.historySyncTimer) clearTimeout(window.historySyncTimer);
+            window.historySyncTimer = setTimeout(() => window.authService.pushSync(), 2000);
+        }
     } catch (e) {
-        // console.error('保存观看历史失败:', e);
+        console.error('保存观看历史失败:', e);
     }
 }
 

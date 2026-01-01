@@ -56,32 +56,27 @@ globalThis.fetch = new Proxy(globalThis.fetch, {
   }
 });
 var JWT_ALGO = { name: "HMAC", hash: "SHA-256" };
-async function hashPassword(password) {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password);
-  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-  return Array.from(new Uint8Array(hashBuffer)).map((b) => b.toString(16).padStart(2, "0")).join("");
+async function verifyToken(token, secret) {
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) return null;
+    const [header, payload, signature] = parts;
+    const encoder = new TextEncoder();
+    const keyData = encoder.encode(secret);
+    const key = await crypto.subtle.importKey("raw", keyData, JWT_ALGO, false, ["verify"]);
+    const tokenBase = `${header}.${payload}`;
+    const sigData = Uint8Array.from(atob(signature.replace(/-/g, "+").replace(/_/g, "/")), (c) => c.charCodeAt(0));
+    const isValid = await crypto.subtle.verify("HMAC", key, sigData, encoder.encode(tokenBase));
+    if (!isValid) return null;
+    const decodedPayload = JSON.parse(atob(payload));
+    if (decodedPayload.exp < Math.floor(Date.now() / 1e3)) return null;
+    return decodedPayload;
+  } catch (e) {
+    return null;
+  }
 }
-__name(hashPassword, "hashPassword");
-__name2(hashPassword, "hashPassword");
-async function createToken(user, secret) {
-  const header = btoa(JSON.stringify({ alg: "HS256", typ: "JWT" }));
-  const payload = btoa(JSON.stringify({
-    id: user.id,
-    username: user.username,
-    exp: Math.floor(Date.now() / 1e3) + 7 * 24 * 60 * 60
-    // 7天过期
-  }));
-  const tokenBase = `${header}.${payload}`;
-  const encoder = new TextEncoder();
-  const keyData = encoder.encode(secret);
-  const key = await crypto.subtle.importKey("raw", keyData, JWT_ALGO, false, ["sign"]);
-  const signatureBuffer = await crypto.subtle.sign("HMAC", key, encoder.encode(tokenBase));
-  const signature = btoa(String.fromCharCode(...new Uint8Array(signatureBuffer))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
-  return `${tokenBase}.${signature}`;
-}
-__name(createToken, "createToken");
-__name2(createToken, "createToken");
+__name(verifyToken, "verifyToken");
+__name2(verifyToken, "verifyToken");
 var INIT_SQL = [
   `CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -102,8 +97,122 @@ var INIT_SQL = [
 ];
 async function ensureTables(db) {
   try {
-    console.log("Initializing database tables...");
     for (const sql of INIT_SQL) {
+      await db.prepare(sql).run();
+    }
+  } catch (e) {
+    console.error("Failed to initialize database:", e);
+  }
+}
+__name(ensureTables, "ensureTables");
+__name2(ensureTables, "ensureTables");
+async function onRequest(context) {
+  const { request, env } = context;
+  if (!env || !env.DB) {
+    return new Response(JSON.stringify({ error: "\u6570\u636E\u5E93\u672A\u7ED1\u5B9A (env.DB is missing)" }), { status: 500 });
+  }
+  const authHeader = request.headers.get("Authorization");
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return new Response(JSON.stringify({ error: "\u672A\u6388\u6743" }), { status: 401 });
+  }
+  const token = authHeader.split(" ")[1];
+  const user = await verifyToken(token, env.JWT_SECRET || "default_secret");
+  if (!user) {
+    return new Response(JSON.stringify({ error: "Token \u65E0\u6548\u6216\u5DF2\u8FC7\u671F" }), { status: 401 });
+  }
+  async function handleRequest(isRetry = false) {
+    try {
+      if (request.method === "GET") {
+        const data = await env.DB.prepare(
+          "SELECT viewing_history, search_history, favorites, settings FROM user_data WHERE user_id = ?"
+        ).bind(user.id).first();
+        return new Response(JSON.stringify(data || {}));
+      }
+      if (request.method === "POST") {
+        const { viewing_history, search_history, favorites, settings } = await request.json();
+        const { success } = await env.DB.prepare(
+          `INSERT INTO user_data (user_id, viewing_history, search_history, favorites, settings, updated_at)
+                     VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                     ON CONFLICT(user_id) DO UPDATE SET
+                     viewing_history = COALESCE(excluded.viewing_history, viewing_history),
+                     search_history = COALESCE(excluded.search_history, search_history),
+                     favorites = COALESCE(excluded.favorites, favorites),
+                     settings = COALESCE(excluded.settings, settings),
+                     updated_at = CURRENT_TIMESTAMP`
+        ).bind(
+          user.id,
+          viewing_history || null,
+          search_history || null,
+          favorites || null,
+          settings || null
+        ).run();
+        return new Response(JSON.stringify({ success }));
+      }
+      return new Response("Method Not Allowed", { status: 405 });
+    } catch (e) {
+      if (!isRetry && e.message && (e.message.includes("no such table") || e.message.includes("SQLITE_ERROR"))) {
+        console.log("Datatabase table missing detected in user.js. Auto-healing...");
+        await ensureTables(env.DB);
+        return handleRequest(true);
+      }
+      return new Response(JSON.stringify({ error: e.message || "Unknown DB Error" }), { status: 500 });
+    }
+  }
+  __name(handleRequest, "handleRequest");
+  __name2(handleRequest, "handleRequest");
+  return handleRequest();
+}
+__name(onRequest, "onRequest");
+__name2(onRequest, "onRequest");
+var JWT_ALGO2 = { name: "HMAC", hash: "SHA-256" };
+async function hashPassword(password) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(hashBuffer)).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+__name(hashPassword, "hashPassword");
+__name2(hashPassword, "hashPassword");
+async function createToken(user, secret) {
+  const header = btoa(JSON.stringify({ alg: "HS256", typ: "JWT" }));
+  const payload = btoa(JSON.stringify({
+    id: user.id,
+    username: user.username,
+    exp: Math.floor(Date.now() / 1e3) + 7 * 24 * 60 * 60
+    // 7天过期
+  }));
+  const tokenBase = `${header}.${payload}`;
+  const encoder = new TextEncoder();
+  const keyData = encoder.encode(secret);
+  const key = await crypto.subtle.importKey("raw", keyData, JWT_ALGO2, false, ["sign"]);
+  const signatureBuffer = await crypto.subtle.sign("HMAC", key, encoder.encode(tokenBase));
+  const signature = btoa(String.fromCharCode(...new Uint8Array(signatureBuffer))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+  return `${tokenBase}.${signature}`;
+}
+__name(createToken, "createToken");
+__name2(createToken, "createToken");
+var INIT_SQL2 = [
+  `CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE NOT NULL,
+        password_hash TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`,
+  `CREATE TABLE IF NOT EXISTS user_data (
+        user_id INTEGER PRIMARY KEY,
+        viewing_history TEXT,
+        search_history TEXT,
+        favorites TEXT,
+        settings TEXT,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+    )`,
+  `CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)`
+];
+async function ensureTables2(db) {
+  try {
+    console.log("Initializing database tables...");
+    for (const sql of INIT_SQL2) {
       await db.prepare(sql).run();
     }
     console.log("Database initialized successfully.");
@@ -111,8 +220,8 @@ async function ensureTables(db) {
     console.error("Failed to initialize database:", e);
   }
 }
-__name(ensureTables, "ensureTables");
-__name2(ensureTables, "ensureTables");
+__name(ensureTables2, "ensureTables2");
+__name2(ensureTables2, "ensureTables");
 async function onRequestPost(context) {
   const { request, env } = context;
   const url = new URL(request.url);
@@ -165,7 +274,7 @@ async function onRequestPost(context) {
     } catch (e) {
       if (!isRetry && e.message && (e.message.includes("no such table") || e.message.includes("SQLITE_ERROR"))) {
         console.log("Table missing detected. Attempting to initialize DB...");
-        await ensureTables(env.DB);
+        await ensureTables2(env.DB);
         return handleRequest(true);
       }
       return new Response(JSON.stringify({ error: e.message }), { status: 500 });
@@ -177,68 +286,6 @@ async function onRequestPost(context) {
 }
 __name(onRequestPost, "onRequestPost");
 __name2(onRequestPost, "onRequestPost");
-var JWT_ALGO2 = { name: "HMAC", hash: "SHA-256" };
-async function verifyToken(token, secret) {
-  try {
-    const parts = token.split(".");
-    if (parts.length !== 3) return null;
-    const [header, payload, signature] = parts;
-    const encoder = new TextEncoder();
-    const keyData = encoder.encode(secret);
-    const key = await crypto.subtle.importKey("raw", keyData, JWT_ALGO2, false, ["verify"]);
-    const tokenBase = `${header}.${payload}`;
-    const sigData = Uint8Array.from(atob(signature.replace(/-/g, "+").replace(/_/g, "/")), (c) => c.charCodeAt(0));
-    const isValid = await crypto.subtle.verify("HMAC", key, sigData, encoder.encode(tokenBase));
-    if (!isValid) return null;
-    const decodedPayload = JSON.parse(atob(payload));
-    if (decodedPayload.exp < Math.floor(Date.now() / 1e3)) return null;
-    return decodedPayload;
-  } catch (e) {
-    return null;
-  }
-}
-__name(verifyToken, "verifyToken");
-__name2(verifyToken, "verifyToken");
-async function onRequest(context) {
-  const { request, env } = context;
-  const authHeader = request.headers.get("Authorization");
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return new Response(JSON.stringify({ error: "\u672A\u6388\u6743" }), { status: 401 });
-  }
-  const token = authHeader.split(" ")[1];
-  const user = await verifyToken(token, env.JWT_SECRET || "default_secret");
-  if (!user) {
-    return new Response(JSON.stringify({ error: "Token \u65E0\u6548\u6216\u5DF2\u8FC7\u671F" }), { status: 401 });
-  }
-  if (request.method === "GET") {
-    const data = await env.DB.prepare(
-      "SELECT viewing_history, search_history, favorites, settings FROM user_data WHERE user_id = ?"
-    ).bind(user.id).first();
-    return new Response(JSON.stringify(data || {}));
-  }
-  if (request.method === "POST") {
-    const { viewing_history, search_history, favorites, settings } = await request.json();
-    const { success } = await env.DB.prepare(
-      `UPDATE user_data SET
-             viewing_history = COALESCE(?, viewing_history),
-             search_history = COALESCE(?, search_history),
-             favorites = COALESCE(?, favorites),
-             settings = COALESCE(?, settings),
-             updated_at = CURRENT_TIMESTAMP
-             WHERE user_id = ?`
-    ).bind(
-      viewing_history ? JSON.stringify(viewing_history) : null,
-      search_history ? JSON.stringify(search_history) : null,
-      favorites ? JSON.stringify(favorites) : null,
-      settings ? JSON.stringify(settings) : null,
-      user.id
-    ).run();
-    return new Response(JSON.stringify({ success }));
-  }
-  return new Response("Method Not Allowed", { status: 405 });
-}
-__name(onRequest, "onRequest");
-__name2(onRequest, "onRequest");
 var MEDIA_FILE_EXTENSIONS = [
   ".mp4",
   ".webm",
@@ -706,18 +753,18 @@ __name(onRequest3, "onRequest3");
 __name2(onRequest3, "onRequest");
 var routes = [
   {
+    routePath: "/api/user/sync",
+    mountPath: "/api/user",
+    method: "",
+    middlewares: [],
+    modules: [onRequest]
+  },
+  {
     routePath: "/api/auth/:path*",
     mountPath: "/api/auth",
     method: "POST",
     middlewares: [],
     modules: [onRequestPost]
-  },
-  {
-    routePath: "/api/user",
-    mountPath: "/api",
-    method: "",
-    middlewares: [],
-    modules: [onRequest]
   },
   {
     routePath: "/proxy/:path*",
