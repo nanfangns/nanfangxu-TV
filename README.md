@@ -8,7 +8,7 @@
 
 ## 📺 项目简介
 
-南方许 是一个轻量级、免费的在线视频搜索与观看平台，提供来自多个视频源的内容搜索与播放服务。无需注册，即开即用，支持多种设备访问。项目结合了前端技术和后端代理功能，可部署在支持服务端功能的各类网站托管服务上。**项目门户**： [nanfangxu.is-an.org](https://nanfangxu.is-an.org)
+南方许 是一个轻量级、免费的在线视频搜索与观看平台，提供来自多个视频源的内容搜索与播放服务。无需强制注册，即可直接使用基础功能；登录后可启用播放记录、收藏夹与设置同步。项目结合了前端技术和后端代理功能，可部署在支持服务端功能的各类网站托管服务上。**项目门户**： [nanfangxu.is-an.org](https://nanfangxu.is-an.org)
 
 本项目基于 [bestK/tv](https://github.com/bestK/tv) 进行重构与增强。
 
@@ -27,7 +27,7 @@
 
 ## 🚨 重要声明
 
-- 本项目仅供学习和个人使用，为避免版权纠纷，必须设置PASSWORD环境变量
+- 本项目仅供学习和个人使用，为避免版权纠纷，必须设置 PASSWORD 环境变量
 - 请勿将部署的实例用于商业用途或公开服务
 - 如因公开分享导致的任何法律问题，用户需自行承担责任
 - 项目开发者不对用户的使用行为承担任何法律责任
@@ -123,6 +123,40 @@ npm run dev
 ### 密码保护
 
 **重要提示**: 为确保安全，所有部署都必须设置 PASSWORD 环境变量，否则用户将看到设置密码的提示。
+
+### 账号系统（可选）
+
+项目已内置账号系统，登录后可同步播放记录、收藏夹、搜索历史与设置（基于 Cloudflare Functions + D1 数据库）。
+
+**必要环境变量：**
+- `DB`：Cloudflare D1 数据库绑定（必需）
+- `JWT_SECRET`：JWT 签名密钥（必需，生产环境请务必设置）
+
+**相关接口：**
+- `POST /api/auth/register`：注册
+- `POST /api/auth/login`：登录
+- `GET /api/user/sync`：拉取用户数据
+- `POST /api/user/sync`：同步用户数据
+
+> 未配置 `DB` 与 `JWT_SECRET` 时，账号功能将不可用，但基础搜索与播放仍可使用。
+
+### 环境变量参考
+
+#### 代理与安全
+- `PASSWORD`：代理访问鉴权密码（必需）
+- `USER_AGENTS_JSON`：自定义代理请求的 User-Agent 列表（JSON 数组）
+- `DEBUG`：开启调试日志（`true`/`false`）
+
+#### Node 本地/自建服务器（`server.mjs`）
+- `PORT`：服务端口（默认 8080）
+- `CORS_ORIGIN`：CORS 允许来源（默认 `*`）
+- `REQUEST_TIMEOUT`：代理请求超时（毫秒，默认 5000）
+- `MAX_RETRIES`：代理重试次数（默认 2）
+- `CACHE_MAX_AGE`：静态资源缓存时长（默认 `1d`）
+- `USER_AGENT`：代理请求的 User-Agent
+- `BLOCKED_HOSTS`：代理禁止访问的主机名（逗号分隔）
+- `BLOCKED_IP_PREFIXES`：代理禁止访问的 IP 段前缀（逗号分隔）
+- `FILTERED_HEADERS`：过滤响应头列表（逗号分隔）
 
 
 ### API兼容性
