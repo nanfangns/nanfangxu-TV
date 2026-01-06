@@ -1,7 +1,7 @@
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 
-// ../.wrangler/tmp/bundle-GV8Vtn/checked-fetch.js
+// ../.wrangler/tmp/bundle-rKeqH6/checked-fetch.js
 var urls = /* @__PURE__ */ new Set();
 function checkURL(request, init) {
   const url = request instanceof URL ? request : new URL(
@@ -228,10 +228,33 @@ async function onRequest3(context) {
       }
       return new Response("Method Not Allowed", { status: 405 });
     } catch (e) {
-      if (!isRetry && e.message && (e.message.includes("no such table") || e.message.includes("SQLITE_ERROR"))) {
-        console.log("Datatabase table missing detected in user.js. Auto-healing...");
-        await ensureTables(env.DB);
-        return handleRequest(true);
+      if (!isRetry) {
+        if (e.message && (e.message.includes("no such table") || e.message.includes("SQLITE_ERROR"))) {
+          console.log("Database table missing detected in user.js. Auto-healing...");
+          await ensureTables(env.DB);
+          return handleRequest(true);
+        }
+        if (e.message && e.message.includes("FOREIGN KEY constraint failed")) {
+          console.log("Foreign key constraint error detected. Checking user existence...");
+          const userExists = await env.DB.prepare(
+            "SELECT id FROM users WHERE id = ?"
+          ).bind(user.id).first();
+          if (!userExists) {
+            return new Response(JSON.stringify({
+              error: "\u7528\u6237\u4E0D\u5B58\u5728\uFF0C\u8BF7\u91CD\u65B0\u767B\u5F55",
+              code: "USER_NOT_FOUND"
+            }), { status: 401 });
+          }
+          try {
+            await env.DB.prepare(
+              "DELETE FROM user_data WHERE user_id NOT IN (SELECT id FROM users)"
+            ).run();
+            console.log("Cleaned orphaned user_data records");
+            return handleRequest(true);
+          } catch (cleanError) {
+            console.error("Failed to clean orphaned records:", cleanError);
+          }
+        }
       }
       return new Response(JSON.stringify({ error: e.message || "Unknown DB Error" }), { status: 500 });
     }
@@ -820,7 +843,7 @@ async function onRequest5(context) {
 }
 __name(onRequest5, "onRequest");
 
-// ../.wrangler/tmp/pages-kLXbzu/functionsRoutes-0.6531042051523306.mjs
+// ../.wrangler/tmp/pages-UuhwMS/functionsRoutes-0.016089521326736134.mjs
 var routes = [
   {
     routePath: "/api/admin/stats",
@@ -1353,7 +1376,7 @@ var jsonError = /* @__PURE__ */ __name(async (request, env, _ctx, middlewareCtx)
 }, "jsonError");
 var middleware_miniflare3_json_error_default = jsonError;
 
-// ../.wrangler/tmp/bundle-GV8Vtn/middleware-insertion-facade.js
+// ../.wrangler/tmp/bundle-rKeqH6/middleware-insertion-facade.js
 var __INTERNAL_WRANGLER_MIDDLEWARE__ = [
   middleware_ensure_req_body_drained_default,
   middleware_miniflare3_json_error_default
@@ -1385,7 +1408,7 @@ function __facade_invoke__(request, env, ctx, dispatch, finalMiddleware) {
 }
 __name(__facade_invoke__, "__facade_invoke__");
 
-// ../.wrangler/tmp/bundle-GV8Vtn/middleware-loader.entry.ts
+// ../.wrangler/tmp/bundle-rKeqH6/middleware-loader.entry.ts
 var __Facade_ScheduledController__ = class ___Facade_ScheduledController__ {
   constructor(scheduledTime, cron, noRetry) {
     this.scheduledTime = scheduledTime;
@@ -1485,4 +1508,4 @@ export {
   __INTERNAL_WRANGLER_MIDDLEWARE__,
   middleware_loader_entry_default as default
 };
-//# sourceMappingURL=functionsWorker-0.17134186471681967.mjs.map
+//# sourceMappingURL=functionsWorker-0.2393474883676351.mjs.map

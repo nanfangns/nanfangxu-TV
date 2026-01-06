@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LibreTV Overseer | 控制台</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet">
+
+    <script src="libs/tailwindcss.min.js"></script>
+    <link rel="stylesheet" href="css/styles.css">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #050505;
+            color: white;
+        }
+
+        .font-tech {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        /* Glassmorphism Utilities */
+        .glass-panel {
+            background: rgba(17, 17, 22, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .glass-panel:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+            background: rgba(17, 17, 22, 0.8);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* Animation for Live Indicator */
+        @keyframes pulse-glow {
+
+            0%,
+            100% {
+                box-shadow: 0 0 5px rgba(34, 197, 94, 0.2);
+            }
+
+            50% {
+                box-shadow: 0 0 15px rgba(34, 197, 94, 0.6);
+            }
+        }
+
+        .live-dot {
+            animation: pulse-glow 2s infinite;
+        }
+    </style>
+</head>
+
+<body class="selection:bg-yellow-500/30">
+
+    <!-- BACKGROUND AMBIENCE -->
+    <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        <div
+            class="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-blue-900/10 blur-[120px] rounded-full mix-blend-screen">
+        </div>
+        <div
+            class="absolute bottom-[-10%] right-[-10%] w-[40vw] h-[40vw] bg-purple-900/10 blur-[100px] rounded-full mix-blend-screen">
+        </div>
+        <div
+            class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wMykiLz48L3N2Zz4=')] opacity-50">
+        </div>
+    </div>
+
+    <!-- SIDEBAR: Fixed Left + Glass Effect -->
+    <aside
+        class="fixed top-0 left-0 bottom-0 w-72 bg-[#0a0a0f]/95 backdrop-blur-xl border-r border-white/5 z-50 flex flex-col">
+        <!-- Logo -->
+        <div class="h-24 flex items-center px-8 border-b border-white/5 relative overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-r from-yellow-500/5 to-transparent opacity-50"></div>
+            <div class="flex items-center gap-4 relative z-10">
+                <div
+                    class="w-9 h-9 bg-yellow-500 rounded flex items-center justify-center text-black font-tech font-bold text-lg shadow-[0_0_20px_rgba(234,179,8,0.4)]">
+                    L
+                </div>
+                <div class="flex flex-col">
+                    <span class="font-tech text-lg font-bold tracking-[0.2em] text-white leading-none">OVERSEER</span>
+                    <span
+                        class="text-[9px] text-yellow-500/80 tracking-widest mt-1.5 uppercase font-bold">Administration</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="flex-1 py-8 px-4 space-y-2 overflow-y-auto">
+            <div class="px-4 mb-2 text-[10px] font-bold text-gray-600 uppercase tracking-widest">Core Modules</div>
+
+            <a href="#" onclick="switchView('dashboard')" id="nav-dashboard"
+                class="group flex items-center gap-4 px-4 py-4 rounded-xl transition-all duration-300 border-l-2 border-transparent relative overflow-hidden">
+                <!-- Hover Glow -->
+                <div class="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+
+                <svg class="w-5 h-5 text-gray-400 group-hover:text-yellow-400 transition-colors relative z-10"
+                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z">
+                    </path>
+                </svg>
+                <div class="flex flex-col relative z-10">
+                    <span class="font-medium text-sm text-gray-400 group-hover:text-white transition-colors">系统概览</span>
+                    <span
+                        class="text-[10px] text-gray-600 group-hover:text-gray-500 font-tech uppercase tracking-wider">Dashboard</span>
+                </div>
+            </a>
+
+            <a href="#" onclick="switchView('users')" id="nav-users"
+                class="group flex items-center gap-4 px-4 py-4 rounded-xl transition-all duration-300 border-l-2 border-transparent relative overflow-hidden">
+                <!-- Hover Glow -->
+                <div class="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+
+                <svg class="w-5 h-5 text-gray-400 group-hover:text-cyan-400 transition-colors relative z-10" fill="none"
+                    stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z">
+                    </path>
+                </svg>
+                <div class="flex flex-col relative z-10">
+                    <span class="font-medium text-sm text-gray-400 group-hover:text-white transition-colors">用户管理</span>
+                    <span
+                        class="text-[10px] text-gray-600 group-hover:text-gray-500 font-tech uppercase tracking-wider">Users</span>
+                </div>
+            </a>
+
+            <div class="my-6 mx-4 border-t border-white/5"></div>
+
+            <a href="/index.html"
+                class="flex items-center gap-4 px-4 py-3 group opacity-70 hover:opacity-100 transition-opacity">
+                <div
+                    class="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-gray-400 group-hover:text-green-400 group-hover:bg-green-500/10 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                    </svg>
+                </div>
+                <span class="text-sm font-medium text-gray-400 group-hover:text-white">返回前台</span>
+            </a>
+        </nav>
+
+        <!-- User Profile -->
+        <div class="p-6 border-t border-white/5 bg-[#050508]">
+            <div class="glass-panel p-3 rounded-xl flex items-center gap-3 cursor-pointer group hover:border-red-500/30 transition-colors"
+                onclick="localStorage.removeItem('libretv_auth_token'); location.href='/index.html'">
+                <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-yellow-500 to-yellow-700 p-[1px]">
+                    <div class="w-full h-full bg-[#111] rounded-[7px] flex items-center justify-center">
+                        <span class="text-xs font-bold text-yellow-500">OP</span>
+                    </div>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="text-xs font-bold text-white group-hover:text-red-400 transition-colors">退出登录 (LOGOUT)
+                    </div>
+                    <div class="text-[10px] text-gray-500 font-tech tracking-wider">ROOT ACCESS</div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT: Margin Fix -->
+    <main class="ml-72 min-h-screen relative p-8 md:p-12">
+
+        <!-- DASHBOARD VIEW -->
+        <div id="view-dashboard" class="animate-fade-in">
+            <header class="flex items-end justify-between mb-8 pb-6 border-b border-white/5">
+                <div>
+                    <h2 class="text-3xl font-bold text-white font-tech tracking-wide flex items-center gap-3">
+                        <span class="w-1.5 h-8 bg-gradient-to-b from-yellow-500 to-transparent rounded-full"></span>
+                        SYSTEM OVERVIEW
+                    </h2>
+                    <p class="text-gray-500 text-sm mt-2 ml-5">Real-time surveillance monitoring</p>
+                </div>
+                <div
+                    class="flex items-center gap-3 bg-white/5 border border-white/5 px-4 py-2 rounded-full backdrop-blur-md">
+                    <span class="w-2 h-2 bg-green-500 rounded-full live-dot"></span>
+                    <span class="text-xs font-mono font-bold text-green-400" id="clock-display">SYSTEM ONLINE</span>
+                </div>
+            </header>
+
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+                <!-- User Stat -->
+                <div class="glass-panel p-6 rounded-2xl relative overflow-hidden group">
+                    <div
+                        class="absolute right-0 top-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity transform group-hover:scale-110 duration-500">
+                        <svg class="w-24 h-24 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path
+                                d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z">
+                            </path>
+                        </svg>
+                    </div>
+                    <div class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Total Users</div>
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-4xl font-bold text-white font-tech" id="stat-users">--</span>
+                        <span class="text-xs text-blue-400 font-bold">+Live</span>
+                    </div>
+                </div>
+
+                <!-- Node Stat -->
+                <div class="glass-panel p-6 rounded-2xl relative overflow-hidden group">
+                    <div
+                        class="absolute right-0 top-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity transform group-hover:scale-110 duration-500">
+                        <svg class="w-24 h-24 text-purple-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M2 5a2 2 0 012-2h12a2 2 0 012 2v2a2 2 0 01-2 2H4a2 2 0 01-2-2V5zm14 1a1 1 0 11-2 0 1 1 0 012 0zM2 13a2 2 0 012-2h12a2 2 0 012 2v2a2 2 0 01-2 2H4a2 2 0 01-2-2v-2zm14 1a1 1 0 11-2 0 1 1 0 012 0z"
+                                clip-rule="evenodd"></path>
+                        </svg>
+                    </div>
+                    <div class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Data Nodes</div>
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-4xl font-bold text-white font-tech" id="stat-nodes">--</span>
+                        <span class="text-xs text-purple-400 font-bold">D1</span>
+                    </div>
+                </div>
+
+                <!-- Status Stat -->
+                <div class="glass-panel p-6 rounded-2xl border-green-500/20">
+                    <div class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">System Integrity</div>
+                    <div class="text-4xl font-bold text-green-500 font-tech">100%</div>
+                </div>
+
+                <!-- Clearance Stat -->
+                <div class="glass-panel p-6 rounded-2xl bg-yellow-900/10 border-yellow-500/20">
+                    <div class="text-xs font-bold text-yellow-500/60 uppercase tracking-widest mb-3">Clearance Level
+                    </div>
+                    <div class="text-4xl font-bold text-yellow-500 font-tech">ROOT</div>
+                </div>
+            </div>
+
+            <!-- Large Monitor -->
+            <div
+                class="glass-panel rounded-2xl h-[500px] flex items-center justify-center relative overflow-hidden group">
+                <div
+                    class="absolute inset-0 bg-[linear-gradient(to_right,#ffffff03_1px,transparent_1px),linear-gradient(to_bottom,#ffffff03_1px,transparent_1px)] bg-[size:40px_40px]">
+                </div>
+
+                <div class="z-10 text-center">
+                    <div
+                        class="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-500 border border-white/5 shadow-2xl">
+                        <svg class="w-10 h-10 text-gray-600 group-hover:text-yellow-500 transition-colors" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
+                            </path>
+                        </svg>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-2 font-tech tracking-wide">TRAFFIC MONITOR</h3>
+                    <p class="text-gray-500 font-mono text-sm">Awaiting neural link connection...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- USERS VIEW -->
+        <div id="view-users" class="hidden">
+            <header class="flex items-end justify-between mb-8 pb-6 border-b border-white/5">
+                <div>
+                    <h2 class="text-3xl font-bold text-white font-tech tracking-wide flex items-center gap-3">
+                        <span class="w-1.5 h-8 bg-gradient-to-b from-cyan-500 to-transparent rounded-full"></span>
+                        USER DATABASE
+                    </h2>
+                    <p class="text-gray-500 text-sm mt-2 ml-5">Manage access and permissions</p>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="fetchUsers()"
+                        class="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-sm text-gray-300 border border-white/5 transition-all">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                            </path>
+                        </svg>
+                        Refresh Data
+                    </button>
+                    <button
+                        class="flex items-center gap-2 px-4 py-2 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-500 rounded-lg text-sm font-bold border border-yellow-500/20 transition-all">
+                        + New User
+                    </button>
+                </div>
+            </header>
+
+            <div class="glass-panel rounded-2xl overflow-hidden shadow-2xl">
+                <table class="w-full text-left">
+                    <thead
+                        class="bg-black/20 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-white/5">
+                        <tr>
+                            <th class="px-8 py-5">Identifier</th>
+                            <th class="px-8 py-5">Identity</th>
+                            <th class="px-8 py-5">Role</th>
+                            <th class="px-8 py-5">Sync Node</th>
+                            <th class="px-8 py-5">Registered</th>
+                            <th class="px-8 py-5 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-table-body" class="text-sm divide-y divide-white/5 font-mono text-gray-400">
+                        <tr>
+                            <td colspan="6" class="px-8 py-12 text-center text-gray-600">Accessing secure database...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // Update Time
+        setInterval(() => {
+            const now = new Date();
+            const el = document.getElementById('clock-display');
+            if (el) el.innerText = 'NODE: ONLINE | ' + now.toLocaleTimeString('zh-CN');
+        }, 1000);
+
+        // View Transition Logic
+        function switchView(viewId) {
+            // Hide all
+            document.getElementById('view-dashboard').classList.add('hidden');
+            document.getElementById('view-users').classList.add('hidden');
+
+            // Show target
+            document.getElementById('view-' + viewId).classList.remove('hidden');
+
+            // Update Nav Styles
+            const navDash = document.getElementById('nav-dashboard');
+            const navUsers = document.getElementById('nav-users');
+
+            // --- ACTIVE STATE: Glowing Background, Yellow/Cyan Text, Active Border ---
+            const activeClassBase = "group flex items-center gap-4 px-4 py-4 rounded-xl transition-all duration-300 border-l-2 relative overflow-hidden bg-white/5 shadow-inner";
+
+            // --- INACTIVE STATE: Transparent Background, Gray Text ---
+            const inactiveClass = "group flex items-center gap-4 px-4 py-4 rounded-xl transition-all duration-300 border-l-2 border-transparent relative overflow-hidden hover:bg-white/5";
+
+            // Reset Elements
+            navDash.className = inactiveClass;
+            navUsers.className = inactiveClass;
+
+            // Reset Icons/Text Colors
+            [navDash, navUsers].forEach(el => {
+                const icon = el.querySelector('svg');
+                const text = el.querySelector('span.font-medium');
+                const sub = el.querySelector('span.text-[10px]');
+
+                icon.classList.remove('text-yellow-500', 'text-cyan-500');
+                icon.classList.add('text-gray-400'); // default
+
+                text.classList.remove('text-white');
+                text.classList.add('text-gray-400');
+
+                sub.classList.remove('text-gray-400');
+                sub.classList.add('text-gray-600');
+            });
+
+            // Activate Target
+            const targetNav = (viewId === 'dashboard') ? navDash : navUsers;
+            const targetColor = (viewId === 'dashboard') ? 'yellow' : 'cyan';
+
+            targetNav.className = activeClassBase + ` border-${targetColor}-500`;
+
+            const icon = targetNav.querySelector('svg');
+            const text = targetNav.querySelector('span.font-medium');
+            const sub = targetNav.querySelector('span.text-[10px]');
+
+            icon.classList.remove('text-gray-400');
+            icon.classList.add(`text-${targetColor}-500`);
+
+            text.classList.remove('text-gray-400');
+            text.classList.add('text-white');
+
+            sub.classList.remove('text-gray-600');
+            sub.classList.add('text-gray-400');
+
+            if (viewId === 'users') fetchUsers();
+        }
+
+        async function fetchStats() {
+            try {
+                const token = localStorage.getItem('libretv_auth_token');
+                const res = await fetch('/api/admin/stats', { headers: { 'Authorization': `Bearer ${token}` } });
+                if (res.ok) {
+                    const data = await res.json();
+                    document.getElementById('stat-users').innerText = data.total_users;
+                    document.getElementById('stat-nodes').innerText = data.total_nodes;
+                }
+            } catch (e) { }
+        }
+
+        async function fetchUsers() {
+            const tbody = document.getElementById('users-table-body');
+            tbody.innerHTML = '<tr><td colspan="6" class="px-8 py-12 text-center text-gray-600 font-mono animate-pulse">Scanning encrypted records...</td></tr>';
+            try {
+                const token = localStorage.getItem('libretv_auth_token');
+                const res = await fetch('/api/admin/users', { headers: { 'Authorization': `Bearer ${token}` } });
+                const users = await res.json();
+
+                if (users.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="px-8 py-12 text-center text-gray-600">Database Empty</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = users.map(u => `
+                    <tr class="hover:bg-white/5 transition-colors group">
+                        <td class="px-8 py-4 font-mono text-gray-500 text-xs">ID_${String(u.id).padStart(4, '0')}</td>
+                        <td class="px-8 py-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-gray-800 to-gray-700 border border-white/10 flex items-center justify-center text-xs font-bold text-gray-300">
+                                    ${u.username[0].toUpperCase()}
+                                </div>
+                                <span class="text-gray-200 group-hover:text-white transition-colors font-medium">${u.username}</span>
+                            </div>
+                        </td>
+                        <td class="px-8 py-4">
+                             ${u.role === 'admin'
+                        ? '<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 tracking-wider">ADMIN</span>'
+                        : '<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-white/5 text-gray-500 border border-white/10 tracking-wider">USER</span>'}
+                        </td>
+                        <td class="px-8 py-4">
+                            ${u.has_data
+                        ? '<div class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.6)]"></span><span class="text-xs text-green-400">Synced</span></div>'
+                        : '<div class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-gray-700"></span><span class="text-xs text-gray-600">Idle</span></div>'}
+                        </td>
+                        <td class="px-8 py-4 font-mono text-xs text-gray-500">${new Date(u.created_at).toLocaleDateString('zh-CN')}</td>
+                        <td class="px-8 py-4 text-right">
+                            <button class="text-gray-600 hover:text-red-400 transition-colors bg-white/5 hover:bg-white/10 p-2 rounded-lg opacity-0 group-hover:opacity-100">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (e) {
+                console.error(e);
+                tbody.innerHTML = '<tr><td colspan="6" class="px-8 py-12 text-center text-red-500/50">Connection Lost</td></tr>';
+            }
+        }
+
+        // Init
+        (async function init() {
+            await fetchStats();
+            // Pre-fetch users silently so it's ready when clicked
+            fetchUsers();
+        })();
+
+        // Set Default View
+        // Don't call switchView('dashboard') which resets classes, just let HTML be default
+        // But we do need to set active state for dashboard nav
+        document.getElementById('nav-dashboard').classList.add('bg-white/5', 'border-yellow-500', 'shadow-inner');
+        document.getElementById('nav-dashboard').classList.remove('border-transparent');
+        document.getElementById('nav-dashboard').querySelector('svg').classList.add('text-yellow-500');
+        document.getElementById('nav-dashboard').querySelector('span.font-medium').classList.add('text-white');
+
+        setInterval(fetchStats, 30000);
+    </script>
+</body>
+
+</html>

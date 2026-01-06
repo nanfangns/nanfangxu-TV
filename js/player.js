@@ -291,8 +291,20 @@ async function initializePageContent() {
             videoUrl = await window.ProxyAuth.addAuthToProxyUrl(videoUrl);
         }
         initPlayer(videoUrl);
+    } else if (urlParams.get('id') && urlParams.get('source')) {
+        // ID播放模式：尝试通过ID和Source获取视频链接 (修复收藏夹跳转问题)
+        const id = urlParams.get('id');
+        const source = urlParams.get('source');
+        showToast('正在获取视频资源...', 'info');
+
+        try {
+            await fetchVideoDetailsById(id, source, index);
+        } catch (e) {
+            console.error('ID播放失败:', e);
+            showError('无法获取视频资源: ' + e.message);
+        }
     } else {
-        showError('无效的视频链接');
+        showError('无效的视频链接或ID');
     }
 
 
@@ -1809,5 +1821,96 @@ async function switchToResource(sourceKey, vodId) {
         showToast('切换资源失败，请稍后重试', 'error');
     } finally {
         hideLoading();
+    }
+}
+
+// 通过ID获取视频详情并播放
+async function fetchVideoDetailsById(id, source, index = 0) {
+    try {
+        // Robust Source Handling: If 'source' is a Name (e.g. '黑木耳'), map it to Code (e.g. 'heimuer')
+        let finalSourceCode = source;
+        if (window.API_SITES) {
+            // 1. Check if source matches any key directly
+            if (!window.API_SITES[source]) {
+                // 2. Not a key, search by Name
+                const matchedKey = Object.keys(window.API_SITES).find(key => window.API_SITES[key].name === source);
+                if (matchedKey) {
+                    finalSourceCode = matchedKey;
+                    console.log(`[SourceMap] Mapped "${source}" to "${matchedKey}"`);
+                } else {
+                    console.warn(`[SourceMap] Unknown source: "${source}", assuming it is a valid code or custom source.`);
+                }
+            }
+        }
+
+        const response = await fetch(`/api/detail?id=${id}&source=${finalSourceCode}`);
+        if (!response.ok) throw new Error('获取视频详情失败');
+
+        const data = await response.json();
+        if (!data || !data.list || data.list.length === 0) {
+            throw new Error('未找到视频资源');
+        }
+
+        const videoData = data.list[0];
+
+        // 更新标题
+        currentVideoTitle = videoData.vod_name || '未知视频';
+        document.title = currentVideoTitle + ' - 南方许播放器';
+        const titleEl = document.getElementById('videoTitle');
+        if (titleEl) titleEl.textContent = currentVideoTitle;
+
+        // 保存到 localStorage 供下次使用
+        localStorage.setItem('currentVideoTitle', currentVideoTitle);
+
+        // 解析播放地址
+        const playUrlStr = videoData.vod_play_url;
+        if (!playUrlStr) throw new Error('无播放地址');
+
+        // 处理多组播放源 (通常用 $$$ 分隔)
+        const sourceGroups = playUrlStr.split('$$$');
+        // 简单策略：优先取 m3u8，或者直接取第一组
+        const currentGroupStr = sourceGroups.find(g => g.includes('m3u8')) || sourceGroups[0];
+
+        // 解析集数 (格式: 名称$URL#名称$URL)
+        const episodes = currentGroupStr.split('#').map(segment => {
+            const parts = segment.split('$');
+            if (parts.length >= 2) {
+                return { name: parts[0], url: parts[1] };
+            } else {
+                return { name: '正片', url: parts[0] };
+            }
+        });
+
+        // 验证索引
+        if (index < 0 || index >= episodes.length) index = 0;
+
+        // 保存集数信息
+        currentEpisodes = episodes;
+        localStorage.setItem('currentEpisodes', JSON.stringify(episodes));
+
+        // 更新全局 Index
+        currentEpisodeIndex = index;
+
+        // 获取实际播放链接
+        let finalUrl = episodes[index].url;
+
+        // 更新 URL 参数
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.set('url', finalUrl);
+        newUrl.searchParams.set('title', currentVideoTitle);
+        newUrl.searchParams.set('index', index);
+        window.history.replaceState({}, '', newUrl);
+
+        // 代理鉴权
+        if (window.ProxyAuth && window.ProxyAuth.addAuthToProxyUrl) {
+            finalUrl = await window.ProxyAuth.addAuthToProxyUrl(finalUrl);
+        }
+
+        // 初始化播放
+        initPlayer(finalUrl);
+
+    } catch (e) {
+        console.error('Fetch Details Error:', e);
+        showError('资源解析失败: ' + e.message);
     }
 }

@@ -142,6 +142,15 @@ class AuthService {
                 body: JSON.stringify(syncData)
             });
             const result = await response.json();
+
+            // 检查用户不存在错误
+            if (result.code === 'USER_NOT_FOUND') {
+                console.log('检测到用户已被删除，自动登出');
+                this.logout();
+                alert('您的账号已被删除或不存在，请重新注册');
+                return;
+            }
+
             if (result.success) {
                 // console.log('数据已成功同步至云端');
             } else if (result.error) {
@@ -164,6 +173,14 @@ class AuthService {
                 headers: { 'Authorization': `Bearer ${this.token}` }
             });
             const data = await response.json();
+
+            // 检查用户不存在错误
+            if (data.code === 'USER_NOT_FOUND') {
+                console.log('检测到用户已被删除，自动登出');
+                this.logout();
+                alert('您的账号已被删除或不存在，请重新注册');
+                return;
+            }
 
             if (data.error) {
                 alert('从云端拉取数据失败: ' + data.error);
@@ -254,6 +271,18 @@ class AuthService {
     showUserPanel() {
         const username = this.user.username || 'User';
         const firstChar = username[0].toUpperCase();
+        const isAdmin = this.user.role === 'admin';
+
+        const adminBadge = isAdmin
+            ? `<span class="bg-yellow-500/20 text-yellow-500 text-[10px] px-2 py-0.5 rounded border border-yellow-500/30 ml-2 align-middle">ADMIN</span>`
+            : '';
+
+        const adminButton = isAdmin
+            ? `<button onclick="window.location.href='/admin.html'" class="w-full bg-yellow-600/20 hover:bg-yellow-600/30 text-yellow-500 border border-yellow-500/30 py-2 rounded-lg transition-colors flex items-center justify-center gap-2 mb-3">
+                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                 管理后台 (Overseer)
+               </button>`
+            : '';
 
         const userHtml = `
             <div id="authModal" class="fixed inset-0 z-[99999] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in">
@@ -266,10 +295,14 @@ class AuthService {
                         <div class="w-20 h-20 bg-gradient-to-tr from-cyan-500 to-blue-500 rounded-full mx-auto mb-4 flex items-center justify-center shadow-lg">
                             <span class="text-3xl font-bold text-white">${firstChar}</span>
                         </div>
-                        <h3 class="text-xl font-bold text-white mb-1">${username}</h3>
+                        <h3 class="text-xl font-bold text-white mb-1">
+                            ${username}
+                            ${adminBadge}
+                        </h3>
                         <p class="text-gray-500 text-xs mb-6">云端数据已同步</p>
 
                         <div class="space-y-3">
+                            ${adminButton}
                             <button onclick="if(typeof toggleFavorites === 'function') toggleFavorites(event); document.getElementById('authModal').remove();" class="w-full bg-gray-800 hover:bg-gray-700 text-white py-2 rounded-lg transition-colors flex items-center justify-center gap-2">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
                                 我的收藏

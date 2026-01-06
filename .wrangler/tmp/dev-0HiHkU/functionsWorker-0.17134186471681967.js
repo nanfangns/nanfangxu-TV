@@ -77,6 +77,113 @@ async function verifyToken(token, secret) {
 }
 __name(verifyToken, "verifyToken");
 __name2(verifyToken, "verifyToken");
+async function onRequest(context) {
+  const { request, env } = context;
+  if (!env || !env.DB) {
+    return new Response(JSON.stringify({ error: "DB not bound" }), { status: 500 });
+  }
+  const authHeader = request.headers.get("Authorization");
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
+  }
+  const token = authHeader.split(" ")[1];
+  const user = await verifyToken(token, env.JWT_SECRET || "default_secret");
+  if (!user || user.role !== "admin") {
+    return new Response(JSON.stringify({ error: "Forbidden: Admin Access Only" }), { status: 403 });
+  }
+  try {
+    const totalUsers = await env.DB.prepare("SELECT COUNT(*) as count FROM users").first();
+    const totalNodes = await env.DB.prepare("SELECT COUNT(*) as count FROM user_data").first();
+    return new Response(JSON.stringify({
+      total_users: totalUsers.count,
+      total_nodes: totalNodes.count,
+      system_status: "NOMINAL",
+      timestamp: Date.now()
+    }));
+  } catch (e) {
+    return new Response(JSON.stringify({ error: e.message }), { status: 500 });
+  }
+}
+__name(onRequest, "onRequest");
+__name2(onRequest, "onRequest");
+var JWT_ALGO2 = { name: "HMAC", hash: "SHA-256" };
+async function verifyToken2(token, secret) {
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) return null;
+    const [header, payload, signature] = parts;
+    const encoder = new TextEncoder();
+    const keyData = encoder.encode(secret);
+    const key = await crypto.subtle.importKey("raw", keyData, JWT_ALGO2, false, ["verify"]);
+    const tokenBase = `${header}.${payload}`;
+    const sigData = Uint8Array.from(atob(signature.replace(/-/g, "+").replace(/_/g, "/")), (c) => c.charCodeAt(0));
+    const isValid = await crypto.subtle.verify("HMAC", key, sigData, encoder.encode(tokenBase));
+    if (!isValid) return null;
+    const decodedPayload = JSON.parse(atob(payload));
+    if (decodedPayload.exp < Math.floor(Date.now() / 1e3)) return null;
+    return decodedPayload;
+  } catch (e) {
+    return null;
+  }
+}
+__name(verifyToken2, "verifyToken2");
+__name2(verifyToken2, "verifyToken");
+async function onRequest2(context) {
+  const { request, env } = context;
+  if (!env || !env.DB) return new Response(JSON.stringify({ error: "DB Error" }), { status: 500 });
+  const authHeader = request.headers.get("Authorization");
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
+  }
+  const user = await verifyToken2(authHeader.split(" ")[1], env.JWT_SECRET || "default_secret");
+  if (!user || user.role !== "admin") {
+    return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403 });
+  }
+  if (request.method === "GET") {
+    try {
+      const users = await env.DB.prepare(`
+                SELECT 
+                    u.id, 
+                    u.username, 
+                    u.role, 
+                    u.created_at,
+                    CASE WHEN ud.user_id IS NOT NULL THEN 1 ELSE 0 END as has_data
+                FROM users u
+                LEFT JOIN user_data ud ON u.id = ud.user_id
+                ORDER BY u.id DESC
+                LIMIT 100
+            `).all();
+      return new Response(JSON.stringify(users.results));
+    } catch (e) {
+      return new Response(JSON.stringify({ error: e.message }), { status: 500 });
+    }
+  }
+  return new Response("Method not allowed", { status: 405 });
+}
+__name(onRequest2, "onRequest2");
+__name2(onRequest2, "onRequest");
+var JWT_ALGO3 = { name: "HMAC", hash: "SHA-256" };
+async function verifyToken3(token, secret) {
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) return null;
+    const [header, payload, signature] = parts;
+    const encoder = new TextEncoder();
+    const keyData = encoder.encode(secret);
+    const key = await crypto.subtle.importKey("raw", keyData, JWT_ALGO3, false, ["verify"]);
+    const tokenBase = `${header}.${payload}`;
+    const sigData = Uint8Array.from(atob(signature.replace(/-/g, "+").replace(/_/g, "/")), (c) => c.charCodeAt(0));
+    const isValid = await crypto.subtle.verify("HMAC", key, sigData, encoder.encode(tokenBase));
+    if (!isValid) return null;
+    const decodedPayload = JSON.parse(atob(payload));
+    if (decodedPayload.exp < Math.floor(Date.now() / 1e3)) return null;
+    return decodedPayload;
+  } catch (e) {
+    return null;
+  }
+}
+__name(verifyToken3, "verifyToken3");
+__name2(verifyToken3, "verifyToken");
 var INIT_SQL = [
   `CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -106,7 +213,7 @@ async function ensureTables(db) {
 }
 __name(ensureTables, "ensureTables");
 __name2(ensureTables, "ensureTables");
-async function onRequest(context) {
+async function onRequest3(context) {
   const { request, env } = context;
   if (!env || !env.DB) {
     return new Response(JSON.stringify({ error: "\u6570\u636E\u5E93\u672A\u7ED1\u5B9A (env.DB is missing)" }), { status: 500 });
@@ -116,7 +223,7 @@ async function onRequest(context) {
     return new Response(JSON.stringify({ error: "\u672A\u6388\u6743" }), { status: 401 });
   }
   const token = authHeader.split(" ")[1];
-  const user = await verifyToken(token, env.JWT_SECRET || "default_secret");
+  const user = await verifyToken3(token, env.JWT_SECRET || "default_secret");
   if (!user) {
     return new Response(JSON.stringify({ error: "Token \u65E0\u6548\u6216\u5DF2\u8FC7\u671F" }), { status: 401 });
   }
@@ -162,9 +269,9 @@ async function onRequest(context) {
   __name2(handleRequest, "handleRequest");
   return handleRequest();
 }
-__name(onRequest, "onRequest");
-__name2(onRequest, "onRequest");
-var JWT_ALGO2 = { name: "HMAC", hash: "SHA-256" };
+__name(onRequest3, "onRequest3");
+__name2(onRequest3, "onRequest");
+var JWT_ALGO4 = { name: "HMAC", hash: "SHA-256" };
 async function hashPassword(password) {
   const encoder = new TextEncoder();
   const data = encoder.encode(password);
@@ -178,13 +285,14 @@ async function createToken(user, secret) {
   const payload = btoa(JSON.stringify({
     id: user.id,
     username: user.username,
+    role: user.role,
     exp: Math.floor(Date.now() / 1e3) + 7 * 24 * 60 * 60
     // 7天过期
   }));
   const tokenBase = `${header}.${payload}`;
   const encoder = new TextEncoder();
   const keyData = encoder.encode(secret);
-  const key = await crypto.subtle.importKey("raw", keyData, JWT_ALGO2, false, ["sign"]);
+  const key = await crypto.subtle.importKey("raw", keyData, JWT_ALGO4, false, ["sign"]);
   const signatureBuffer = await crypto.subtle.sign("HMAC", key, encoder.encode(tokenBase));
   const signature = btoa(String.fromCharCode(...new Uint8Array(signatureBuffer))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
   return `${tokenBase}.${signature}`;
@@ -196,6 +304,7 @@ var INIT_SQL2 = [
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT UNIQUE NOT NULL,
         password_hash TEXT NOT NULL,
+        role TEXT DEFAULT 'user',
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`,
   `CREATE TABLE IF NOT EXISTS user_data (
@@ -245,7 +354,7 @@ async function onRequestPost(context) {
         const passwordHash = await hashPassword(password);
         try {
           const { success } = await env.DB.prepare(
-            "INSERT INTO users (username, password_hash) VALUES (?, ?)"
+            "INSERT INTO users (username, password_hash, role) VALUES (?, ?, 'user')"
           ).bind(username, passwordHash).run();
           if (success) {
             const user = await env.DB.prepare("SELECT id FROM users WHERE username = ?").bind(username).first();
@@ -262,13 +371,20 @@ async function onRequestPost(context) {
       if (path.endsWith("/login")) {
         const passwordHash = await hashPassword(password);
         const user = await env.DB.prepare(
-          "SELECT id, username FROM users WHERE username = ? AND password_hash = ?"
+          "SELECT id, username, role FROM users WHERE username = ? AND password_hash = ?"
         ).bind(username, passwordHash).first();
         if (!user) {
           return new Response(JSON.stringify({ error: "\u7528\u6237\u540D\u6216\u5BC6\u7801\u9519\u8BEF" }), { status: 401 });
         }
         const token = await createToken(user, env.JWT_SECRET || "default_secret");
-        return new Response(JSON.stringify({ token, user: { id: user.id, username: user.username } }));
+        return new Response(JSON.stringify({
+          token,
+          user: {
+            id: user.id,
+            username: user.username,
+            role: user.role
+          }
+        }));
       }
       return new Response("Not Found", { status: 404 });
     } catch (e) {
@@ -323,7 +439,7 @@ var MEDIA_FILE_EXTENSIONS = [
   ".heic"
 ];
 var MEDIA_CONTENT_TYPES = ["video/", "audio/", "image/"];
-async function onRequest2(context) {
+async function onRequest4(context) {
   const { request, env, next, waitUntil } = context;
   const url = new URL(request.url);
   const DEBUG_ENABLED = env.DEBUG === "true";
@@ -744,20 +860,34 @@ async function onRequest2(context) {
     return createResponse(`\u4EE3\u7406\u5904\u7406\u9519\u8BEF: ${error.message}`, 500);
   }
 }
-__name(onRequest2, "onRequest2");
-__name2(onRequest2, "onRequest");
-async function onRequest3(context) {
+__name(onRequest4, "onRequest4");
+__name2(onRequest4, "onRequest");
+async function onRequest5(context) {
   return await context.next();
 }
-__name(onRequest3, "onRequest3");
-__name2(onRequest3, "onRequest");
+__name(onRequest5, "onRequest5");
+__name2(onRequest5, "onRequest");
 var routes = [
+  {
+    routePath: "/api/admin/stats",
+    mountPath: "/api/admin",
+    method: "",
+    middlewares: [],
+    modules: [onRequest]
+  },
+  {
+    routePath: "/api/admin/users",
+    mountPath: "/api/admin",
+    method: "",
+    middlewares: [],
+    modules: [onRequest2]
+  },
   {
     routePath: "/api/user/sync",
     mountPath: "/api/user",
     method: "",
     middlewares: [],
-    modules: [onRequest]
+    modules: [onRequest3]
   },
   {
     routePath: "/api/auth/:path*",
@@ -771,13 +901,13 @@ var routes = [
     mountPath: "/proxy",
     method: "",
     middlewares: [],
-    modules: [onRequest2]
+    modules: [onRequest4]
   },
   {
     routePath: "/",
     mountPath: "/",
     method: "",
-    middlewares: [onRequest3],
+    middlewares: [onRequest5],
     modules: []
   }
 ];

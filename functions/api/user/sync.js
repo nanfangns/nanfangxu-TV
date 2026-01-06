@@ -117,11 +117,44 @@ export async function onRequest(context) {
 
         } catch (e) {
             // 自动修复逻辑
-            if (!isRetry && e.message && (e.message.includes("no such table") || e.message.includes("SQLITE_ERROR"))) {
-                console.log("Datatabase table missing detected in user.js. Auto-healing...");
-                await ensureTables(env.DB);
-                return handleRequest(true); // Retry once
+            if (!isRetry) {
+                // 1. 表不存在错误 - 自动建表
+                if (e.message && (e.message.includes("no such table") || e.message.includes("SQLITE_ERROR"))) {
+                    console.log("Database table missing detected in user.js. Auto-healing...");
+                    await ensureTables(env.DB);
+                    return handleRequest(true); // Retry once
+                }
+
+                // 2. 外键约束错误 - 确保用户存在
+                if (e.message && e.message.includes("FOREIGN KEY constraint failed")) {
+                    console.log("Foreign key constraint error detected. Checking user existence...");
+
+                    // 检查用户是否存在
+                    const userExists = await env.DB.prepare(
+                        "SELECT id FROM users WHERE id = ?"
+                    ).bind(user.id).first();
+
+                    if (!userExists) {
+                        // 用户不存在，返回特殊错误让前端重新登录
+                        return new Response(JSON.stringify({
+                            error: "用户不存在，请重新登录",
+                            code: "USER_NOT_FOUND"
+                        }), { status: 401 });
+                    }
+
+                    // 用户存在但仍失败，尝试清理孤立数据并重试
+                    try {
+                        await env.DB.prepare(
+                            "DELETE FROM user_data WHERE user_id NOT IN (SELECT id FROM users)"
+                        ).run();
+                        console.log("Cleaned orphaned user_data records");
+                        return handleRequest(true);
+                    } catch (cleanError) {
+                        console.error("Failed to clean orphaned records:", cleanError);
+                    }
+                }
             }
+
             return new Response(JSON.stringify({ error: e.message || "Unknown DB Error" }), { status: 500 });
         }
     }

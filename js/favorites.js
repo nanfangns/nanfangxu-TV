@@ -118,6 +118,78 @@ const FavoritesService = {
     },
 
     // 渲染收藏夹面板内容
+    // 播放收藏 (类似历史记录的预加载逻辑)
+    async playFavorite(vodId) {
+        const list = this.getFavorites();
+        const item = list.find(i => String(i.vod_id) === String(vodId));
+        if (!item) return;
+
+        showToast('正在解析视频资源...', 'info');
+
+        try {
+            // 1. 尝试获取最新源
+            let sourceCode = item.sourceName; // Default
+
+            // 尝试将中文名转换为代码
+            if (window.API_SITES) {
+                if (!window.API_SITES[sourceCode]) {
+                    const matchedKey = Object.keys(window.API_SITES).find(key => window.API_SITES[key].name === sourceCode);
+                    if (matchedKey) sourceCode = matchedKey;
+                }
+            }
+
+            // 2. 请求详情以获取最新 m3u8
+            const apiUrl = `/api/detail?id=${encodeURIComponent(item.vod_id)}&source=${encodeURIComponent(sourceCode)}`;
+
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+            const res = await fetch(apiUrl, { signal: controller.signal });
+            clearTimeout(timeoutId);
+
+            if (!res.ok) throw new Error('API Error');
+            const data = await res.json();
+
+            if (data.list && data.list.length > 0) {
+                const videoData = data.list[0];
+                const playUrlStr = videoData.vod_play_url;
+
+                // 解析集数
+                const sourceGroups = playUrlStr.split('$$$');
+                const currentGroupStr = sourceGroups.find(g => g.includes('m3u8')) || sourceGroups[0];
+                const episodes = currentGroupStr.split('#').map(s => {
+                    const p = s.split('$');
+                    return { name: p.length > 1 ? p[0] : '正片', url: p.length > 1 ? p[1] : p[0] };
+                });
+
+                // 更新本地存储
+                localStorage.setItem('currentEpisodes', JSON.stringify(episodes));
+                localStorage.setItem('currentVideoTitle', videoData.vod_name);
+
+                // 构造完整URL (播放第一集)
+                const finalUrl = episodes[0].url;
+                const playPageUrl = `player.html?url=${encodeURIComponent(finalUrl)}&title=${encodeURIComponent(videoData.vod_name)}&index=0&source=${encodeURIComponent(sourceCode)}&id=${encodeURIComponent(item.vod_id)}`;
+
+                window.location.href = playPageUrl;
+            } else {
+                throw new Error('No Data');
+            }
+
+        } catch (e) {
+            console.error('收藏播放失败:', e);
+            // 兜底：直接跳转，依赖 player.js 的修复逻辑
+            showToast('无法获取最新资源，尝试直接播放...', 'warning');
+            setTimeout(() => {
+                let fallbackUrl = item.url;
+                if (!fallbackUrl.includes('player.html')) {
+                    fallbackUrl = `player.html?id=${encodeURIComponent(item.vod_id)}&source=${encodeURIComponent(item.sourceName)}`;
+                }
+                window.location.href = fallbackUrl;
+            }, 1000);
+        }
+    },
+
+    // 渲染收藏夹面板内容
     renderFavoritesPanel() {
         const container = document.getElementById('favoritesList');
         if (!container) return;
@@ -130,19 +202,11 @@ const FavoritesService = {
         }
 
         container.innerHTML = list.map(item => {
-            // 安全处理
             const safeTitle = (item.title || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
             const safeSource = (item.sourceName || '未知').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-            // 构建跳转 URL
-            // 如果存的是 player.html 链接直接用，否则构造
-            let playUrl = item.url;
-            if (!playUrl.includes('player.html')) {
-                playUrl = `player.html?id=${encodeURIComponent(item.vod_id)}&source=${encodeURIComponent(item.sourceName)}`;
-            }
-
             return `
-                <div class="history-item cursor-pointer relative group" onclick="window.location.href='${playUrl}'">
+                <div class="history-item cursor-pointer relative group" onclick="FavoritesService.playFavorite('${item.vod_id}')">
                     <button onclick="event.stopPropagation(); FavoritesService.removeFavorite('${item.vod_id}')"
                             class="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-gray-400 hover:text-red-400 p-1 rounded-full hover:bg-gray-800 z-10"
                             title="取消收藏">

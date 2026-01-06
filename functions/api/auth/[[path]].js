@@ -16,6 +16,7 @@ async function createToken(user, secret) {
     const payload = btoa(JSON.stringify({
         id: user.id,
         username: user.username,
+        role: user.role,
         exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60) // 7天过期
     }));
 
@@ -35,6 +36,7 @@ const INIT_SQL = [
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT UNIQUE NOT NULL,
         password_hash TEXT NOT NULL,
+        role TEXT DEFAULT 'user',
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`,
     `CREATE TABLE IF NOT EXISTS user_data (
@@ -91,7 +93,7 @@ export async function onRequestPost(context) {
                 const passwordHash = await hashPassword(password);
                 try {
                     const { success } = await env.DB.prepare(
-                        "INSERT INTO users (username, password_hash) VALUES (?, ?)"
+                        "INSERT INTO users (username, password_hash, role) VALUES (?, ?, 'user')"
                     ).bind(username, passwordHash).run();
 
                     if (success) {
@@ -112,7 +114,7 @@ export async function onRequestPost(context) {
             if (path.endsWith("/login")) {
                 const passwordHash = await hashPassword(password);
                 const user = await env.DB.prepare(
-                    "SELECT id, username FROM users WHERE username = ? AND password_hash = ?"
+                    "SELECT id, username, role FROM users WHERE username = ? AND password_hash = ?"
                 ).bind(username, passwordHash).first();
 
                 if (!user) {
@@ -120,7 +122,14 @@ export async function onRequestPost(context) {
                 }
 
                 const token = await createToken(user, env.JWT_SECRET || "default_secret");
-                return new Response(JSON.stringify({ token, user: { id: user.id, username: user.username } }));
+                return new Response(JSON.stringify({
+                    token,
+                    user: {
+                        id: user.id,
+                        username: user.username,
+                        role: user.role
+                    }
+                }));
             }
 
             return new Response("Not Found", { status: 404 });
