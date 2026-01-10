@@ -9,7 +9,13 @@
   "scripts": {
     "dev": "nodemon server.mjs",
     "dev:cf": "wrangler pages dev .",
-    "start": "node server.mjs"
+    "dev:remote": "wrangler pages dev . --d1=DB=my-tv-db --remote",
+    "start": "node server.mjs",
+    "init:local-db": "node scripts/init-local-db.js",
+    "reset:local-db": "node scripts/reset-local-db.js",
+    "deploy": "wrangler pages deploy .",
+    "db:local": "wrangler d1 execute my-tv-db --local --command",
+    "db:remote": "wrangler d1 execute my-tv-db --remote --command"
   },
   "dependencies": {
     "axios": "^1.9.0",

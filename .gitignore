@@ -23,3 +23,8 @@ coverage
 *.sln
 *.sw?
 .env
+
+# Wrangler
+# 注意：.wrangler 文件夹包含本地 D1 数据库
+# 虽然被 gitignore，但本地开发时数据会持久化保存
+.wrangler/
