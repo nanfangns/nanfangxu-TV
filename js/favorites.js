@@ -60,6 +60,7 @@ const FavoritesService = {
             pic: videoInfo.pic || '',
             url: videoInfo.url || '', // 播放地址或页面地址
             sourceName: videoInfo.sourceName || '',
+            sourceCode: videoInfo.sourceCode || videoInfo.sourceName || '', // 同时保存 sourceCode 用于 API 调用
             createTime: Date.now()
         };
 
@@ -127,8 +128,8 @@ const FavoritesService = {
         showToast('正在解析视频资源...', 'info');
 
         try {
-            // 1. 尝试获取最新源
-            let sourceCode = item.sourceName; // Default
+            // 1. 优先使用已保存的 sourceCode，否则用 sourceName
+            let sourceCode = item.sourceCode || item.sourceName;
 
             // 尝试将中文名转换为代码
             if (window.API_SITES) {
@@ -150,40 +151,56 @@ const FavoritesService = {
             if (!res.ok) throw new Error('API Error');
             const data = await res.json();
 
-            if (data.list && data.list.length > 0) {
+            // 兼容两种 API 格式
+            let episodes = [];
+            let videoTitle = item.title || '未知视频';
+
+            if (data.episodes && Array.isArray(data.episodes) && data.episodes.length > 0) {
+                // 新格式：api.js 返回的 episodes 是纯 URL 数组
+                episodes = data.episodes.map((url, i) => ({
+                    name: `第${i + 1}集`,
+                    url: url
+                }));
+                videoTitle = data.videoInfo?.title || videoTitle;
+            } else if (data.list && data.list.length > 0) {
+                // 旧格式：传统采集站 API 返回
                 const videoData = data.list[0];
+                videoTitle = videoData.vod_name || videoTitle;
                 const playUrlStr = videoData.vod_play_url;
 
-                // 解析集数
-                const sourceGroups = playUrlStr.split('$$$');
-                const currentGroupStr = sourceGroups.find(g => g.includes('m3u8')) || sourceGroups[0];
-                const episodes = currentGroupStr.split('#').map(s => {
-                    const p = s.split('$');
-                    return { name: p.length > 1 ? p[0] : '正片', url: p.length > 1 ? p[1] : p[0] };
-                });
-
-                // 更新本地存储
-                localStorage.setItem('currentEpisodes', JSON.stringify(episodes));
-                localStorage.setItem('currentVideoTitle', videoData.vod_name);
-
-                // 构造完整URL (播放第一集)
-                const finalUrl = episodes[0].url;
-                const playPageUrl = `player.html?url=${encodeURIComponent(finalUrl)}&title=${encodeURIComponent(videoData.vod_name)}&index=0&source=${encodeURIComponent(sourceCode)}&id=${encodeURIComponent(item.vod_id)}`;
-
-                window.location.href = playPageUrl;
-            } else {
-                throw new Error('No Data');
+                if (playUrlStr) {
+                    const sourceGroups = playUrlStr.split('$$$');
+                    const currentGroupStr = sourceGroups.find(g => g.includes('m3u8')) || sourceGroups[0];
+                    episodes = currentGroupStr.split('#').map(s => {
+                        const p = s.split('$');
+                        return { name: p.length > 1 ? p[0] : '正片', url: p.length > 1 ? p[1] : p[0] };
+                    });
+                }
             }
+
+            if (episodes.length === 0) {
+                throw new Error('No valid episodes');
+            }
+
+            // 更新本地存储
+            localStorage.setItem('currentEpisodes', JSON.stringify(episodes));
+            localStorage.setItem('currentVideoTitle', videoTitle);
+
+            // 构造完整URL (播放第一集)
+            const finalUrl = episodes[0].url;
+            // 同时传递 source (用于显示) 和 source_code (用于 API 调用)
+            const playPageUrl = `player.html?url=${encodeURIComponent(finalUrl)}&title=${encodeURIComponent(videoTitle)}&index=0&source=${encodeURIComponent(sourceCode)}&source_code=${encodeURIComponent(sourceCode)}&id=${encodeURIComponent(item.vod_id)}`;
+
+            window.location.href = playPageUrl;
 
         } catch (e) {
             console.error('收藏播放失败:', e);
-            // 兜底：直接跳转，依赖 player.js 的修复逻辑
+            // 兜底：直接跳转到 player.html，让 player.js 的 fetchVideoDetailsById 处理
             showToast('无法获取最新资源，尝试直接播放...', 'warning');
             setTimeout(() => {
-                let fallbackUrl = item.url;
-                if (!fallbackUrl.includes('player.html')) {
-                    fallbackUrl = `player.html?id=${encodeURIComponent(item.vod_id)}&source=${encodeURIComponent(item.sourceName)}`;
-                }
+                // 优先使用 sourceCode，兜底使用 sourceName
+                const sourceParam = item.sourceCode || item.sourceName;
+                const fallbackUrl = `player.html?id=${encodeURIComponent(item.vod_id)}&source=${encodeURIComponent(sourceParam)}&source_code=${encodeURIComponent(sourceParam)}&title=${encodeURIComponent(item.title || '')}`;
                 window.location.href = fallbackUrl;
             }, 1000);
         }

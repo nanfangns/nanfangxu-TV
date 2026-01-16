@@ -81,6 +81,7 @@ function toggleCurrentFavorite() {
     const urlParams = new URLSearchParams(window.location.search);
     const id = urlParams.get('id');
     const source = urlParams.get('source');
+    const sourceCode = urlParams.get('source_code') || source; // 优先使用 source_code
 
     if (!id) {
         showToast('无法收藏：缺少视频ID信息', 'warning');
@@ -90,6 +91,7 @@ function toggleCurrentFavorite() {
     const videoInfo = {
         vod_id: id,
         sourceName: source || '未知来源',
+        sourceCode: sourceCode || source || '未知来源', // 额外保存 sourceCode 用于 API 调用
         title: currentVideoTitle || document.title,
         url: window.location.href,
         pic: '' // 暂无图片信息
@@ -1847,39 +1849,59 @@ async function fetchVideoDetailsById(id, source, index = 0) {
         if (!response.ok) throw new Error('获取视频详情失败');
 
         const data = await response.json();
-        if (!data || !data.list || data.list.length === 0) {
+
+        // 兼容两种 API 格式：
+        // 新格式: { episodes: [...], videoInfo: {...} }
+        // 旧格式: { list: [{vod_play_url: '...', vod_name: '...'}] }
+
+        let episodes = [];
+        let videoTitle = '未知视频';
+
+        if (data.episodes && Array.isArray(data.episodes) && data.episodes.length > 0) {
+            // 新格式：api.js 返回的 episodes 是纯 URL 数组
+            episodes = data.episodes.map((url, i) => ({
+                name: `第${i + 1}集`,
+                url: url
+            }));
+            videoTitle = data.videoInfo?.title || '未知视频';
+        } else if (data.list && data.list.length > 0) {
+            // 旧格式：传统采集站 API 返回
+            const videoData = data.list[0];
+            videoTitle = videoData.vod_name || '未知视频';
+
+            const playUrlStr = videoData.vod_play_url;
+            if (!playUrlStr) throw new Error('无播放地址');
+
+            // 处理多组播放源 (通常用 $$$ 分隔)
+            const sourceGroups = playUrlStr.split('$$$');
+            // 简单策略：优先取 m3u8，或者直接取第一组
+            const currentGroupStr = sourceGroups.find(g => g.includes('m3u8')) || sourceGroups[0];
+
+            // 解析集数 (格式: 名称$URL#名称$URL)
+            episodes = currentGroupStr.split('#').map(segment => {
+                const parts = segment.split('$');
+                if (parts.length >= 2) {
+                    return { name: parts[0], url: parts[1] };
+                } else {
+                    return { name: '正片', url: parts[0] };
+                }
+            });
+        } else {
             throw new Error('未找到视频资源');
         }
 
-        const videoData = data.list[0];
+        if (episodes.length === 0) {
+            throw new Error('无有效播放地址');
+        }
 
         // 更新标题
-        currentVideoTitle = videoData.vod_name || '未知视频';
+        currentVideoTitle = videoTitle;
         document.title = currentVideoTitle + ' - 南方许播放器';
         const titleEl = document.getElementById('videoTitle');
         if (titleEl) titleEl.textContent = currentVideoTitle;
 
         // 保存到 localStorage 供下次使用
         localStorage.setItem('currentVideoTitle', currentVideoTitle);
-
-        // 解析播放地址
-        const playUrlStr = videoData.vod_play_url;
-        if (!playUrlStr) throw new Error('无播放地址');
-
-        // 处理多组播放源 (通常用 $$$ 分隔)
-        const sourceGroups = playUrlStr.split('$$$');
-        // 简单策略：优先取 m3u8，或者直接取第一组
-        const currentGroupStr = sourceGroups.find(g => g.includes('m3u8')) || sourceGroups[0];
-
-        // 解析集数 (格式: 名称$URL#名称$URL)
-        const episodes = currentGroupStr.split('#').map(segment => {
-            const parts = segment.split('$');
-            if (parts.length >= 2) {
-                return { name: parts[0], url: parts[1] };
-            } else {
-                return { name: '正片', url: parts[0] };
-            }
-        });
 
         // 验证索引
         if (index < 0 || index >= episodes.length) index = 0;
@@ -1893,6 +1915,9 @@ async function fetchVideoDetailsById(id, source, index = 0) {
 
         // 获取实际播放链接
         let finalUrl = episodes[index].url;
+
+        // 【关键修复】更新全局 currentVideoUrl，确保进度能正确读取
+        currentVideoUrl = finalUrl;
 
         // 更新 URL 参数
         const newUrl = new URL(window.location.href);
@@ -1908,6 +1933,11 @@ async function fetchVideoDetailsById(id, source, index = 0) {
 
         // 初始化播放
         initPlayer(finalUrl);
+
+        // 更新集数列表和导航按钮
+        renderEpisodes();
+        updateEpisodeInfo();
+        updateButtonStates();
 
     } catch (e) {
         console.error('Fetch Details Error:', e);

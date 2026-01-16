@@ -48,6 +48,17 @@ LibreTV 全局样式
     --tech-silver: #f8fafc;
     --tech-grid: rgba(66, 133, 244, 0.05);
 
+    /* 渐变毛玻璃系统 (Neon Glass) */
+    --neon-purple: #BF5AF2;
+    /* 霓虹紫 */
+    --neon-blue: #0A84FF;
+    /* 电光蓝 */
+    --neon-orange: #FF9F0A;
+    /* 珊瑚橙 */
+    --glass-bg: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+
     --primary-color: var(--tech-blue);
     --accent-color: var(--tech-mint);
     --text-color: #ffffff;
@@ -58,9 +69,36 @@ LibreTV 全局样式
     --font-main: 'Inter', sans-serif;
 
     /* 科技渐变 - 核心 */
-    --gradient-premium: linear-gradient(135deg, #4285F4 0%, #0F9D58 50%, #ffffff 100%);
-    --gradient-youth: linear-gradient(135deg, #4285F4 0%, #1a73e8 40%, #DB4437 100%);
-    --gradient-active: linear-gradient(135deg, #4285F4 0%, #1a73e8 100%);
+    --gradient-premium: linear-gradient(135deg, var(--neon-blue) 0%, var(--neon-purple) 50%, #ffffff 100%);
+    --gradient-youth: linear-gradient(135deg, var(--neon-blue) 0%, #1a73e8 40%, var(--neon-purple) 100%);
+    --gradient-active: linear-gradient(135deg, var(--neon-blue) 0%, var(--neon-purple) 100%);
+    --gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+}
+
+/* 渐变毛玻璃宏 */
+.glass-effect {
+    background: var(--gradient-glass);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    position: relative;
+    overflow: hidden;
+}
+
+/* 3D 边缘光效 */
+.glass-effect::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, transparent 50%, rgba(255, 255, 255, 0.1) 100%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
 }
 
 /* 全局交互重置 - 赋予“Q弹”手感 */

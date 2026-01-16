@@ -301,7 +301,9 @@
 .douban-tag {
     padding: 0.4rem 1.2rem;
     background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
     color: var(--text-dim);
     font-size: 0.9rem;
@@ -309,20 +311,75 @@
     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.douban-tag:hover {
-    background: rgba(66, 133, 244, 0.1);
-    border-color: var(--tech-blue);
-    color: white;
-    transform: translateY(-2px);
-    box-shadow: 0 0 15px rgba(66, 133, 244, 0.2);
+/* 豆瓣卡片 - 渐变毛玻璃升级 */
+.douban-card-glass {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.douban-card-glass:hover {
+    transform: translateY(-8px) scale(1.02) rotateX(2deg);
+    background: rgba(255, 255, 255, 0.06);
+    border-color: var(--neon-blue);
+    box-shadow:
+        0 20px 40px rgba(0, 0, 0, 0.6),
+        0 0 20px rgba(10, 132, 255, 0.2);
+}
+
+/* 搜索结果卡片 - 极速 3D 玻璃拟态 */
+.card-hover {
+    background: rgba(10, 15, 26, 0.6) !important;
+    backdrop-filter: blur(25px) saturate(150%);
+    -webkit-backdrop-filter: blur(25px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+.card-hover:hover {
+    transform: translateY(-5px) perspective(1000px) rotateY(1deg);
+    border-color: rgba(191, 90, 242, 0.4);
+    /* 霓虹紫边框反馈 */
+    background: rgba(255, 255, 255, 0.08) !important;
+    box-shadow:
+        0 25px 50px rgba(0, 0, 0, 0.7),
+        0 0 30px rgba(191, 90, 242, 0.15);
+}
+
+/* 搜索结果卡片边框光效 */
+.card-hover::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 16px;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, transparent 50%, rgba(191, 90, 242, 0.2) 100%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    opacity: 0.5;
+    transition: opacity 0.3s;
+}
+
+.card-hover:hover::after {
+    opacity: 1;
 }
 
 .douban-tag.active {
-    background: var(--gradient-youth);
+    background: var(--gradient-active);
     border-color: transparent;
     color: white;
-    box-shadow: 0 5px 20px rgba(15, 157, 88, 0.4);
+    box-shadow: 0 8px 25px rgba(191, 90, 242, 0.4);
     font-weight: 700;
+    transform: translateY(-2px) scale(1.05);
 }
 
 /* 搜索结果样式 */
@@ -423,14 +480,17 @@
 
 /* History Card Style */
 .history-item {
-    background: linear-gradient(145deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 12px;
-    padding: 1rem;
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 1.2rem;
     margin-bottom: 1rem;
     position: relative;
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
     overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
 }
 
 .history-item::before {
@@ -446,10 +506,12 @@
 }
 
 .history-item:hover {
-    transform: translateX(5px);
-    background: linear-gradient(145deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
-    border-color: rgba(66, 133, 244, 0.3);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    transform: translateY(-5px) perspective(1000px) rotateX(2deg);
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.04) 100%);
+    border-color: rgba(66, 133, 244, 0.4);
+    box-shadow:
+        0 15px 35px rgba(0, 0, 0, 0.5),
+        0 0 20px rgba(66, 133, 244, 0.15);
 }
 
 .history-item:hover::before {
@@ -509,8 +571,8 @@
 
 .history-progress .progress-filled {
     height: 100%;
-    background: var(--gradient-youth);
-    box-shadow: 0 0 10px var(--tech-blue);
+    background: var(--gradient-active);
+    box-shadow: 0 0 15px var(--neon-blue);
 }
 
 .progress-text {
