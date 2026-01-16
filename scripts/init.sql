@@ -41,7 +41,7 @@ CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
 INSERT OR IGNORE INTO users (username, password_hash, role) 
 VALUES (
     'nanfang', 
-    'e665a45920422f9d417e4867efdc48ba04a1f8ff1fa07e998e86f7f2e7ae3', 
+    '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9', 
     'admin'
 );
 

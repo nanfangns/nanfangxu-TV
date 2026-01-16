@@ -36,28 +36,31 @@ LibreTV 全局样式
 }
 
 :root {
-    /* 极致科技感 - 曜石核心 (极简调优) */
+    /* Google 科技感 - 极简调优 */
     --tech-bg: #010204;
-    --tech-blue: #00f2ff;
-    --tech-mint: #00ffaa;
+    --tech-blue: #4285F4;
+    /* Google Blue */
+    --tech-mint: #0F9D58;
+    /* Google Green */
     --tech-purple: #7000ff;
-    --tech-pink: #ff00c8;
+    --tech-pink: #DB4437;
+    /* Google Red */
     --tech-silver: #f8fafc;
-    --tech-grid: rgba(0, 242, 255, 0.05);
+    --tech-grid: rgba(66, 133, 244, 0.05);
 
     --primary-color: var(--tech-blue);
     --accent-color: var(--tech-mint);
     --text-color: #ffffff;
     --text-dim: #94a3b8;
-    --border-color: rgba(0, 242, 255, 0.2);
+    --border-color: rgba(66, 133, 244, 0.3);
 
     --font-tech: 'Orbitron', sans-serif;
     --font-main: 'Inter', sans-serif;
 
-    /* 少年感溢彩渐变 - 核心 */
-    --gradient-premium: linear-gradient(135deg, #00f2ff 0%, #00ffaa 50%, #ffffff 100%);
-    --gradient-youth: linear-gradient(135deg, #00f2ff 0%, #00ffaa 40%, #ff00c8 100%);
-    --gradient-active: linear-gradient(135deg, #7000ff 0%, #ff00c8 100%);
+    /* 科技渐变 - 核心 */
+    --gradient-premium: linear-gradient(135deg, #4285F4 0%, #0F9D58 50%, #ffffff 100%);
+    --gradient-youth: linear-gradient(135deg, #4285F4 0%, #1a73e8 40%, #DB4437 100%);
+    --gradient-active: linear-gradient(135deg, #4285F4 0%, #1a73e8 100%);
 }
 
 /* 全局交互重置 - 赋予“Q弹”手感 */

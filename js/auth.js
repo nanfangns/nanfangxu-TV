@@ -31,8 +31,8 @@ class AuthService {
             await this.pullSync();
             return true;
         } catch (e) {
-            showToast(e.message, 'error');
-            return false;
+            // 不在此处显示通知，交由 UI 层处理
+            throw e;
         }
     }
 
@@ -50,8 +50,8 @@ class AuthService {
             showToast('注册成功，请登录', 'success');
             return true;
         } catch (e) {
-            showToast(e.message, 'error');
-            return false;
+            // 不在此处显示通知，交由 UI 层处理
+            throw e;
         }
     }
 
@@ -246,19 +246,21 @@ class AuthService {
 
                     <div class="space-y-4">
                         <div class="relative group">
-                            <input type="text" id="authUsername" placeholder="用户名" class="w-full bg-gray-800 border-gray-700 text-white rounded-xl px-4 py-3 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all outline-none">
+                            <input type="text" id="authUsername" placeholder="用户名" class="w-full bg-gray-800 border-gray-700 text-white rounded-xl px-4 py-3 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all outline-none">
                         </div>
                         <div class="relative group">
-                            <input type="password" id="authPassword" placeholder="密码" class="w-full bg-gray-800 border-gray-700 text-white rounded-xl px-4 py-3 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all outline-none">
+                            <input type="password" id="authPassword" placeholder="密码" class="w-full bg-gray-800 border-gray-700 text-white rounded-xl px-4 py-3 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all outline-none">
                         </div>
                         
-                        <button id="authBtn" onclick="handleAuthSubmit()" class="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-3 rounded-xl transition-all shadow-lg hover:shadow-cyan-500/20">
+                        <div id="authError" class="hidden my-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm text-center"></div>
+
+                        <button id="authBtn" onclick="handleAuthSubmit()" class="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-bold py-3 rounded-xl transition-all shadow-lg hover:shadow-blue-500/20">
                             立即登录
                         </button>
                     </div>
 
                     <div class="mt-6 text-center">
-                        <button id="authToggle" onclick="toggleAuthMode()" class="text-sm text-cyan-400 hover:text-cyan-300 transition-colors">
+                        <button id="authToggle" onclick="toggleAuthMode()" class="text-sm text-blue-400 hover:text-blue-300 transition-colors">
                             第一次来？点击注册账号
                         </button>
                     </div>
@@ -345,17 +347,28 @@ async function handleAuthSubmit() {
     btn.disabled = true;
     btn.innerText = '请稍候...';
 
-    const success = isRegisterMode
-        ? await authService.register(u, p)
-        : await authService.login(u, p);
+    const errorEl = document.getElementById('authError');
+    if (errorEl) errorEl.classList.add('hidden');
 
-    if (success) {
-        if (isRegisterMode) {
-            toggleAuthMode(); // 切换回登录
-        } else {
-            document.getElementById('authModal').remove();
-            // 登录成功后自动刷新页面，重置所有组件状态（特别是播放器拦截）
-            location.reload();
+    try {
+        const success = isRegisterMode
+            ? await authService.register(u, p)
+            : await authService.login(u, p);
+
+        if (success) {
+            if (isRegisterMode) {
+                toggleAuthMode(); // 切换回登录
+            } else {
+                document.getElementById('authModal').remove();
+                // 登录成功后自动刷新页面，重置所有组件状态（特别是播放器拦截）
+                location.reload();
+            }
+        }
+    } catch (e) {
+        // 捕获 AuthService 抛出的错误，并在窗口内显示
+        if (errorEl) {
+            errorEl.innerText = e.message || (isRegisterMode ? '注册失败' : '登录失败');
+            errorEl.classList.remove('hidden');
         }
     }
     btn.disabled = false;

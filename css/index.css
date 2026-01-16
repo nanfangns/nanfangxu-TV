@@ -90,11 +90,11 @@
 }
 
 .top-corner-button:hover {
-    background: rgba(0, 242, 255, 0.15);
+    background: rgba(66, 133, 244, 0.15);
     border-color: var(--tech-blue);
     color: #fff;
     transform: translateY(-2px) scale(1.05);
-    box-shadow: 0 8px 25px rgba(0, 242, 255, 0.25);
+    box-shadow: 0 8px 25px rgba(66, 133, 244, 0.25);
 }
 
 .top-corner-button:active {
@@ -112,7 +112,7 @@
 /* 搜索区域样式 */
 .search-box {
     height: 4rem;
-    box-shadow: 0 0 30px rgba(0, 0, 0, 0.5), 0 0 10px rgba(0, 229, 255, 0.2);
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.5), 0 0 10px rgba(66, 133, 244, 0.2);
     border-radius: 12px;
     overflow: hidden;
     display: flex;
@@ -165,8 +165,8 @@
     display: inline-block;
     padding: 0.3rem 1rem;
     margin: 0.25rem;
-    background: rgba(0, 242, 255, 0.05);
-    border: 1px solid rgba(0, 242, 255, 0.2);
+    background: rgba(66, 133, 244, 0.05);
+    border: 1px solid rgba(66, 133, 244, 0.2);
     border-radius: 12px;
     color: var(--text-dim);
     font-size: 0.85rem;
@@ -177,7 +177,7 @@
     background: var(--gradient-youth);
     color: white;
     transform: translateY(-2px) scale(1.05);
-    box-shadow: 0 5px 15px rgba(0, 255, 170, 0.3);
+    box-shadow: 0 5px 15px rgba(15, 157, 88, 0.3);
     border-color: transparent;
 }
 
@@ -212,7 +212,7 @@
 .douban-toggle-button.active {
     background: var(--gradient-active);
     color: white;
-    box-shadow: 0 0 15px rgba(112, 0, 255, 0.4);
+    box-shadow: 0 0 15px rgba(66, 133, 244, 0.4);
 }
 
 .douban-refresh-button {
@@ -230,7 +230,7 @@
 
 .douban-refresh-button:hover {
     transform: translateY(-2px) scale(1.05);
-    box-shadow: 0 5px 20px rgba(0, 255, 170, 0.4);
+    box-shadow: 0 5px 20px rgba(15, 157, 88, 0.4);
 }
 
 /* 科技感换一批按钮 */
@@ -243,8 +243,8 @@
     font-size: 0.875rem;
     font-weight: 600;
     color: #fff;
-    background: linear-gradient(135deg, rgba(0, 242, 255, 0.15) 0%, rgba(112, 0, 255, 0.15) 100%);
-    border: 1px solid rgba(0, 242, 255, 0.4);
+    background: linear-gradient(135deg, rgba(66, 133, 244, 0.15) 0%, rgba(15, 157, 88, 0.15) 100%);
+    border: 1px solid rgba(66, 133, 244, 0.4);
     border-radius: 8px;
     overflow: hidden;
     cursor: pointer;
@@ -268,9 +268,9 @@
 }
 
 .tech-refresh-btn:hover {
-    background: linear-gradient(135deg, rgba(0, 242, 255, 0.3) 0%, rgba(112, 0, 255, 0.3) 100%);
+    background: linear-gradient(135deg, rgba(66, 133, 244, 0.3) 0%, rgba(15, 157, 88, 0.3) 100%);
     border-color: var(--tech-blue);
-    box-shadow: 0 0 20px rgba(0, 242, 255, 0.3), inset 0 0 10px rgba(0, 242, 255, 0.1);
+    box-shadow: 0 0 20px rgba(66, 133, 244, 0.3), inset 0 0 10px rgba(66, 133, 244, 0.1);
     transform: translateY(-2px);
 }
 
@@ -310,18 +310,18 @@
 }
 
 .douban-tag:hover {
-    background: rgba(0, 242, 255, 0.1);
+    background: rgba(66, 133, 244, 0.1);
     border-color: var(--tech-blue);
     color: white;
     transform: translateY(-2px);
-    box-shadow: 0 0 15px rgba(0, 242, 255, 0.2);
+    box-shadow: 0 0 15px rgba(66, 133, 244, 0.2);
 }
 
 .douban-tag.active {
     background: var(--gradient-youth);
     border-color: transparent;
     color: white;
-    box-shadow: 0 5px 20px rgba(0, 255, 170, 0.4);
+    box-shadow: 0 5px 20px rgba(15, 157, 88, 0.4);
     font-weight: 700;
 }
 
@@ -413,11 +413,11 @@
 /* Tech Header */
 .tech-header-text {
     font-family: var(--font-tech);
-    background: linear-gradient(135deg, #fff 0%, #a5f3fc 100%);
+    background: linear-gradient(135deg, #fff 0%, #d2e3fc 100%);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
-    text-shadow: 0 0 20px rgba(0, 242, 255, 0.3);
+    text-shadow: 0 0 20px rgba(66, 133, 244, 0.3);
     letter-spacing: 1px;
 }
 
@@ -448,7 +448,7 @@
 .history-item:hover {
     transform: translateX(5px);
     background: linear-gradient(145deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
-    border-color: rgba(0, 242, 255, 0.3);
+    border-color: rgba(66, 133, 244, 0.3);
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
 }
 
@@ -575,7 +575,7 @@
 }
 
 .tech-toggle:checked {
-    background: rgba(0, 242, 255, 0.2);
+    background: rgba(66, 133, 244, 0.2);
     border-color: var(--tech-blue);
     color: #fff;
 }
@@ -601,7 +601,7 @@
 .tech-input-field:focus {
     border-color: var(--tech-blue);
     background: rgba(0, 0, 0, 0.5);
-    box-shadow: 0 0 15px rgba(0, 242, 255, 0.1);
+    box-shadow: 0 0 15px rgba(66, 133, 244, 0.1);
     outline: none;
 }
 
