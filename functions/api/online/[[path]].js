@@ -1,5 +1,5 @@
 const JWT_ALGO = { name: "HMAC", hash: "SHA-256" };
-const ACTIVE_WINDOW_MS = 2 * 60 * 1000;
+const ACTIVE_WINDOW_MS = 10 * 1000;
 const INIT_SQL = [
     `CREATE TABLE IF NOT EXISTS user_presence (
         user_id INTEGER PRIMARY KEY,
@@ -81,6 +81,22 @@ export async function onRequest(context) {
         ).bind(user.id, now).run();
 
         return new Response(JSON.stringify({ ok: true, last_seen: now }));
+    }
+
+    if (path.endsWith("/logout") && request.method === "POST") {
+        const authHeader = request.headers.get("Authorization");
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
+        }
+
+        const token = authHeader.split(" ")[1];
+        const user = await verifyToken(token, env.JWT_SECRET || "default_secret");
+        if (!user) {
+            return new Response(JSON.stringify({ error: "Token 无效或已过期" }), { status: 401 });
+        }
+
+        await env.DB.prepare("DELETE FROM user_presence WHERE user_id = ?").bind(user.id).run();
+        return new Response(JSON.stringify({ ok: true }));
     }
 
     if (path.endsWith("/count") && request.method === "GET") {

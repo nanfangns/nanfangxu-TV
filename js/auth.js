@@ -63,6 +63,15 @@ class AuthService {
             const btn = document.getElementById('authButton');
             if (btn) btn.innerHTML = '<span class="text-xs">同步中...</span>';
             await this.pushSync(); // 强制等待同步完成
+
+            try {
+                await fetch('/api/online/logout', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${this.token}` }
+                });
+            } catch (e) {
+                console.warn('Online logout failed', e);
+            }
         }
 
         localStorage.removeItem(AUTH_TOKEN_KEY);
