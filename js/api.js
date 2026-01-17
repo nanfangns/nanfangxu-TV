@@ -580,7 +580,12 @@ async function handleMultipleCustomSearch(searchQuery, customApiUrls) {
     window.fetch = async function (input, init) {
         const requestUrl = typeof input === 'string' ? new URL(input, window.location.origin) : input.url;
 
-        if (requestUrl.pathname.startsWith('/api/') && !requestUrl.pathname.startsWith('/api/auth') && !requestUrl.pathname.startsWith('/api/user')) {
+        if (
+            requestUrl.pathname.startsWith('/api/') &&
+            !requestUrl.pathname.startsWith('/api/auth') &&
+            !requestUrl.pathname.startsWith('/api/user') &&
+            !requestUrl.pathname.startsWith('/api/online')
+        ) {
             try {
                 const data = await handleApiRequest(requestUrl);
                 return new Response(data, {

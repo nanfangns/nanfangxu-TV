@@ -19,3 +19,13 @@ CREATE TABLE IF NOT EXISTS user_data (
 
 -- 3. 创建索引优化查询
 CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
+
+-- 4. 在线状态表
+CREATE TABLE IF NOT EXISTS user_presence (
+    user_id INTEGER PRIMARY KEY,
+    last_seen INTEGER NOT NULL,
+    FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- 5. 在线状态索引
+CREATE INDEX IF NOT EXISTS idx_user_presence_last_seen ON user_presence(last_seen);
