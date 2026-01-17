@@ -78,23 +78,26 @@ window.addEventListener('load', function () {
 // ============== FAVORITES =======
 // =================================
 function toggleCurrentFavorite() {
+    const btn = document.getElementById('favoriteBtn');
     const urlParams = new URLSearchParams(window.location.search);
-    const id = urlParams.get('id');
+
+    // 优先从按钮绑定的 dataset 中获取，其次从 URL 获取
+    const id = btn ? btn.dataset.vodId : urlParams.get('id');
     const source = urlParams.get('source');
-    const sourceCode = urlParams.get('source_code') || source; // 优先使用 source_code
+    const sourceCode = urlParams.get('source_code') || source;
 
     if (!id) {
-        showToast('无法收藏：缺少视频ID信息', 'warning');
+        showToast('无法操作：缺少视频ID信息', 'warning');
         return;
     }
 
     const videoInfo = {
         vod_id: id,
         sourceName: source || '未知来源',
-        sourceCode: sourceCode || source || '未知来源', // 额外保存 sourceCode 用于 API 调用
+        sourceCode: sourceCode || source || '未知来源',
         title: currentVideoTitle || document.title,
         url: window.location.href,
-        pic: '' // 暂无图片信息
+        pic: '' // 暂无图片
     };
 
     if (window.FavoritesService) {
@@ -1938,6 +1941,15 @@ async function fetchVideoDetailsById(id, source, index = 0) {
         renderEpisodes();
         updateEpisodeInfo();
         updateButtonStates();
+
+        // 【新增】更新收藏按钮绑定的 ID，确保 toggle 逻辑能匹配
+        const favBtn = document.getElementById('favoriteBtn');
+        if (favBtn) {
+            favBtn.dataset.vodId = id;
+            if (window.FavoritesService) {
+                window.FavoritesService.updateUI();
+            }
+        }
 
     } catch (e) {
         console.error('Fetch Details Error:', e);

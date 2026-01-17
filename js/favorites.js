@@ -90,11 +90,17 @@ const FavoritesService = {
 
     // 切换收藏状态
     toggleFavorite(videoInfo) {
+        let isFav = false;
         if (this.isFavorite(videoInfo.vod_id)) {
-            return !this.removeFavorite(videoInfo.vod_id); // 返回当前状态 (false=未收藏)
+            this.removeFavorite(videoInfo.vod_id);
+            isFav = false;
         } else {
-            return this.addFavorite(videoInfo); // 返回当前状态 (true=已收藏)
+            this.addFavorite(videoInfo);
+            isFav = true;
         }
+        // 强制触发 UI 同步
+        this.updateUI();
+        return isFav;
     },
 
     // 更新所有相关的 UI 状态
@@ -102,9 +108,8 @@ const FavoritesService = {
         // 1. 更新播放页的收藏按钮状态
         const btn = document.getElementById('favoriteBtn');
         if (btn) {
-            // 需要获取当前视频的 ID，通常在 player.js 的全局变量或 URL 参数中
-            // 这里假设通过全局变量或 DOM 属性获取当前 ID
-            const currentId = btn.dataset.vodId;
+            // 优先从 dataset 获取 ID，如果是在 player.js 初始化前，尝试从 URL 获取
+            const currentId = btn.dataset.vodId || (new URLSearchParams(window.location.search)).get('id');
             if (currentId) {
                 const isFav = this.isFavorite(currentId);
                 updateFavoriteButtonState(btn, isFav);
