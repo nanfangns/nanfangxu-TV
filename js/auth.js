@@ -3,8 +3,8 @@
  * 处理登录、注册及云端同步
  */
 
-const AUTH_TOKEN_KEY = 'libretv_auth_token';
-const USER_INFO_KEY = 'libretv_user_info';
+const AUTH_TOKEN_KEY = 'nanfangxutv_auth_token';
+const USER_INFO_KEY = 'nanfangxutv_user_info';
 
 class AuthService {
     constructor() {
