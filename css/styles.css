@@ -55,9 +55,9 @@ LibreTV 全局样式
     /* 电光蓝 */
     --neon-orange: #FF9F0A;
     /* 珊瑚橙 */
-    --glass-bg: rgba(255, 255, 255, 0.05);
-    --glass-border: rgba(255, 255, 255, 0.1);
-    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+    --glass-bg: rgba(255, 255, 255, 0.035);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
 
     --primary-color: var(--tech-blue);
     --accent-color: var(--tech-mint);
@@ -72,7 +72,7 @@ LibreTV 全局样式
     --gradient-premium: linear-gradient(135deg, var(--neon-blue) 0%, var(--neon-purple) 50%, #ffffff 100%);
     --gradient-youth: linear-gradient(135deg, var(--neon-blue) 0%, #1a73e8 40%, var(--neon-purple) 100%);
     --gradient-active: linear-gradient(135deg, var(--neon-blue) 0%, var(--neon-purple) 100%);
-    --gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+    --gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.025) 100%);
 }
 
 /* 渐变毛玻璃宏 */
@@ -93,7 +93,7 @@ LibreTV 全局样式
     inset: 0;
     border-radius: inherit;
     padding: 1px;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, transparent 50%, rgba(255, 255, 255, 0.1) 100%);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, transparent 50%, rgba(255, 255, 255, 0.06) 100%);
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
