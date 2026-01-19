@@ -609,8 +609,8 @@ function renderDoubanCards(data, container, isAppend = false) {
                 
                 <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 
-                <div class="absolute bottom-2 left-2 flex items-center gap-1.5 bg-black/60 backdrop-blur-md text-white text-[10px] px-2 py-0.5 rounded-full border border-white/5">
-                    <span class="text-yellow-400 text-xs">★</span> ${safeRate}
+                <div class="douban-rating-badge absolute bottom-2 left-2 flex items-center gap-1.5 bg-black/60 backdrop-blur-md text-white text-[10px] px-2 py-0.5 rounded-full border border-white/5">
+                    <span class="douban-rating-star text-yellow-400 text-xs">★</span> ${safeRate}
                 </div>
                 
                 <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
@@ -623,7 +623,7 @@ function renderDoubanCards(data, container, isAppend = false) {
             </div>
             <div class="px-2.5 pt-2.5 text-center" style="padding-bottom: ${randomPb}rem">
                 <button onclick="fillAndSearchWithDouban('${safeTitle}')" 
-                        class="text-xs sm:text-sm font-bold text-gray-200 truncate w-full group-hover:text-cyan-400 transition-colors duration-300"
+                        class="douban-card-title text-xs sm:text-sm font-bold text-gray-200 truncate w-full group-hover:text-cyan-400 transition-colors duration-300"
                         title="${safeTitle}">
                     ${safeTitle}
                 </button>

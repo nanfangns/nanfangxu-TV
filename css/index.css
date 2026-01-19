@@ -397,6 +397,20 @@
     color: #2563eb !important;
 }
 
+[data-theme="light"] .douban-rating-badge {
+    background: rgba(248, 250, 252, 0.9);
+    border-color: rgba(148, 163, 184, 0.4);
+    color: #0f172a;
+}
+
+[data-theme="light"] .douban-rating-star {
+    color: #f59e0b;
+}
+
+[data-theme="light"] .douban-card-title {
+    color: #1f2937;
+}
+
 .card-hover:hover {
     transform: translateY(-5px) perspective(1000px) rotateY(1deg);
     border-color: rgba(191, 90, 242, 0.4);

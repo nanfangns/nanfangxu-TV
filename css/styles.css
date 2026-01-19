@@ -44,6 +44,10 @@ LibreTV 全局样式
     background-color: #f8fafc !important;
 }
 
+[data-theme="light"] [class*="bg-[#0a0a0f]"] {
+    background-color: rgba(248, 250, 252, 0.95) !important;
+}
+
 .close-btn svg {
     width: 16px;
     height: 16px;
@@ -1976,6 +1980,11 @@ body[data-theme="light"],
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
+[data-theme="light"] .history-title {
+    color: #0f172a !important;
+    text-shadow: none;
+}
+
 .history-meta {
     color: #bbb;
     font-size: 0.75rem;
@@ -1984,6 +1993,10 @@ body[data-theme="light"],
     flex-wrap: wrap;
     margin-bottom: 1px;
     /* 减小边距 */
+}
+
+[data-theme="light"] .history-meta {
+    color: #64748b;
 }
 
 .history-episode {
@@ -2000,6 +2013,22 @@ body[data-theme="light"],
     /* 减小字体大小 */
     margin-top: 1px;
     /* 减小顶部边距 */
+}
+
+[data-theme="light"] .history-episode {
+    color: #2563eb;
+}
+
+[data-theme="light"] .history-source {
+    color: #0f766e;
+}
+
+[data-theme="light"] .history-time {
+    color: #94a3b8;
+}
+
+[data-theme="light"] .history-separator {
+    color: #cbd5f5;
 }
 
 .history-separator {

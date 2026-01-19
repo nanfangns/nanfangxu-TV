@@ -1166,6 +1166,8 @@ function playVideo(url, vod_name, sourceCode, episodeIndex = 0, vodId = '') {
         playerUrl += `&returnUrl=${encodeURIComponent(currentPath)}`;
     }
 
+    const isSearchPage = currentPath.includes('/s=') || currentPath.includes('?s=');
+
     // 保存当前状态到localStorage
     try {
         localStorage.setItem('currentVideoTitle', vod_name || '未知视频');
@@ -1173,9 +1175,14 @@ function playVideo(url, vod_name, sourceCode, episodeIndex = 0, vodId = '') {
         localStorage.setItem('currentEpisodeIndex', episodeIndex);
         localStorage.setItem('currentSourceCode', sourceCode || '');
         localStorage.setItem('lastPlayTime', Date.now());
-        localStorage.setItem('lastSearchPage', currentPath);
-        localStorage.setItem('lastPageUrl', currentPath);  // 确保保存返回页面URL
-        sessionStorage.setItem('playerReturnUrl', currentPath);
+        if (isSearchPage) {
+            localStorage.setItem('lastSearchPage', currentPath);
+        } else {
+            localStorage.setItem('lastPageUrl', currentPath);
+        }
+        if (!currentPath.includes('player.html')) {
+            sessionStorage.setItem('playerReturnUrl', currentPath);
+        }
     } catch (e) {
         console.error('保存播放状态失败:', e);
     }

@@ -78,7 +78,7 @@ window.addEventListener('load', function () {
     const returnUrl = urlParams.get('returnUrl');
     const decodedReturnUrl = returnUrl ? decodeURIComponent(returnUrl) : '';
 
-    if (decodedReturnUrl) {
+    if (decodedReturnUrl && !decodedReturnUrl.includes('player.html')) {
         sessionStorage.setItem('playerReturnUrl', decodedReturnUrl);
     }
 
