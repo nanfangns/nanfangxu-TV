@@ -1165,7 +1165,7 @@ function playVideo(url, vod_name, sourceCode, episodeIndex = 0, vodId = '') {
 
     const isSearchPage = currentPath.includes('/s=') || currentPath.includes('?s=');
     const storedSearchPage = localStorage.getItem('lastSearchPage');
-    const returnTarget = isSearchPage && storedSearchPage ? storedSearchPage : currentPath;
+    const returnTarget = storedSearchPage || currentPath;
 
     // 构建播放页面URL，直接跳转至 player.html 以消除回退历史陷阱
     let playerUrl = `player.html?id=${vodId || ''}&source=${sourceCode || ''}&url=${encodeURIComponent(url)}&index=${episodeIndex}&title=${encodeURIComponent(vod_name || '')}`;
