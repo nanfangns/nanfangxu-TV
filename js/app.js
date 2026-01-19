@@ -769,9 +769,9 @@ async function search(isHistoryNav = false) {
     }
     document.title = `搜索: ${query} - 南方许`;
     try {
-        const currentUrl = window.location.href;
-        localStorage.setItem('lastSearchPage', currentUrl);
-        sessionStorage.setItem('playerReturnUrl', currentUrl);
+        const safeSearchUrl = `${window.location.origin}/?s=${encodeURIComponent(query)}`;
+        localStorage.setItem('lastSearchPage', safeSearchUrl);
+        sessionStorage.setItem('playerReturnUrl', safeSearchUrl);
     } catch (e) { }
 
     let totalResultsCount = 0;

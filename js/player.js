@@ -13,6 +13,21 @@ function goBack(event) {
     };
 
     const isSearchUrl = (url) => url && (url.includes('/s=') || url.includes('?s='));
+    const normalizeSearchUrl = (url) => {
+        if (!url) return url;
+        try {
+            const parsed = new URL(url, window.location.origin);
+            if (parsed.pathname.startsWith('/s=')) {
+                const keyword = parsed.pathname.replace('/s=', '');
+                const normalized = new URL('/', parsed.origin);
+                normalized.searchParams.set('s', decodeURIComponent(keyword));
+                return normalized.toString();
+            }
+            return parsed.toString();
+        } catch (e) {
+            return url;
+        }
+    };
 
     // 1. 优先检查URL参数中的returnUrl
     const urlParams = new URLSearchParams(window.location.search);
@@ -20,21 +35,21 @@ function goBack(event) {
     const decodedReturnUrl = returnUrl ? decodeURIComponent(returnUrl) : '';
 
     if (isSearchUrl(decodedReturnUrl)) {
-        window.location.replace(decodedReturnUrl);
+        window.location.replace(normalizeSearchUrl(decodedReturnUrl));
         return;
     }
 
     // 2. 检查 sessionStorage 中保存的 playerReturnUrl
     const sessionReturnUrl = sessionStorage.getItem('playerReturnUrl');
     if (isSearchUrl(sessionReturnUrl) && sessionReturnUrl !== window.location.href) {
-        window.location.replace(sessionReturnUrl);
+        window.location.replace(normalizeSearchUrl(sessionReturnUrl));
         return;
     }
 
     // 3. 检查 localStorage 中保存的 lastSearchPage
     const lastSearchPage = localStorage.getItem('lastSearchPage');
     if (isSearchUrl(lastSearchPage) && lastSearchPage !== window.location.href) {
-        window.location.replace(lastSearchPage);
+        window.location.replace(normalizeSearchUrl(lastSearchPage));
         return;
     }
 
