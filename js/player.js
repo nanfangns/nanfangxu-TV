@@ -12,7 +12,17 @@ function goBack(event) {
         return true;
     };
 
-    const isSearchUrl = (url) => url && (url.includes('/s=') || url.includes('?s='));
+    const isSearchUrl = (url) => {
+        if (!url) return false;
+        if (url.includes('/s=') || url.includes('?s=')) return true;
+        try {
+            const parsed = new URL(url, window.location.origin);
+            if (parsed.pathname.startsWith('/s=')) return true;
+            return parsed.searchParams.has('s');
+        } catch (e) {
+            return false;
+        }
+    };
     const normalizeSearchUrl = (url) => {
         if (!url) return url;
         try {
@@ -48,9 +58,15 @@ function goBack(event) {
 
     // 3. 检查 localStorage 中保存的 lastSearchPage
     const lastSearchPage = localStorage.getItem('lastSearchPage');
-    if (isSearchUrl(lastSearchPage) && lastSearchPage !== window.location.href) {
-        window.location.replace(normalizeSearchUrl(lastSearchPage));
-        return;
+    if (lastSearchPage && lastSearchPage !== window.location.href) {
+        if (isSearchUrl(lastSearchPage)) {
+            window.location.replace(normalizeSearchUrl(lastSearchPage));
+            return;
+        }
+        if (isSafeReturnUrl(lastSearchPage)) {
+            window.location.replace(lastSearchPage);
+            return;
+        }
     }
 
     if (isSafeReturnUrl(decodedReturnUrl)) {
