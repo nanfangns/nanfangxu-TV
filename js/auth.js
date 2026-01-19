@@ -75,10 +75,10 @@ class AuthService {
     }
 
     // 登出
-    async logout() {
+    async logout(skipSync = false) {
         // --- 修复：退出前强制同步数据 ---
         // 防止用户在产生数据后立即退出（少于防抖时间），导致数据未上传
-        if (this.isLoggedIn) {
+        if (this.isLoggedIn && !skipSync) {
             const btn = document.getElementById('authButton');
             if (btn) btn.innerHTML = '<span class="text-xs">同步中...</span>';
             await this.pushSync(); // 强制等待同步完成
@@ -109,6 +109,24 @@ class AuthService {
         this.updateAuthUI(); // 更新UI状态
         showToast('已退出登录', 'info');
         location.reload();
+    }
+
+    // 会话过期统一处理
+    handleSessionExpired() {
+        if (!this.isLoggedIn) return;
+
+        console.log('Session expired, logging out...');
+        // 调用 logout 但跳过同步（因为 Token 已经无效了，同步肯定会失败）
+        this.logout(true);
+
+        // 延迟一点显示提示，确保页面刷新后能看到（如果 logout 触发了刷新）
+        // 但由于 logout 会 reload 页面，这里的 UI 提示可能需要 reload 后处理
+        // 实际上 logout 的 location.reload() 会清空 UI，所以我们可以先不 reload 或者把提示逻辑放在 reload 之前
+        // 这里做一个妥协：logout 里的 reload 是为了重置状态，但会打断 Toast
+        // 我们修改 logout 逻辑？或者简单点，先弹窗再调用 logout 的非 reload 部分
+        // 鉴于 logout 必须 reload 清理内存状态，我们接受 Toast 被刷掉，
+        // 但我们可以存一个标记到 sessionStorage，reload 后再弹 Toast
+        sessionStorage.setItem('auth_expired_msg', 'true');
     }
 
     saveSession(token, user) {
@@ -169,12 +187,19 @@ class AuthService {
                 },
                 body: JSON.stringify(syncData)
             });
+
+            // 拦截 401 Token 过期
+            if (response.status === 401) {
+                this.handleSessionExpired();
+                return;
+            }
+
             const result = await response.json();
 
             // 检查用户不存在错误
             if (result.code === 'USER_NOT_FOUND') {
                 console.log('检测到用户已被删除，自动登出');
-                this.logout();
+                this.logout(true);
                 alert('您的账号已被删除或不存在，请重新注册');
                 return;
             }
@@ -182,7 +207,8 @@ class AuthService {
             if (result.success) {
                 // console.log('数据已成功同步至云端');
             } else if (result.error) {
-                alert('云端同步失败: ' + result.error);
+                // 普通错误只 log 不 alert，免得打扰用户
+                console.warn('云端同步失败: ' + result.error);
             }
         } catch (e) {
             console.error('云端同步失败:', e);
@@ -200,18 +226,25 @@ class AuthService {
             const response = await fetch('/api/user/sync', {
                 headers: { 'Authorization': `Bearer ${this.token}` }
             });
+
+            // 拦截 401 Token 过期
+            if (response.status === 401) {
+                this.handleSessionExpired();
+                return;
+            }
+
             const data = await response.json();
 
             // 检查用户不存在错误
             if (data.code === 'USER_NOT_FOUND') {
                 console.log('检测到用户已被删除，自动登出');
-                this.logout();
+                this.logout(true); // Skip sync
                 alert('您的账号已被删除或不存在，请重新注册');
                 return;
             }
 
             if (data.error) {
-                alert('从云端拉取数据失败: ' + data.error);
+                console.warn('从云端拉取数据失败: ' + data.error);
                 return;
             }
 
@@ -500,6 +533,16 @@ window.addEventListener('load', () => {
     // 再次尝试更新UI，确保DOM已加载
     if (authService && authService.updateAuthUI) {
         authService.updateAuthUI();
+    }
+
+    // --- 检查会话过期标记 ---
+    // 如果之前因为 Token 过期触发了 logout (reload)，这里会捕获到标记并提示用户
+    if (sessionStorage.getItem('auth_expired_msg')) {
+        sessionStorage.removeItem('auth_expired_msg');
+        showToast('登录已过期，请重新登录', 'warning');
+        if (authService && authService.showAuthModal) {
+            setTimeout(() => authService.showAuthModal(), 500);
+        }
     }
 
     if (authService.isLoggedIn) {
