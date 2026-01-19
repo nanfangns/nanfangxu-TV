@@ -1175,6 +1175,7 @@ function playVideo(url, vod_name, sourceCode, episodeIndex = 0, vodId = '') {
         localStorage.setItem('lastPlayTime', Date.now());
         localStorage.setItem('lastSearchPage', currentPath);
         localStorage.setItem('lastPageUrl', currentPath);  // 确保保存返回页面URL
+        sessionStorage.setItem('playerReturnUrl', currentPath);
     } catch (e) {
         console.error('保存播放状态失败:', e);
     }
