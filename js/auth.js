@@ -1,5 +1,5 @@
 /**
- * LibreTV 前端账号系统逻辑
+ * 南方许TV 前端账号系统逻辑
  * 处理登录、注册及云端同步
  */
 
@@ -53,6 +53,25 @@ class AuthService {
             // 不在此处显示通知，交由 UI 层处理
             throw e;
         }
+    }
+
+    // 修改密码
+    async changePassword(oldPassword, newPassword) {
+        if (!this.isLoggedIn) throw new Error('未登录');
+
+        const response = await fetch('/api/user/password', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${this.token}`
+            },
+            body: JSON.stringify({ oldPassword, newPassword })
+        });
+
+        const data = await response.json();
+        if (data.error) throw new Error(data.error);
+
+        return true;
     }
 
     // 登出
@@ -322,6 +341,10 @@ class AuthService {
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                 观看历史
                             </button>
+                            <button onclick="authService.showChangePasswordModal(); document.getElementById('authModal').remove();" class="w-full bg-gray-800 hover:bg-gray-700 text-white py-2 rounded-lg transition-colors flex items-center justify-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11.542 16.542a3 3 0 00-4.085 4.085l-1.657 1.657-3.115-3.115 1.657-1.657a3 3 0 004.085-4.085l1.758-1.758A6 6 0 0121 9z"></path></svg>
+                                修改密码
+                            </button>
                             <button onclick="authService.pullSync(); showToast('同步成功', 'success')" class="w-full bg-gray-800 hover:bg-gray-700 text-white py-2 rounded-lg transition-colors flex items-center justify-center gap-2">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                                 立即手动同步
@@ -335,6 +358,38 @@ class AuthService {
             </div>
         `;
         document.body.insertAdjacentHTML('beforeend', userHtml);
+    }
+
+    showChangePasswordModal() {
+        const modalHtml = `
+            <div id="changePwdModal" class="fixed inset-0 z-[99999] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in">
+                <div class="w-[90%] max-w-md p-8 rounded-2xl bg-gray-900 border border-white/10 shadow-2xl relative">
+                    <button onclick="document.getElementById('changePwdModal').remove()" class="absolute right-4 top-4 text-gray-400 hover:text-white transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+
+                    <h2 class="text-xl font-bold text-white mb-6 text-center">修改密码</h2>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-gray-400 text-sm mb-1">当前密码</label>
+                            <input type="password" id="oldPwd" class="w-full bg-gray-800 border-gray-700 text-white rounded-xl px-4 py-3 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-gray-400 text-sm mb-1">新密码</label>
+                            <input type="password" id="newPwd" class="w-full bg-gray-800 border-gray-700 text-white rounded-xl px-4 py-3 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all outline-none">
+                        </div>
+                        
+                        <div id="pwdError" class="hidden my-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm text-center"></div>
+
+                        <button onclick="handleChangePasswordSubmit()" id="changePwdBtn" class="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-bold py-3 rounded-xl transition-all mt-2">
+                            确认修改
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
     }
 }
 
@@ -401,6 +456,42 @@ function toggleAuthMode() {
         sub.innerText = '登录以同步您的播放记录和收藏夹';
         btn.innerText = '立即登录';
         toggle.innerText = '第一次来？点击注册账号';
+    }
+}
+
+async function handleChangePasswordSubmit() {
+    const oldPwd = document.getElementById('oldPwd').value;
+    const newPwd = document.getElementById('newPwd').value;
+    const errorEl = document.getElementById('pwdError');
+    const btn = document.getElementById('changePwdBtn');
+
+    if (!oldPwd || !newPwd) {
+        errorEl.innerText = '请完整填写';
+        errorEl.classList.remove('hidden');
+        return;
+    }
+
+    if (newPwd.length < 6) {
+        errorEl.innerText = '新密码至少需要6位';
+        errorEl.classList.remove('hidden');
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerText = '处理中...';
+    errorEl.classList.add('hidden');
+
+    try {
+        await authService.changePassword(oldPwd, newPwd);
+        showToast('修改成功，请重新登录', 'success');
+        document.getElementById('changePwdModal').remove();
+        authService.logout();
+    } catch (e) {
+        errorEl.innerText = e.message || '修改失败';
+        errorEl.classList.remove('hidden');
+    } finally {
+        btn.disabled = false;
+        btn.innerText = '确认修改';
     }
 }
 

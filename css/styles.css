@@ -602,6 +602,53 @@ a:active {
     letter-spacing: -2px;
 }
 
+/* --- Global Logo / Branding System (From Player) --- */
+.logo-brand {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    font-family: var(--font-tech);
+    transition: transform 0.3s ease;
+}
+
+.logo-char {
+    display: inline-block;
+    background: linear-gradient(90deg, #4285F4 0%, #DB4437 25%, #F4B400 50%, #0F9D58 75%, #4285F4 100%) !important;
+    background-size: 200% auto !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+    color: transparent !important;
+
+    animation-name: tech-wave-jump, rainbow-shift;
+    animation-duration: 3s, 8s;
+    animation-timing-function: ease-in-out, linear;
+    animation-iteration-count: infinite, infinite;
+
+    /* Delay: index * 0.6s for sequential jumping */
+    animation-delay: calc(var(--char-index) * 0.6s), 0s;
+    transform-origin: bottom center;
+}
+
+@keyframes tech-wave-jump {
+    0%, 80%, 100% {
+        transform: translateY(0) scale(1);
+        filter: drop-shadow(0 0 5px rgba(66, 133, 244, 0.2));
+    }
+    10% {
+        transform: translateY(-12px) scale(1.1);
+        filter: drop-shadow(0 0 15px rgba(66, 133, 244, 0.6));
+    }
+    20% {
+        transform: translateY(2px) scale(0.95);
+        filter: drop-shadow(0 0 8px rgba(66, 133, 244, 0.3));
+    }
+    30% {
+        transform: translateY(0) scale(1);
+        filter: drop-shadow(0 0 5px rgba(66, 133, 244, 0.2));
+    }
+}
+
 /* ============================================ */
 /*           Real-Time Visitor Widget           */
 /* ============================================ */

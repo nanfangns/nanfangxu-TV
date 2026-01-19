@@ -5,195 +5,201 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>关于我们 - 南方许</title>
-	<script src="libs/tailwindcss.min.js"></script>
-	<link rel="stylesheet" href="css/styles.css?v=1.2">
-	<link rel="manifest" href="manifest.json">
+	<meta name="description" content="了解 南方许 - 一个由技术驱动、以用户为中心的免费在线视频搜索平台。">
 
 	<!-- Favicon -->
 	<link rel="icon" href="image/logo.png">
 	<link rel="apple-touch-icon" href="image/logo-black.png">
+	<link rel="manifest" href="manifest.json">
+
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&family=Inter:wght@100..900&display=swap"
+		rel="stylesheet">
+	<script src="libs/tailwindcss.min.js"></script>
+	<link rel="stylesheet" href="css/styles.css?v=1.4">
+	<style>
+		@keyframes fadeIn {
+			from {
+				opacity: 0;
+				transform: translateY(20px) scale(0.98);
+			}
+
+			to {
+				opacity: 1;
+				transform: translateY(0) scale(1);
+			}
+		}
+
+		.animate-fade-in {
+			animation: fadeIn 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+		}
+
+		.hero-section {
+			background: radial-gradient(circle at top right, rgba(66, 133, 244, 0.05), transparent 40%),
+				radial-gradient(circle at bottom left, rgba(15, 157, 88, 0.05), transparent 40%);
+		}
+	</style>
 </head>
 
-<body class="page-bg text-white flex flex-col min-h-screen">
-	<header class="p-6 flex items-center manga-divider-top gap-6 bg-black/80 backdrop-blur-xl">
-		<div class="container mx-auto flex items-center">
+<body class="page-bg text-white flex flex-col min-h-screen hero-section">
+	<!-- Premium Header -->
+	<header
+		class="fixed top-0 left-0 w-full z-50 bg-[#05080f]/65 backdrop-blur-2xl border-bottom border-white/5 shadow-2xl transition-all duration-300">
+		<div class="container mx-auto px-6 h-20 flex items-center justify-between gap-6">
 			<div class="flex items-center">
-				<a href="/" class="manga-text manga-impact text-3xl transform -rotate-2 px-4 py-1">
-					南方许
+				<a href="/" class="logo-brand text-3xl px-2">
+					<span class="logo-char" style="--char-index: 0">南</span>
+					<span class="logo-char" style="--char-index: 1">方</span>
+					<span class="logo-char" style="--char-index: 2">许</span>
 				</a>
 			</div>
-			<div class="flex-1 text-center">
-				<h2 class="text-xl font-semibold">关于 南方许</h2>
+
+			<div class="hidden md:flex flex-1 justify-center">
+				<div class="tech-badge-mini px-6 py-1 text-xs">
+					南方许核心系统 // 关于本项目
+				</div>
 			</div>
+
 			<div class="flex items-center">
-				<a href="/" class="top-corner-button flex items-center">
-					<svg class="w-5 h-5 mr-1" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-						<path d="M10 19l-7-7m0 0l7-7m-7 7h18" stroke="currentColor" stroke-width="2"
+				<a href="/" class="top-corner-button group" title="返回首页">
+					<svg class="w-5 h-5 transition-transform duration-500 group-hover:-translate-x-1"
+						viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+						<path d="M10 19l-7-7m0 0l7-7m-7 7h18" stroke="currentColor" stroke-width="2.5"
 							stroke-linecap="round" stroke-linejoin="round" />
 					</svg>
-					回到首页
 				</a>
 			</div>
 		</div>
 	</header>
-	<main class="flex-grow container mx-auto px-4 sm:px-6 py-8 sm:py-16">
-		<div class="max-w-5xl mx-auto">
-			<!-- 主要内容区域 -->
-			<div class="glass-panel p-4 sm:p-8 lg:p-12 shadow-2xl rounded-2xl">
-				<!-- 项目介绍 -->
-				<div class="text-center mb-8 sm:mb-16">
-					<div
-						class="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl mb-6 sm:mb-8">
-						<img src="image/logo-black.png" alt="南方许TV Logo"
-							class="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl">
-					</div>
 
-					<p class="text-gray-300 text-lg sm:text-xl mb-6 sm:mb-8 leading-relaxed max-w-3xl mx-auto px-2">
-						<span class="manga-text scale-75">南方许TV</span>
-						是一个免费的在线视频搜索平台，提供视频搜索与播放服务。基于最新的账号系统，为您提供跨设备同步的极速追剧体验。
+	<main class="flex-grow container mx-auto px-6 pt-32 pb-20">
+		<div class="max-w-4xl mx-auto space-y-12 animate-fade-in">
+
+			<!-- Hero Introduction -->
+			<div class="text-center space-y-8 mb-20">
+				<div class="relative inline-block group">
+					<div
+						class="absolute -inset-8 bg-cyan-500/10 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700">
+					</div>
+					<img src="image/logo-black.png" alt="南方许TV Logo"
+						class="relative w-24 h-24 sm:w-32 sm:h-32 rounded-[2rem] shadow-2xl border border-white/10 mx-auto transform hover:scale-105 transition-transform duration-500">
+				</div>
+
+				<div class="space-y-4">
+					<div class="flex justify-center items-center gap-3">
+						<div class="h-[1px] w-12 bg-gradient-to-r from-transparent to-cyan-400"></div>
+						<span class="hero-badge">极致视听体验</span>
+						<div class="h-[1px] w-12 bg-gradient-to-l from-transparent to-cyan-400"></div>
+					</div>
+					<h1 class="tech-header-text text-4xl sm:text-5xl font-black">关于 南方许</h1>
+					<p class="hero-slogan text-base sm:text-lg tracking-widest uppercase">
+						少年观影 / 燃动全网
 					</p>
-					<div
-						class="bg-cyan-950/20 border border-cyan-800/30 rounded-lg sm:rounded-xl p-4 sm:p-6 max-w-2xl mx-auto">
-						<p class="text-gray-300 text-base sm:text-lg mb-4 px-1">
-							本项目代码托管在 GitHub 上，欢迎访问我们的仓库：
-						</p>
-						<a href="https://github.com/nanfangns/nanfangxu-TV"
-							class="inline-flex items-center px-6 py-3 bg-gradient-active hover:shadow-lg text-white font-bold rounded-xl transition-all duration-300 transform hover:scale-105"
-							target="_blank" rel="noopener">
-							<svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
-								<path
-									d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-							</svg>
-							<span>访问 GitHub 仓库</span>
-						</a>
-					</div>
-				</div> <!-- 分割线 -->
-				<div class="w-full h-px bg-gradient-to-r from-transparent via-[#333] to-transparent mb-8 sm:mb-16">
 				</div>
 
-				<!-- 隐私政策 -->
-				<div class="mb-8 sm:mb-16">
-					<h2
-						class="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-center bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
-						隐私政策</h2>
-					<div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8">
-						<div class="bg-cyan-950/20 border border-cyan-800/30 rounded-xl p-4 sm:p-8">
-							<div class="flex items-center mb-3 sm:mb-4">
-								<div class="w-3 h-3 bg-green-400 rounded-full mr-3"></div>
-								<h3 class="text-lg sm:text-xl font-semibold text-gray-200">数据保护</h3>
-							</div>
-							<p class="text-gray-300 text-base sm:text-lg leading-relaxed">
-								我们尊重并保护您的隐私。南方许 不收集任何个人数据，且不会限制访问或使用本网站。
+				<p class="text-gray-400 text-lg leading-relaxed max-w-2xl mx-auto">
+					南方许 是一个专注于极致视听体验的免费在线视频搜索平台。我们致力于通过技术手段，为用户提供一个无广告、纯净且跨设备同步的极速追剧空间。
+				</p>
+			</div>
+
+			<!-- Content Grid -->
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+				<!-- Data Privacy -->
+				<div class="card-hover p-8 relative overflow-hidden group">
+					<div class="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+						<svg class="w-20 h-20" fill="currentColor" viewBox="0 0 24 24">
+							<path
+								d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
+						</svg>
+					</div>
+					<div class="flex items-center gap-3 mb-6">
+						<div class="w-2 h-8 bg-green-500 rounded-full shadow-[0_0_15px_rgba(34,197,94,0.5)]"></div>
+						<h3 class="text-xl font-bold tech-header-text">隐私保护</h3>
+					</div>
+					<p class="text-gray-400 leading-relaxed">
+						我们坚信隐私是基本权利。南方许 不存储您的身份敏感信息，所有账号行为通过加密 Token 进行，确保您的观看习惯仅为您个人所有。
+					</p>
+				</div>
+
+				<!-- Open Source -->
+				<div class="card-hover p-8 relative overflow-hidden group">
+					<div class="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+						<svg class="w-20 h-20" fill="currentColor" viewBox="0 0 24 24">
+							<path
+								d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z" />
+						</svg>
+					</div>
+					<div class="flex items-center gap-3 mb-6">
+						<div class="w-2 h-8 bg-blue-500 rounded-full shadow-[0_0_15px_rgba(59,130,246,0.5)]"></div>
+						<h3 class="text-xl font-bold tech-header-text">开源精神</h3>
+					</div>
+					<p class="text-gray-400 leading-relaxed mb-6">
+						我们的核心代码完全托管在 GitHub，拥抱社区监督。我们欢迎任何开发者参与到这个“少年观影计划”中。
+					</p>
+					<a href="https://github.com/nanfangns/nanfangxu-TV" target="_blank"
+						class="tech-refresh-btn inline-flex items-center">
+						<span>查看源代码</span>
+						<svg class="w-4 h-4 ml-2" fill="currentColor" viewBox="0 0 24 24">
+							<path
+								d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.372.79 1.102.79 2.222v3.293c0 .317.19.694.806.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+						</svg>
+					</a>
+				</div>
+
+				<!-- Copyright -->
+				<div class="col-span-1 md:col-span-2 card-hover p-8 group">
+					<div class="flex items-center gap-3 mb-8">
+						<div class="w-2 h-8 bg-red-500 rounded-full shadow-[0_0_15px_rgba(239,68,68,0.5)]"></div>
+						<h3 class="text-xl font-bold tech-header-text">免责声明与反馈</h3>
+					</div>
+					<div class="grid grid-cols-1 sm:grid-cols-2 gap-8 text-sm sm:text-base">
+						<div class="space-y-4">
+							<h4 class="font-bold text-gray-200">服务性质</h4>
+							<p class="text-gray-400 leading-relaxed font-light">
+								南方许 仅作为视频搜索引擎，不直接存储或分发内容。所有结果源自第三方公开 API。我们倡导合法观影，不支持任何形式的侵权传播。
 							</p>
 						</div>
-						<div class="glass-panel rounded-xl p-4 sm:p-8">
-							<div class="flex items-center mb-3 sm:mb-4">
-								<div class="w-3 h-3 bg-blue-400 rounded-full mr-3"></div>
-								<h3 class="text-lg sm:text-xl font-semibold text-gray-200">服务说明</h3>
-							</div>
-							<p class="text-gray-300 text-base sm:text-lg leading-relaxed">
-								本平台仅用于提供在线视频搜索与播放服务。所有数据均由第三方接口提供，我们不会存储或追踪用户信息。
+						<div class="space-y-4 pt-6 sm:pt-0">
+							<h4 class="font-bold text-gray-200">版权保护</h4>
+							<p class="text-gray-400 leading-relaxed font-light mb-4">
+								若发现侵权内容，请附带权利证明发送至下述邮箱，我们将在 24 小时内处理并断开相关索引。
 							</p>
+							<a href="mailto:troll@pissmail.com"
+								class="google-btn-gradient px-6 py-2 rounded-lg inline-block text-xs font-black tracking-widest text-white hover:shadow-lg transition-all">
+								我要投诉/建议
+							</a>
 						</div>
 					</div>
 				</div>
+			</div>
 
-				<!-- 分割线 -->
-				<div class="w-full h-px bg-gradient-to-r from-transparent via-gray-700 to-transparent mb-8 sm:mb-16">
-				</div> <!-- 版权声明与投诉机制 -->
-				<div>
-					<h2
-						class="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-center bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
-						版权声明与投诉机制</h2>
-					<div class="space-y-6 sm:space-y-8">
-						<div class="bg-[#1a1a1a] border border-[#333] rounded-xl p-4 sm:p-8">
-							<div class="flex items-start">
-								<div
-									class="flex-shrink-0 w-8 h-8 bg-yellow-500 rounded-lg flex items-center justify-center mr-3 sm:mr-4 mt-1">
-									<svg class="w-4 h-4 text-white" fill="none" stroke="currentColor"
-										viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-											d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z">
-										</path>
-									</svg>
-								</div>
-								<div>
-									<h3 class="text-lg sm:text-xl font-semibold text-gray-200 mb-3 sm:mb-4">免责声明</h3>
-									<p class="text-gray-300 text-base sm:text-lg leading-relaxed">
-										南方许
-										仅提供视频搜索服务，不直接提供、存储或上传任何视频内容。所有搜索结果均来自第三方公开接口。用户在使用本站服务时，须遵守相关法律法规，不得利用搜索结果从事侵权行为，如下载、传播未经授权的作品等。
-									</p>
-								</div>
-							</div>
-						</div>
-
-						<div class="bg-[#1a1a1a] border border-[#333] rounded-xl p-4 sm:p-8">
-							<div class="flex items-start">
-								<div
-									class="flex-shrink-0 w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center mr-3 sm:mr-4 mt-1">
-									<svg class="w-4 h-4 text-white" fill="none" stroke="currentColor"
-										viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-											d="M3 8l7.89 7.89a2 2 0 002.83 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z">
-										</path>
-									</svg>
-								</div>
-								<div class="flex-1">
-									<h3 class="text-lg sm:text-xl font-semibold text-gray-200 mb-3 sm:mb-4">投诉反馈</h3>
-									<p class="text-gray-300 text-base sm:text-lg mb-4 sm:mb-6 leading-relaxed">
-										若您是版权方或相关权利人，发现本站搜索结果中存在侵犯您合法权益的内容，请通过以下渠道向我们反馈：
-									</p>
-									<div
-										class="bg-gradient-to-r from-[#222] to-[#333] border border-[#444] rounded-lg p-4 sm:p-6 mb-4 sm:mb-6">
-										<div class="flex items-center flex-wrap">
-											<svg class="w-5 h-5 sm:w-6 sm:h-6 text-blue-400 mr-2 sm:mr-3 flex-shrink-0"
-												fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-													d="M3 8l7.89 7.89a2 2 0 002.83 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z">
-												</path>
-											</svg>
-											<span
-												class="text-gray-300 text-base sm:text-lg font-medium mr-2 sm:mr-3">投诉邮箱：</span>
-											<a href="mailto:troll@pissmail.com"
-												class="text-blue-400 hover:text-blue-300 transition-colors text-base sm:text-lg font-medium break-all">troll@pissmail.com</a>
-										</div>
-									</div>
-									<p class="text-gray-300 text-base sm:text-lg leading-relaxed">
-										请在投诉邮件中提供：您的身份证明、权利证明、侵权内容的具体链接及相关说明。我们将在收到投诉后尽快处理，对于确认侵权的内容，将立即断开相关链接，停止展示侵权内容，并将处理结果反馈给您。
-									</p>
-								</div>
-							</div>
-						</div>
-					</div>
+			<!-- Signature Stamp -->
+			<div class="flex justify-center pt-10">
+				<div class="manga-signature text-xl">
+					南方许 / 核心系统
 				</div>
 			</div>
 		</div>
 	</main>
-	<footer class="footer py-6 border-t border-[#333] bg-[#0a0a0a]">
-		<div class="container mx-auto px-4">
-			<div class="flex flex-col md:flex-row justify-between items-center">
-				<div class="mb-4 md:mb-0">
-					<div class="flex items-center justify-center md:justify-start">
-						<div class="manga-text manga-impact text-3xl transform -rotate-1 px-4 mb-2">
-							南方许
-						</div>
-					</div>
-					<p class="text-gray-500 text-sm mt-2 text-center md:text-left">© 2025 南方许 - 自由观影，畅享精彩</p>
-				</div>
 
-				<div class="text-center md:text-right">
-					<p class="text-gray-500 text-sm max-w-md">
-						免责声明：本站仅为视频搜索工具，不存储、上传或分发任何视频内容。
-						所有视频均来自第三方API接口。如有侵权，请联系相关内容提供方。
-					</p>
-					<div class="mt-2 flex justify-center md:justify-end space-x-4">
-						<a href="/" class="text-gray-400 hover:text-white text-sm transition-colors">首页</a>
-						<a href="about.html" class="text-gray-400 hover:text-white text-sm transition-colors">关于我们</a>
-						<a href="https://www.msf.hk/zh-hant/donate/general?type=one-off" target="_blank" rel="noopener"
-							class="text-blue-400 hover:text-blue-300 text-sm transition-colors">捐赠</a>
-					</div>
-				</div>
+	<!-- Simple Footer -->
+	<footer class="mt-auto py-10 border-t border-white/5 bg-[#05080f]">
+		<div class="container mx-auto px-6 flex flex-col items-center gap-6">
+			<a href="/" class="logo-brand text-2xl opacity-60 hover:opacity-100 transition-opacity">
+				<span class="logo-char" style="--char-index: 0">南</span>
+				<span class="logo-char" style="--char-index: 1">方</span>
+				<span class="logo-char" style="--char-index: 2">许</span>
+			</a>
+			<div class="flex gap-8 text-xs font-bold text-gray-600 tracking-widest uppercase">
+				<a href="/" class="hover:text-cyan-400 transition-colors">核心搜索</a>
+				<a href="about.html" class="text-white">系统指南</a>
+				<a href="https://www.msf.hk/zh-hant/donate/general?type=one-off" target="_blank"
+					class="hover:text-red-400 transition-colors">公益捐赠</a>
 			</div>
+			<p class="text-[10px] text-gray-700 font-mono tracking-tighter">
+				&copy; 2026 南方许 视频系统. 保留所有权利.
+			</p>
 		</div>
 	</footer>
 </body>
