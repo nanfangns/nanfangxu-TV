@@ -29,6 +29,17 @@ LibreTV 全局样式
     border-color: #555;
 }
 
+[data-theme="light"] .close-btn {
+    background: #e2e8f0;
+    border-color: #cbd5f5;
+    color: #0f172a;
+}
+
+[data-theme="light"] .close-btn:hover {
+    background: #cbd5f5;
+    border-color: #94a3b8;
+}
+
 .close-btn svg {
     width: 16px;
     height: 16px;
@@ -73,6 +84,63 @@ LibreTV 全局样式
     --gradient-youth: linear-gradient(135deg, var(--neon-blue) 0%, #1a73e8 40%, var(--neon-purple) 100%);
     --gradient-active: linear-gradient(135deg, var(--neon-blue) 0%, var(--neon-purple) 100%);
     --gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.025) 100%);
+
+    --page-bg-color: #020408;
+    --page-bg-glow: rgba(0, 242, 255, 0.05);
+    --page-bg-grid: rgba(0, 242, 255, 0.02);
+    --page-bg-grid-strong: rgba(0, 242, 255, 0.02);
+    --panel-bg: #111;
+    --panel-bg-strong: #151515;
+    --panel-bg-soft: #191919;
+    --panel-border: #333;
+    --panel-border-soft: #222;
+    --panel-border-strong: #444;
+    --input-bg: rgba(1, 2, 4, 0.85);
+    --input-border: rgba(0, 242, 255, 0.2);
+    --scrollbar-track: #111;
+    --scrollbar-thumb: #333;
+    --scrollbar-thumb-hover: #444;
+    --card-gradient-start: rgba(15, 23, 42, 0.8);
+    --card-gradient-end: rgba(15, 23, 42, 0.5);
+    --page-gradient-start: rgba(2, 6, 23, 0.9);
+    --page-gradient-end: rgba(2, 6, 23, 0.6);
+    --primary-light: #60a5fa;
+    --surface-glass: rgba(10, 15, 25, 0.4);
+    --surface-glass-vibrant: rgba(255, 255, 255, 0.03);
+    --surface-strong: rgba(10, 15, 25, 0.6);
+}
+
+[data-theme="light"] {
+    --text-color: #0f172a;
+    --text-dim: #475569;
+    --border-color: rgba(59, 130, 246, 0.3);
+    --glass-bg: rgba(255, 255, 255, 0.7);
+    --glass-border: rgba(15, 23, 42, 0.12);
+    --glass-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+
+    --page-bg-color: #f8fafc;
+    --page-bg-glow: rgba(59, 130, 246, 0.12);
+    --page-bg-grid: rgba(15, 23, 42, 0.08);
+    --page-bg-grid-strong: rgba(15, 23, 42, 0.05);
+    --panel-bg: #ffffff;
+    --panel-bg-strong: #f1f5f9;
+    --panel-bg-soft: #e2e8f0;
+    --panel-border: #cbd5f5;
+    --panel-border-soft: #e2e8f0;
+    --panel-border-strong: #94a3b8;
+    --input-bg: rgba(255, 255, 255, 0.9);
+    --input-border: rgba(59, 130, 246, 0.25);
+    --scrollbar-track: #e2e8f0;
+    --scrollbar-thumb: #cbd5f5;
+    --scrollbar-thumb-hover: #94a3b8;
+    --card-gradient-start: rgba(255, 255, 255, 0.95);
+    --card-gradient-end: rgba(241, 245, 249, 0.9);
+    --page-gradient-start: rgba(226, 232, 240, 0.9);
+    --page-gradient-end: rgba(241, 245, 249, 0.8);
+    --primary-light: #3b82f6;
+    --surface-glass: rgba(248, 250, 252, 0.8);
+    --surface-glass-vibrant: rgba(255, 255, 255, 0.8);
+    --surface-strong: rgba(248, 250, 252, 0.9);
 }
 
 /* 渐变毛玻璃宏 */
@@ -99,6 +167,35 @@ LibreTV 全局样式
     -webkit-mask-composite: xor;
     mask-composite: exclude;
     pointer-events: none;
+}
+
+.top-corner-button {
+    position: relative;
+    width: 2.8rem;
+    height: 2.8rem;
+    background: var(--surface-strong);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.top-corner-button:hover {
+    background: rgba(66, 133, 244, 0.15);
+    border-color: var(--tech-blue);
+    color: var(--text-color);
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 8px 25px rgba(66, 133, 244, 0.25);
+}
+
+.top-corner-button:active {
+    transform: scale(0.95);
 }
 
 /* 全局交互重置 - 赋予“Q弹”手感 */
@@ -184,10 +281,10 @@ a:active {
 }
 
 .search-input-premium {
-    background: rgba(1, 2, 4, 0.85) !important;
+    background: var(--input-bg) !important;
     backdrop-filter: blur(12px);
-    border: 1px solid rgba(0, 242, 255, 0.2) !important;
-    color: white !important;
+    border: 1px solid var(--input-border) !important;
+    color: var(--text-color) !important;
     font-family: var(--font-main);
     transition: all 0.3s ease;
 }
@@ -195,6 +292,10 @@ a:active {
 .search-input-premium::placeholder {
     color: rgba(0, 242, 255, 0.35);
     transition: color 0.3s ease;
+}
+
+[data-theme="light"] .search-input-premium::placeholder {
+    color: rgba(15, 23, 42, 0.45);
 }
 
 .search-input-premium:focus {
@@ -949,26 +1050,26 @@ a:active {
 
 /* 背景网格微调 - 增强对比 */
 .page-bg {
-    background-color: #020408 !important;
+    background-color: var(--page-bg-color) !important;
     background-image:
-        radial-gradient(circle at 50% 50%, rgba(0, 242, 255, 0.05) 0%, transparent 80%),
-        linear-gradient(rgba(0, 242, 255, 0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0, 242, 255, 0.02) 1px, transparent 1px);
+        radial-gradient(circle at 50% 50%, var(--page-bg-glow) 0%, transparent 80%),
+        linear-gradient(var(--page-bg-grid) 1px, transparent 1px),
+        linear-gradient(90deg, var(--page-bg-grid-strong) 1px, transparent 1px);
     background-size: 100% 100%, 30px 30px, 30px 30px;
 }
 
 .glass-panel {
-    background: rgba(10, 15, 25, 0.4) !important;
+    background: var(--surface-glass) !important;
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border: 1px solid var(--border-color) !important;
 }
 
 .glass-vibrant {
-    background: rgba(255, 255, 255, 0.03) !important;
+    background: var(--surface-glass-vibrant) !important;
     backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--glass-border) !important;
+    box-shadow: var(--glass-shadow);
 }
 
 .tech-btn-vibrant {
@@ -1070,7 +1171,7 @@ button,
 /* 改进设置面板样式 */
 .settings-panel {
     scrollbar-width: thin;
-    scrollbar-color: #444 #222;
+    scrollbar-color: var(--scrollbar-thumb) transparent;
     transform: translateX(100%);
     transition: transform 0.3s ease;
     background: linear-gradient(135deg, var(--page-gradient-end), var(--page-gradient-start));
@@ -1090,7 +1191,7 @@ button,
 }
 
 .settings-panel::-webkit-scrollbar-thumb {
-    background-color: #444;
+    background-color: var(--scrollbar-thumb);
     border-radius: 4px;
 }
 
@@ -1109,23 +1210,23 @@ button,
 }
 
 ::-webkit-scrollbar-track {
-    background: #111;
+    background: var(--scrollbar-track);
     border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #333;
+    background: var(--scrollbar-thumb);
     border-radius: 4px;
     transition: all 0.3s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #444;
+    background: var(--scrollbar-thumb-hover);
 }
 
 * {
     scrollbar-width: thin;
-    scrollbar-color: #333 #111;
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
 }
 
 .search-tag {
@@ -1159,6 +1260,108 @@ body {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+}
+
+body[data-theme="light"],
+[data-theme="light"] body {
+    color: var(--text-color);
+}
+
+[data-theme="light"] .text-white {
+    color: var(--text-color) !important;
+}
+
+[data-theme="light"] .text-gray-200 {
+    color: #1f2937 !important;
+}
+
+[data-theme="light"] .text-gray-300 {
+    color: #334155 !important;
+}
+
+[data-theme="light"] .text-gray-400 {
+    color: #475569 !important;
+}
+
+[data-theme="light"] .text-gray-500 {
+    color: #64748b !important;
+}
+
+[data-theme="light"] .text-gray-600 {
+    color: #475569 !important;
+}
+
+[data-theme="light"] .text-gray-700 {
+    color: #334155 !important;
+}
+
+[data-theme="light"] .bg-\[\#111\] {
+    background-color: var(--panel-bg) !important;
+}
+
+[data-theme="light"] .bg-\[\#151515\] {
+    background-color: var(--panel-bg-strong) !important;
+}
+
+[data-theme="light"] .bg-\[\#191919\] {
+    background-color: var(--panel-bg-soft) !important;
+}
+
+[data-theme="light"] .bg-\[\#222\] {
+    background-color: var(--panel-bg-soft) !important;
+}
+
+[data-theme="light"] .bg-\[\#333\] {
+    background-color: var(--panel-border) !important;
+}
+
+[data-theme="light"] .bg-\[\#444\] {
+    background-color: var(--panel-border-strong) !important;
+}
+
+[data-theme="light"] [class*="bg-[#05080f]"] {
+    background-color: rgba(248, 250, 252, 0.85) !important;
+}
+
+[data-theme="light"] [class*="bg-[#050508]"] {
+    background-color: rgba(248, 250, 252, 0.95) !important;
+}
+
+[data-theme="light"] .border-\[\#333\] {
+    border-color: var(--panel-border) !important;
+}
+
+[data-theme="light"] .border-\[\#222\] {
+    border-color: var(--panel-border-soft) !important;
+}
+
+[data-theme="light"] .border-white\/5 {
+    border-color: rgba(15, 23, 42, 0.08) !important;
+}
+
+.theme-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+}
+
+.theme-icon-sun,
+.theme-icon-moon {
+    width: 1.1rem;
+    height: 1.1rem;
+}
+
+.theme-icon-moon {
+    display: none;
+}
+
+[data-theme="light"] .theme-icon-sun {
+    display: none;
+}
+
+[data-theme="light"] .theme-icon-moon {
+    display: inline-block;
 }
 
 .container {
@@ -1289,6 +1492,20 @@ body {
     box-shadow: 0 2px 4px rgba(0, 204, 255, 0.3);
 }
 
+#themeToggle:checked+.toggle-bg {
+    background-color: var(--primary-color);
+}
+
+#themeToggle:checked~.toggle-dot {
+    transform: translateX(1.5rem);
+    box-shadow: 0 2px 4px rgba(0, 204, 255, 0.3);
+}
+
+#themeToggle:focus+.toggle-bg,
+#themeToggle:hover+.toggle-bg {
+    box-shadow: 0 0 0 2px rgba(0, 204, 255, 0.3);
+}
+
 /* 添加API复选框样式 */
 .form-checkbox {
     appearance: none;
@@ -1296,8 +1513,8 @@ body {
     -moz-appearance: none;
     height: 14px;
     width: 14px;
-    background-color: #222;
-    border: 1px solid #333;
+    background-color: var(--panel-bg-soft);
+    border: 1px solid var(--panel-border);
     border-radius: 3px;
     cursor: pointer;
     position: relative;
@@ -1562,13 +1779,13 @@ body {
     justify-content: space-between;
     padding: 0.25rem 0.5rem;
     margin-bottom: 0.25rem;
-    background-color: #222;
+    background-color: var(--panel-bg-soft);
     border-radius: 0.25rem;
     transition: background-color 0.2s ease;
 }
 
 #customApisList .api-item:hover {
-    background-color: #2a2a2a;
+    background-color: var(--panel-bg-strong);
 }
 
 /* 成人内容标签样式 */
@@ -1624,6 +1841,17 @@ body {
     border-color: var(--tech-blue);
     transform: translateX(4px);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="light"] .history-item {
+    background: rgba(15, 23, 42, 0.04);
+    border-color: rgba(148, 163, 184, 0.4);
+}
+
+[data-theme="light"] .history-item:hover {
+    background: rgba(15, 23, 42, 0.08);
+    border-color: var(--tech-blue);
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.12);
 }
 
 /* 添加组悬停效果，使删除按钮在悬停时显示 */

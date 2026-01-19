@@ -21,6 +21,15 @@
     <script src="libs/tailwindcss.min.js"></script>
     <link rel="stylesheet" href="css/styles.css?v=1.4">
     <link rel="stylesheet" href="css/index.css?v=1.5">
+    <script>
+        (() => {
+            const storedTheme = localStorage.getItem('siteTheme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const theme = storedTheme === 'dark' || storedTheme === 'light' ? storedTheme : (prefersDark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', theme);
+            document.documentElement.style.colorScheme = theme;
+        })();
+    </script>
     <style>
         @keyframes fadeIn {
             from {
@@ -267,6 +276,24 @@
                     </div>
                     <div class="relative inline-block w-12 align-middle select-none">
                         <input type="checkbox" id="doubanToggle"
+                            class="opacity-0 absolute w-full h-full cursor-pointer z-10">
+                        <div
+                            class="toggle-bg bg-[#333] w-12 h-6 rounded-full transition-colors duration-300 ease-in-out">
+                        </div>
+                        <div
+                            class="toggle-dot absolute w-5 h-5 bg-white rounded-full top-0.5 left-0.5 transition-transform duration-300 ease-in-out">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 主题切换 -->
+                <div class="flex items-center justify-between mt-3">
+                    <div>
+                        <label class="text-sm font-medium text-gray-400">主题模式</label>
+                        <p class="text-xs text-gray-500 mt-1">当前为 <span data-theme-status>夜间</span></p>
+                    </div>
+                    <div class="relative inline-block w-12 align-middle select-none">
+                        <input type="checkbox" id="themeToggle" data-theme-toggle
                             class="opacity-0 absolute w-full h-full cursor-pointer z-10">
                         <div
                             class="toggle-bg bg-[#333] w-12 h-6 rounded-full transition-colors duration-300 ease-in-out">
@@ -541,6 +568,7 @@
     </script>
 
     <script src="js/config.js?v=2.0"></script>
+    <script src="js/theme.js?v=1.0"></script>
     <script src="js/proxy-auth.js?v=2.0"></script>
     <script src="js/ui.js?v=2.0"></script>
     <script src="js/api.js?v=2.0"></script>

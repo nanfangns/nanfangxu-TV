@@ -189,6 +189,45 @@ html {
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 }
 
+[data-theme="light"] .player-header-premium {
+    background: rgba(248, 250, 252, 0.9);
+    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.08);
+}
+
+[data-theme="light"] .movie-title-wrapper {
+    background: rgba(255, 255, 255, 0.9);
+    border-color: rgba(148, 163, 184, 0.35);
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.1);
+}
+
+[data-theme="light"] .movie-title-wrapper:hover {
+    background: rgba(255, 255, 255, 0.95);
+    border-color: rgba(59, 130, 246, 0.45);
+}
+
+[data-theme="light"] .back-btn-premium {
+    background: rgba(15, 23, 42, 0.04);
+    border-color: rgba(148, 163, 184, 0.35);
+    color: #0f172a;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.08);
+}
+
+[data-theme="light"] .back-btn-premium:hover {
+    background: rgba(59, 130, 246, 0.08);
+    border-color: rgba(59, 130, 246, 0.4);
+    box-shadow: 0 8px 18px rgba(59, 130, 246, 0.2);
+}
+
+[data-theme="light"] .episode-info-pill {
+    background: rgba(148, 163, 184, 0.18) !important;
+    border-color: rgba(148, 163, 184, 0.4) !important;
+}
+
+[data-theme="light"] #episodeInfo {
+    color: #0f172a !important;
+}
+
 .back-btn-premium:hover {
     background: rgba(255, 255, 255, 0.1);
     border-color: rgba(255, 255, 255, 0.2);
