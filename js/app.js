@@ -1165,7 +1165,20 @@ function playVideo(url, vod_name, sourceCode, episodeIndex = 0, vodId = '') {
 
     const isSearchPage = currentPath.includes('/s=') || currentPath.includes('?s=');
     const storedSearchPage = localStorage.getItem('lastSearchPage');
-    const returnTarget = storedSearchPage || currentPath;
+    const normalizedSearchPage = isSearchPage ? (() => {
+        try {
+            const parsed = new URL(currentPath, window.location.origin);
+            if (parsed.pathname.startsWith('/s=')) {
+                const keyword = parsed.pathname.replace('/s=', '');
+                return `${parsed.origin}/?s=${encodeURIComponent(decodeURIComponent(keyword))}`;
+            }
+            if (parsed.searchParams.has('s')) {
+                return `${parsed.origin}/?s=${encodeURIComponent(parsed.searchParams.get('s') || '')}`;
+            }
+        } catch (e) { }
+        return currentPath;
+    })() : '';
+    const returnTarget = storedSearchPage || (isSearchPage ? normalizedSearchPage : currentPath);
 
     // 构建播放页面URL，直接跳转至 player.html 以消除回退历史陷阱
     let playerUrl = `player.html?id=${vodId || ''}&source=${sourceCode || ''}&url=${encodeURIComponent(url)}&index=${episodeIndex}&title=${encodeURIComponent(vod_name || '')}`;
@@ -1183,7 +1196,7 @@ function playVideo(url, vod_name, sourceCode, episodeIndex = 0, vodId = '') {
         localStorage.setItem('currentSourceCode', sourceCode || '');
         localStorage.setItem('lastPlayTime', Date.now());
         if (isSearchPage) {
-            localStorage.setItem('lastSearchPage', currentPath);
+            localStorage.setItem('lastSearchPage', normalizedSearchPage || currentPath);
         } else {
             localStorage.setItem('lastPageUrl', currentPath);
         }
