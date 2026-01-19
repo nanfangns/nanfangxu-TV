@@ -768,6 +768,11 @@ async function search(isHistoryNav = false) {
         } catch (e) { }
     }
     document.title = `搜索: ${query} - 南方许`;
+    try {
+        const currentUrl = window.location.href;
+        localStorage.setItem('lastSearchPage', currentUrl);
+        sessionStorage.setItem('playerReturnUrl', currentUrl);
+    } catch (e) { }
 
     let totalResultsCount = 0;
     let completedAPIs = 0;

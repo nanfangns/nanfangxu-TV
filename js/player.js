@@ -12,27 +12,34 @@ function goBack(event) {
         return true;
     };
 
+    const isSearchUrl = (url) => url && (url.includes('/s=') || url.includes('?s='));
+
     // 1. 优先检查URL参数中的returnUrl
     const urlParams = new URLSearchParams(window.location.search);
     const returnUrl = urlParams.get('returnUrl');
     const decodedReturnUrl = returnUrl ? decodeURIComponent(returnUrl) : '';
 
-    if (isSafeReturnUrl(decodedReturnUrl)) {
+    if (isSearchUrl(decodedReturnUrl)) {
         window.location.replace(decodedReturnUrl);
         return;
     }
 
     // 2. 检查 sessionStorage 中保存的 playerReturnUrl
     const sessionReturnUrl = sessionStorage.getItem('playerReturnUrl');
-    if (isSafeReturnUrl(sessionReturnUrl) && sessionReturnUrl !== window.location.href) {
+    if (isSearchUrl(sessionReturnUrl) && sessionReturnUrl !== window.location.href) {
         window.location.replace(sessionReturnUrl);
         return;
     }
 
     // 3. 检查 localStorage 中保存的 lastSearchPage
     const lastSearchPage = localStorage.getItem('lastSearchPage');
-    if (isSafeReturnUrl(lastSearchPage) && lastSearchPage !== window.location.href) {
+    if (isSearchUrl(lastSearchPage) && lastSearchPage !== window.location.href) {
         window.location.replace(lastSearchPage);
+        return;
+    }
+
+    if (isSafeReturnUrl(decodedReturnUrl)) {
+        window.location.replace(decodedReturnUrl);
         return;
     }
 
