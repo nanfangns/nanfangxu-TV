@@ -1163,15 +1163,17 @@ function playVideo(url, vod_name, sourceCode, episodeIndex = 0, vodId = '') {
     // 获取当前路径作为返回页面
     let currentPath = window.location.href;
 
+    const isSearchPage = currentPath.includes('/s=') || currentPath.includes('?s=');
+    const storedSearchPage = localStorage.getItem('lastSearchPage');
+    const returnTarget = isSearchPage && storedSearchPage ? storedSearchPage : currentPath;
+
     // 构建播放页面URL，直接跳转至 player.html 以消除回退历史陷阱
     let playerUrl = `player.html?id=${vodId || ''}&source=${sourceCode || ''}&url=${encodeURIComponent(url)}&index=${episodeIndex}&title=${encodeURIComponent(vod_name || '')}`;
 
     // 添加返回URL参数 (直接传递给播放器)
-    if (currentPath) {
-        playerUrl += `&returnUrl=${encodeURIComponent(currentPath)}`;
+    if (returnTarget) {
+        playerUrl += `&returnUrl=${encodeURIComponent(returnTarget)}`;
     }
-
-    const isSearchPage = currentPath.includes('/s=') || currentPath.includes('?s=');
 
     // 保存当前状态到localStorage
     try {
@@ -1185,8 +1187,8 @@ function playVideo(url, vod_name, sourceCode, episodeIndex = 0, vodId = '') {
         } else {
             localStorage.setItem('lastPageUrl', currentPath);
         }
-        if (!currentPath.includes('player.html')) {
-            sessionStorage.setItem('playerReturnUrl', currentPath);
+        if (returnTarget && !returnTarget.includes('player.html')) {
+            sessionStorage.setItem('playerReturnUrl', returnTarget);
         }
     } catch (e) {
         console.error('保存播放状态失败:', e);
