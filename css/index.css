@@ -340,6 +340,22 @@
     column-count: 2;
 }
 
+.douban-sentinel {
+    height: 1px;
+}
+
+.douban-loading-indicator {
+    break-inside: avoid;
+    margin-bottom: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1rem 0;
+    color: var(--text-dim);
+}
+
 @media (min-width: 640px) {
     .douban-masonry {
         column-count: 3;
