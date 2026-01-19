@@ -52,6 +52,30 @@
     color: white;
 }
 
+[data-theme="light"] .modal-overlay {
+    background-color: rgba(15, 23, 42, 0.4);
+}
+
+[data-theme="light"] .modal-content {
+    background-color: #ffffff;
+    border-color: #e2e8f0;
+    box-shadow: 0 25px 45px rgba(15, 23, 42, 0.15);
+}
+
+[data-theme="light"] .modal-title {
+    background: linear-gradient(to right, #2563eb, #9333ea);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+[data-theme="light"] .modal-close {
+    color: #64748b;
+}
+
+[data-theme="light"] .modal-close:hover {
+    color: #0f172a;
+}
+
 .modal-body {
     overflow: auto;
     flex: 1;
@@ -75,6 +99,12 @@
     padding: 1rem;
     border-radius: 0.5rem;
     margin-bottom: 1rem;
+}
+
+[data-theme="light"] .password-input {
+    background-color: #f8fafc;
+    border-color: #cbd5f5;
+    color: #0f172a;
 }
 
 .password-input:focus {
@@ -109,6 +139,14 @@
 .disclaimer-content {
     color: #d1d5db;
     line-height: 1.5;
+}
+
+[data-theme="light"] .disclaimer-content {
+    color: #475569;
+}
+
+[data-theme="light"] .disclaimer-content strong {
+    color: #2563eb;
 }
 
 .disclaimer-content p {
@@ -191,6 +229,25 @@
 .loading-text {
     color: white;
     font-size: 1.125rem;
+}
+
+[data-theme="light"] .loading-overlay {
+    background-color: rgba(226, 232, 240, 0.8);
+}
+
+[data-theme="light"] .loading-content {
+    background-color: #ffffff;
+    border-color: #e2e8f0;
+    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.12);
+}
+
+[data-theme="light"] .loading-spinner {
+    border-color: #2563eb;
+    border-top-color: transparent;
+}
+
+[data-theme="light"] .loading-text {
+    color: #0f172a;
 }
 
 /* 动画效果 */

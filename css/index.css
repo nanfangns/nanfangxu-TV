@@ -355,6 +355,48 @@
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
 }
 
+[data-theme="light"] .douban-card-glass {
+    background: rgba(255, 255, 255, 0.95);
+    border-color: rgba(148, 163, 184, 0.3);
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
+}
+
+[data-theme="light"] .douban-card-glass:hover {
+    background: rgba(255, 255, 255, 1);
+    border-color: rgba(59, 130, 246, 0.45);
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.2);
+}
+
+[data-theme="light"] .card-hover {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border-color: rgba(148, 163, 184, 0.35);
+    box-shadow: 0 18px 35px rgba(15, 23, 42, 0.12);
+}
+
+[data-theme="light"] .card-hover:hover {
+    background: rgba(248, 250, 252, 0.95) !important;
+    border-color: rgba(59, 130, 246, 0.45);
+    box-shadow: 0 22px 45px rgba(15, 23, 42, 0.16);
+}
+
+[data-theme="light"] .card-hover::after {
+    background: linear-gradient(135deg, rgba(148, 163, 184, 0.4) 0%, transparent 50%, rgba(59, 130, 246, 0.3) 100%);
+    opacity: 0.8;
+}
+
+[data-theme="light"] .search-result-stats {
+    color: #475569;
+}
+
+[data-theme="light"] .card-hover .bg-blue-500 {
+    background-color: rgba(59, 130, 246, 0.15) !important;
+    color: #1d4ed8 !important;
+}
+
+[data-theme="light"] .card-hover .text-blue-300 {
+    color: #2563eb !important;
+}
+
 .card-hover:hover {
     transform: translateY(-5px) perspective(1000px) rotateY(1deg);
     border-color: rgba(191, 90, 242, 0.4);

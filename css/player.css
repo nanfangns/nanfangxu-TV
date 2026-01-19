@@ -337,6 +337,27 @@ div.player-loading-text {
     max-width: 90% !important;
 }
 
+[data-theme="light"] .player-placeholder,
+[data-theme="light"] .player-loading-container {
+    background-color: #e2e8f0 !important;
+}
+
+[data-theme="light"] .player-loading-overlay {
+    background-color: #f8fafc !important;
+}
+
+[data-theme="light"] .player-loading-spinner {
+    border-color: rgba(59, 130, 246, 0.2) !important;
+    border-top-color: #2563eb !important;
+    box-shadow: 0 0 18px rgba(37, 99, 235, 0.2);
+}
+
+[data-theme="light"] .player-loading-text,
+[data-theme="light"] .player-loading-overlay div:nth-child(2),
+[data-theme="light"] div.player-loading-text {
+    color: #0f172a !important;
+}
+
 @keyframes player-spinner-rotate {
     to {
         transform: rotate(360deg);
@@ -444,6 +465,21 @@ div.player-loading-text {
     color: #aaa;
 }
 
+[data-theme="light"] .loading-container,
+[data-theme="light"] .error-container {
+    background-color: rgba(248, 250, 252, 0.85);
+    color: #0f172a;
+}
+
+[data-theme="light"] .loading-spinner {
+    border-color: rgba(59, 130, 246, 0.25);
+    border-top-color: #2563eb;
+}
+
+[data-theme="light"] .error-message-sub {
+    color: #64748b;
+}
+
 .episode-item {
     background: rgba(255, 255, 255, 0.05) !important;
     border: 1px solid rgba(0, 242, 255, 0.2) !important;
@@ -468,6 +504,23 @@ div.player-loading-text {
     border-color: rgba(255, 255, 255, 0.2);
     color: white;
     transform: translateY(-2px);
+}
+
+[data-theme="light"] .episode-item {
+    background: rgba(248, 250, 252, 0.95) !important;
+    border-color: rgba(148, 163, 184, 0.4) !important;
+    color: #475569 !important;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+}
+
+[data-theme="light"] .episode-item:hover:not(.episode-active) {
+    background: rgba(241, 245, 249, 0.95);
+    border-color: rgba(59, 130, 246, 0.4);
+    color: #0f172a;
+}
+
+[data-theme="light"] .hud-label {
+    color: #1d4ed8;
 }
 
 /* HUD 风格标签 */
@@ -499,6 +552,12 @@ div.player-loading-text {
     z-index: 1000;
     transition: transform 0.3s ease;
     font-size: 14px;
+}
+
+[data-theme="light"] .position-restore-hint {
+    background-color: rgba(255, 255, 255, 0.95);
+    color: #0f172a;
+    box-shadow: 0 12px 25px rgba(15, 23, 42, 0.12);
 }
 
 .position-restore-hint.show {
@@ -619,6 +678,14 @@ input:checked+.slider:before {
     color: #ccc;
 }
 
+[data-theme="light"] .resource-info-bar-left {
+    color: #0f172a;
+}
+
+[data-theme="light"] .resource-info-bar-videos {
+    color: #64748b;
+}
+
 .resource-switch-btn {
     align-items: center;
     background: rgba(0, 242, 255, 0.05);
@@ -637,6 +704,18 @@ input:checked+.slider:before {
     background: var(--tech-blue);
     color: black;
     box-shadow: 0 0 15px var(--tech-blue);
+}
+
+[data-theme="light"] .resource-switch-btn {
+    background: rgba(59, 130, 246, 0.08);
+    border-color: rgba(59, 130, 246, 0.35);
+    color: #1d4ed8;
+}
+
+[data-theme="light"] .resource-switch-btn:hover {
+    background: #2563eb;
+    color: #fff;
+    box-shadow: 0 0 18px rgba(37, 99, 235, 0.35);
 }
 
 .resource-switch-icon {
@@ -698,6 +777,19 @@ input:checked+.slider:before {
     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
+[data-theme="light"] .floating-auth-btn {
+    background: rgba(248, 250, 252, 0.9);
+    border-color: rgba(59, 130, 246, 0.3);
+    color: #0f172a;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.12);
+}
+
+[data-theme="light"] .floating-auth-btn:hover {
+    background: rgba(59, 130, 246, 0.12);
+    border-color: rgba(59, 130, 246, 0.5);
+    box-shadow: 0 10px 24px rgba(59, 130, 246, 0.18);
+}
+
 .floating-auth-btn:hover {
     transform: scale(1.1);
     border-color: var(--tech-blue);
@@ -749,6 +841,25 @@ input:checked+.slider:before {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     position: relative;
     overflow: hidden;
+}
+
+[data-theme="light"] .fav-btn-premium {
+    background: rgba(248, 250, 252, 0.9);
+    border-color: rgba(148, 163, 184, 0.4);
+    color: #475569;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.1);
+}
+
+[data-theme="light"] .fav-btn-premium:hover {
+    background: rgba(59, 130, 246, 0.12);
+    border-color: rgba(59, 130, 246, 0.45);
+    color: #1d4ed8;
+}
+
+[data-theme="light"] .fav-btn-premium.active {
+    background: rgba(59, 130, 246, 0.18);
+    border-color: rgba(59, 130, 246, 0.6);
+    color: #1d4ed8;
 }
 
 .fav-btn-premium::before {

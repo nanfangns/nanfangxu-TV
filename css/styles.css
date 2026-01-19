@@ -40,6 +40,10 @@ LibreTV 全局样式
     border-color: #94a3b8;
 }
 
+[data-theme="light"] .bg-\[\#0a0a0a\] {
+    background-color: #f8fafc !important;
+}
+
 .close-btn svg {
     width: 16px;
     height: 16px;
@@ -1058,6 +1062,13 @@ a:active {
     background-size: 100% 100%, 30px 30px, 30px 30px;
 }
 
+[data-theme="light"] .page-bg {
+    background-image:
+        radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.12) 0%, transparent 70%),
+        linear-gradient(rgba(15, 23, 42, 0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(15, 23, 42, 0.05) 1px, transparent 1px);
+}
+
 .glass-panel {
     background: var(--surface-glass) !important;
     backdrop-filter: blur(16px);
@@ -1511,14 +1522,15 @@ body[data-theme="light"],
     appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
-    height: 14px;
-    width: 14px;
+    height: 16px;
+    width: 16px;
     background-color: var(--panel-bg-soft);
     border: 1px solid var(--panel-border);
-    border-radius: 3px;
+    border-radius: 4px;
     cursor: pointer;
     position: relative;
     outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .form-checkbox:checked {
@@ -1529,8 +1541,8 @@ body[data-theme="light"],
 .form-checkbox:checked::after {
     content: '';
     position: absolute;
-    left: 4px;
-    top: 1px;
+    left: 5px;
+    top: 2px;
     width: 4px;
     height: 8px;
     border: solid white;
@@ -1538,10 +1550,33 @@ body[data-theme="light"],
     transform: rotate(45deg);
 }
 
+.form-checkbox:hover {
+    border-color: rgba(66, 133, 244, 0.6);
+    box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.15);
+    transform: translateY(-1px);
+}
+
+.form-checkbox:focus-visible {
+    box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.35);
+}
+
 /* API滚动区域美化 */
 #apiCheckboxes {
     scrollbar-width: thin;
-    scrollbar-color: #444 #222;
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+[data-theme="light"] .api-group-title {
+    border-top: 1px solid var(--panel-border);
+    color: #64748b;
+}
+
+[data-theme="light"] .filter-disabled::after {
+    background-color: rgba(226, 232, 240, 0.6);
+}
+
+[data-theme="light"] .search-card-img-container {
+    background-color: #e2e8f0;
 }
 
 #apiCheckboxes::-webkit-scrollbar {
@@ -2150,6 +2185,12 @@ body[data-theme="light"],
     margin-bottom: 1.5rem;
 }
 
+[data-theme="light"] #modal .modal-detail-info {
+    background: linear-gradient(135deg, #ffffff, #f1f5f9);
+    border-color: #e2e8f0;
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+}
+
 #modal .detail-grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -2182,10 +2223,22 @@ body[data-theme="light"],
     word-break: break-word;
 }
 
+[data-theme="light"] #modal .detail-label {
+    color: #64748b;
+}
+
+[data-theme="light"] #modal .detail-value {
+    color: #0f172a;
+}
+
 #modal .detail-desc {
     margin-top: 1rem;
     padding-top: 1rem;
     border-top: 1px solid #333;
+}
+
+[data-theme="light"] #modal .detail-desc {
+    border-top-color: #e2e8f0;
 }
 
 #modal .detail-desc-content {
@@ -2196,6 +2249,19 @@ body[data-theme="light"],
     overflow-y: auto;
     scrollbar-width: thin;
     scrollbar-color: #444 #222;
+}
+
+[data-theme="light"] #modal .detail-desc-content {
+    color: #475569;
+    scrollbar-color: #cbd5f5 #e2e8f0;
+}
+
+[data-theme="light"] #modal .detail-desc-content::-webkit-scrollbar-track {
+    background: #e2e8f0;
+}
+
+[data-theme="light"] #modal .detail-desc-content::-webkit-scrollbar-thumb {
+    background-color: #cbd5f5;
 }
 
 #modal .detail-desc-content::-webkit-scrollbar {
@@ -2219,6 +2285,10 @@ body[data-theme="light"],
     display: flex;
     align-items: center;
     gap: 0.5rem;
+}
+
+[data-theme="light"] #modal .episode-stats {
+    color: #64748b;
 }
 
 /* 移动端优化 */
@@ -2317,6 +2387,64 @@ body[data-theme="light"],
     margin: 0;
     text-shadow: 0 0 10px rgba(0, 242, 255, 0.6);
     animation: tech-pulse 2s infinite;
+}
+
+[data-theme="light"] #loading {
+    background: rgba(226, 232, 240, 0.8) !important;
+}
+
+[data-theme="light"] #loading .loading-content {
+    background: rgba(248, 250, 252, 0.96);
+    border-color: rgba(59, 130, 246, 0.25);
+    box-shadow: 0 20px 45px rgba(15, 23, 42, 0.15);
+}
+
+[data-theme="light"] #loading p {
+    color: #1d4ed8;
+    text-shadow: none;
+}
+
+[data-theme="light"] #authModal {
+    background: rgba(15, 23, 42, 0.25) !important;
+}
+
+[data-theme="light"] #authModal > div {
+    background: #ffffff;
+    border-color: #e2e8f0;
+    box-shadow: 0 30px 60px rgba(15, 23, 42, 0.15);
+}
+
+[data-theme="light"] #authModal h2,
+[data-theme="light"] #authModal h3 {
+    color: #0f172a !important;
+}
+
+[data-theme="light"] #authModal p {
+    color: #64748b !important;
+}
+
+[data-theme="light"] #authModal input {
+    background: #f8fafc !important;
+    border-color: #cbd5f5 !important;
+    color: #0f172a !important;
+}
+
+[data-theme="light"] #authModal input::placeholder {
+    color: #94a3b8 !important;
+}
+
+[data-theme="light"] #authModal .bg-gray-800 {
+    background-color: #f1f5f9 !important;
+    color: #0f172a !important;
+    border: 1px solid #e2e8f0;
+}
+
+[data-theme="light"] #authModal .bg-gray-800:hover {
+    background-color: #e2e8f0 !important;
+}
+
+[data-theme="light"] #authModal .text-blue-400 {
+    color: #2563eb !important;
 }
 
 @keyframes tech-pulse {
