@@ -318,17 +318,50 @@
     -webkit-backdrop-filter: blur(15px);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
+    display: inline-block;
+    width: 100%;
+    break-inside: avoid;
+    margin-bottom: 0.75rem;
     transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
 .douban-card-glass:hover {
-    transform: translateY(-8px) scale(1.02) rotateX(2deg);
+    transform: translateY(-6px) scale(1.01) rotateX(2deg);
     background: rgba(255, 255, 255, 0.06);
     border-color: var(--neon-blue);
     box-shadow:
         0 20px 40px rgba(0, 0, 0, 0.6),
         0 0 20px rgba(10, 132, 255, 0.2);
+}
+
+.douban-masonry {
+    column-gap: 0.75rem;
+    column-count: 2;
+}
+
+@media (min-width: 640px) {
+    .douban-masonry {
+        column-count: 3;
+    }
+}
+
+@media (min-width: 768px) {
+    .douban-masonry {
+        column-count: 4;
+    }
+}
+
+@media (min-width: 1024px) {
+    .douban-masonry {
+        column-count: 5;
+    }
+}
+
+@media (min-width: 1280px) {
+    .douban-masonry {
+        column-count: 6;
+    }
 }
 
 /* 搜索结果卡片 - 极速 3D 玻璃拟态 */
