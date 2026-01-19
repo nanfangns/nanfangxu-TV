@@ -400,9 +400,23 @@
                         </div>
                     </div>
 
-                    <!-- 推荐内容 -->
+                    <!-- 推荐内容：升级为瀑布流布局 -->
                     <div id="douban-results"
-                        class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3">
+                        class="columns-2 sm:columns-3 md:columns-4 lg:columns-6 xl:columns-8 gap-3 space-y-3">
+                    </div>
+
+                    <!-- 无限滚动探测点 -->
+                    <div id="douban-load-more" class="w-full py-8 flex justify-center items-center">
+                        <div class="douban-loader-tech hidden">
+                            <div class="bouncing-loader scale-75">
+                                <div class="bouncing-ball ball-1"></div>
+                                <div class="bouncing-ball ball-2"></div>
+                                <div class="bouncing-ball ball-3"></div>
+                                <div class="bouncing-ball ball-4"></div>
+                            </div>
+                            <span
+                                class="text-[10px] text-cyan-500/50 tracking-[0.2em] font-mono mt-2">NANFANGXU_RECO_SYNCING</span>
+                        </div>
                     </div>
                 </div>
             </div>
