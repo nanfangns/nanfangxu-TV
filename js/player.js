@@ -6,34 +6,90 @@ function goBack(event) {
     // 防止默认链接行为
     if (event) event.preventDefault();
 
+    const isSafeReturnUrl = (url) => {
+        if (!url) return false;
+        if (url.includes('player.html')) return false;
+        return true;
+    };
+
+    const isSearchUrl = (url) => {
+        if (!url) return false;
+        if (url.includes('/s=') || url.includes('?s=')) return true;
+        try {
+            const parsed = new URL(url, window.location.origin);
+            if (parsed.pathname.startsWith('/s=')) return true;
+            return parsed.searchParams.has('s');
+        } catch (e) {
+            return false;
+        }
+    };
+    const normalizeSearchUrl = (url) => {
+        if (!url) return url;
+        try {
+            const parsed = new URL(url, window.location.origin);
+            if (parsed.pathname.startsWith('/s=')) {
+                const keyword = parsed.pathname.replace('/s=', '');
+                const normalized = new URL('/', parsed.origin);
+                normalized.searchParams.set('s', decodeURIComponent(keyword));
+                return normalized.toString();
+            }
+            return parsed.toString();
+        } catch (e) {
+            return url;
+        }
+    };
+
     // 1. 优先检查URL参数中的returnUrl
     const urlParams = new URLSearchParams(window.location.search);
     const returnUrl = urlParams.get('returnUrl');
+    const decodedReturnUrl = returnUrl ? decodeURIComponent(returnUrl) : '';
 
-    if (returnUrl) {
-        // 如果URL中有returnUrl参数，优先进入（使用replace避免回退循环）
-        window.location.replace(decodeURIComponent(returnUrl));
+    if (isSearchUrl(decodedReturnUrl)) {
+        window.location.replace(normalizeSearchUrl(decodedReturnUrl));
         return;
     }
 
-    // 2. 检查localStorage中保存的lastPageUrl
+    // 2. 检查 sessionStorage 中保存的 playerReturnUrl
+    const sessionReturnUrl = sessionStorage.getItem('playerReturnUrl');
+    if (isSearchUrl(sessionReturnUrl) && sessionReturnUrl !== window.location.href) {
+        window.location.replace(normalizeSearchUrl(sessionReturnUrl));
+        return;
+    }
+
+    // 3. 检查 localStorage 中保存的 lastSearchPage
+    const lastSearchPage = localStorage.getItem('lastSearchPage');
+    if (lastSearchPage && lastSearchPage !== window.location.href) {
+        if (isSearchUrl(lastSearchPage)) {
+            window.location.replace(normalizeSearchUrl(lastSearchPage));
+            return;
+        }
+        if (isSafeReturnUrl(lastSearchPage)) {
+            window.location.replace(lastSearchPage);
+            return;
+        }
+    }
+
+    if (isSafeReturnUrl(decodedReturnUrl)) {
+        window.location.replace(decodedReturnUrl);
+        return;
+    }
+
+    // 4. 检查localStorage中保存的lastPageUrl
     const lastPageUrl = localStorage.getItem('lastPageUrl');
-    if (lastPageUrl && lastPageUrl !== window.location.href) {
+    if (isSafeReturnUrl(lastPageUrl) && lastPageUrl !== window.location.href) {
         window.location.replace(lastPageUrl);
         return;
     }
 
-    // 3. 检查是否是从搜索页面进入的播放器
+    // 5. 检查是否是从搜索页面进入的播放器
     const referrer = document.referrer;
 
-    // 检查 referrer 是否包含搜索参数
     if (referrer && (referrer.includes('/s=') || referrer.includes('?s='))) {
-        // 如果是从搜索页面来的，返回到搜索页面
         window.location.replace(referrer);
         return;
     }
 
-    // 4. 如果是在iframe中打开的，尝试关闭iframe
+    // 6. 如果是在iframe中打开的，尝试关闭iframe
     if (window.self !== window.top) {
         try {
             // 尝试调用父窗口的关闭播放器函数
@@ -44,25 +100,32 @@ function goBack(event) {
         }
     }
 
-    // 5. 无法确定上一页，则返回首页
+    // 7. 无法确定上一页，则返回首页
     if (!referrer || referrer === '') {
         window.location.href = '/';
         return;
     }
 
-    // 6. 以上都不满足，使用默认行为：返回上一页
+    // 8. 以上都不满足，使用默认行为：返回上一页
     window.history.back();
 }
 
 // 页面加载时保存当前URL到localStorage，作为返回目标
 window.addEventListener('load', function () {
+    const urlParams = new URLSearchParams(window.location.search);
+    const returnUrl = urlParams.get('returnUrl');
+    const decodedReturnUrl = returnUrl ? decodeURIComponent(returnUrl) : '';
+
+    if (decodedReturnUrl && !decodedReturnUrl.includes('player.html')) {
+        sessionStorage.setItem('playerReturnUrl', decodedReturnUrl);
+    }
+
     // 保存前一页面URL
-    if (document.referrer && document.referrer !== window.location.href) {
+    if (document.referrer && document.referrer !== window.location.href && !document.referrer.includes('player.html')) {
         localStorage.setItem('lastPageUrl', document.referrer);
     }
 
     // 提取当前URL中的重要参数，以便在需要时能够恢复当前页面
-    const urlParams = new URLSearchParams(window.location.search);
     const videoId = urlParams.get('id');
     const sourceCode = urlParams.get('source');
 

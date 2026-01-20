@@ -21,6 +21,15 @@
     <script src="libs/tailwindcss.min.js"></script>
     <link rel="stylesheet" href="css/styles.css?v=1.4">
     <link rel="stylesheet" href="css/index.css?v=1.5">
+    <script>
+        (() => {
+            const storedTheme = localStorage.getItem('siteTheme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const theme = storedTheme === 'dark' || storedTheme === 'light' ? storedTheme : (prefersDark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', theme);
+            document.documentElement.style.colorScheme = theme;
+        })();
+    </script>
     <style>
         @keyframes fadeIn {
             from {
@@ -62,6 +71,21 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z">
                     </path>
+                </svg>
+            </button>
+        </div>
+        <!-- 主题按钮 -->
+        <div class="corner-wrapper" style="animation-delay: 0.15s;">
+            <button type="button" data-theme-toggle class="top-corner-button theme-toggle-btn"
+                aria-label="切换主题">
+                <svg class="theme-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 3v2m0 14v2m9-9h-2M5 12H3m15.364-6.364-1.414 1.414M7.05 16.95l-1.414 1.414M16.95 16.95l1.414 1.414M7.05 7.05 5.636 5.636" />
+                    <circle cx="12" cy="12" r="4" stroke-width="2"></circle>
+                </svg>
+                <svg class="theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
                 </svg>
             </button>
         </div>
@@ -267,6 +291,24 @@
                     </div>
                     <div class="relative inline-block w-12 align-middle select-none">
                         <input type="checkbox" id="doubanToggle"
+                            class="opacity-0 absolute w-full h-full cursor-pointer z-10">
+                        <div
+                            class="toggle-bg bg-[#333] w-12 h-6 rounded-full transition-colors duration-300 ease-in-out">
+                        </div>
+                        <div
+                            class="toggle-dot absolute w-5 h-5 bg-white rounded-full top-0.5 left-0.5 transition-transform duration-300 ease-in-out">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 主题切换 -->
+                <div class="flex items-center justify-between mt-3">
+                    <div>
+                        <label class="text-sm font-medium text-gray-400">主题模式</label>
+                        <p class="text-xs text-gray-500 mt-1">当前为 <span data-theme-status>夜间</span></p>
+                    </div>
+                    <div class="relative inline-block w-12 align-middle select-none">
+                        <input type="checkbox" id="themeToggle" data-theme-toggle
                             class="opacity-0 absolute w-full h-full cursor-pointer z-10">
                         <div
                             class="toggle-bg bg-[#333] w-12 h-6 rounded-full transition-colors duration-300 ease-in-out">
@@ -541,6 +583,7 @@
     </script>
 
     <script src="js/config.js?v=2.0"></script>
+    <script src="js/theme.js?v=1.0"></script>
     <script src="js/proxy-auth.js?v=2.0"></script>
     <script src="js/ui.js?v=2.0"></script>
     <script src="js/api.js?v=2.0"></script>
