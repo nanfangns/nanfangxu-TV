@@ -8,6 +8,38 @@ let defaultTvTags = ['热门', '美剧', '英剧', '韩剧', '日剧', '国产�
 let movieTags = [];
 let tvTags = [];
 
+const HOT_API_PAGE_SIZE = 24;
+const HOT_TABS = [
+    {
+        key: 'douban',
+        label: '豆瓣热门',
+        type: 'douban'
+    },
+    {
+        key: 'ikun',
+        label: 'IKUN热门',
+        type: 'api',
+        sourceCode: 'ikun',
+        strategy: {
+            type: 'list',
+            params: { by: 'hits', h: '24' }
+        }
+    },
+    {
+        key: 'lzi',
+        label: '量子热门',
+        type: 'api',
+        sourceCode: 'lzi',
+        strategy: {
+            type: 'list',
+            params: { by: 'hits', h: '24' }
+        }
+    }
+];
+
+let activeHotTab = 'douban';
+const hotTabState = {};
+
 // 加载用户标签
 function loadUserTags() {
     try {
@@ -48,6 +80,105 @@ function saveUserTags() {
     }
 }
 
+function initHotTabState() {
+    HOT_TABS.forEach(tab => {
+        hotTabState[tab.key] = {
+            items: [],
+            isLoading: false,
+            hasMore: true,
+            page: 1,
+            pageStart: 0,
+            currentTag: '热门',
+            currentSwitch: 'movie'
+        };
+    });
+}
+
+function getHotTabConfig(key) {
+    return HOT_TABS.find(tab => tab.key === key);
+}
+
+function updateHotTabButtons() {
+    const container = document.getElementById('hot-source-tabs');
+    if (!container) return;
+
+    container.querySelectorAll('.hot-tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === activeHotTab);
+    });
+}
+
+function updateHotTabControls() {
+    const isDouban = activeHotTab === 'douban';
+    const doubanControls = document.getElementById('douban-controls');
+    const doubanTagsWrapper = document.getElementById('douban-tags-wrapper');
+
+    if (doubanControls) doubanControls.classList.toggle('hidden', !isDouban);
+    if (doubanTagsWrapper) doubanTagsWrapper.classList.toggle('hidden', !isDouban);
+}
+
+function syncDoubanStateFromCache() {
+    const state = hotTabState.douban;
+    if (!state) return;
+
+    doubanMovieTvCurrentSwitch = state.currentSwitch;
+    doubanCurrentTag = state.currentTag;
+    doubanPageStart = state.pageStart;
+    hasMoreDouban = state.hasMore;
+    isDoubanLoading = state.isLoading;
+}
+
+function updateDoubanToggleUI() {
+    const movieToggle = document.getElementById('douban-movie-toggle');
+    const tvToggle = document.getElementById('douban-tv-toggle');
+    if (!movieToggle || !tvToggle) return;
+
+    if (doubanMovieTvCurrentSwitch === 'movie') {
+        movieToggle.classList.add('google-bg-active', 'text-white');
+        movieToggle.classList.remove('text-gray-300');
+        tvToggle.classList.remove('google-bg-active', 'text-white');
+        tvToggle.classList.add('text-gray-300');
+    } else {
+        tvToggle.classList.add('google-bg-active', 'text-white');
+        tvToggle.classList.remove('text-gray-300');
+        movieToggle.classList.remove('google-bg-active', 'text-white');
+        movieToggle.classList.add('text-gray-300');
+    }
+}
+
+function renderHotTabs() {
+    const container = document.getElementById('hot-source-tabs');
+    if (!container) return;
+
+    container.innerHTML = '';
+    HOT_TABS.forEach(tab => {
+        const btn = document.createElement('button');
+        btn.className = 'hot-tab-btn';
+        btn.textContent = tab.label;
+        btn.dataset.tab = tab.key;
+        btn.addEventListener('click', () => setActiveHotTab(tab.key));
+        container.appendChild(btn);
+    });
+
+    updateHotTabButtons();
+}
+
+function setActiveHotTab(tabKey) {
+    if (tabKey === activeHotTab) return;
+
+    activeHotTab = tabKey;
+    localStorage.setItem('homeHotTab', tabKey);
+    updateHotTabButtons();
+    updateHotTabControls();
+
+    if (activeHotTab === 'douban') {
+        syncDoubanStateFromCache();
+        updateDoubanToggleUI();
+        renderDoubanTags();
+    }
+
+    renderActiveHotTab();
+}
+
 let doubanMovieTvCurrentSwitch = 'movie';
 let doubanCurrentTag = '热门';
 let doubanPageStart = 0;
@@ -61,6 +192,12 @@ let isDoubanInitialized = false;
 function initDouban() {
     if (isDoubanInitialized) return;
     isDoubanInitialized = true;
+    initHotTabState();
+
+    const savedHotTab = localStorage.getItem('homeHotTab');
+    if (savedHotTab && getHotTabConfig(savedHotTab)) {
+        activeHotTab = savedHotTab;
+    }
     // 设置豆瓣开关的初始状态
     const doubanToggle = document.getElementById('doubanToggle');
     if (doubanToggle) {
@@ -103,6 +240,10 @@ function initDouban() {
     // 加载用户标签
     loadUserTags();
 
+    // 渲染热门来源 Tab
+    renderHotTabs();
+    updateHotTabControls();
+
     // 渲染电影/电视剧切换
     renderDoubanMovieTvSwitch();
 
@@ -117,7 +258,7 @@ function initDouban() {
 
     // 初始加载热门内容
     if (localStorage.getItem('doubanEnabled') === 'true') {
-        renderRecommend(doubanCurrentTag, doubanPageSize, doubanPageStart);
+        renderActiveHotTab();
     }
 }
 
@@ -139,7 +280,7 @@ function initInfiniteScroll() {
             document.getElementById('doubanArea') &&
             !document.getElementById('doubanArea').classList.contains('hidden')) {
 
-            loadNextDoubanPage();
+            loadNextHotPage();
         }
     }, {
         rootMargin: '100px', // 适度提前触发
@@ -149,8 +290,42 @@ function initInfiniteScroll() {
     doubanObserver.observe(loaderAnchor);
 }
 
+function renderActiveHotTab() {
+    const tab = getHotTabConfig(activeHotTab);
+    if (!tab) return;
+
+    if (tab.type === 'douban') {
+        if (hotTabState.douban.items.length > 0) {
+            renderHotTabFromCache(tab.key);
+        } else {
+            renderRecommend(doubanCurrentTag, doubanPageSize, doubanPageStart);
+        }
+        return;
+    }
+
+    if (hotTabState[tab.key]?.items.length > 0) {
+        renderHotTabFromCache(tab.key);
+    } else {
+        loadHotApiTab(tab, false);
+    }
+}
+
+// 加载下一页的统一入口
+function loadNextHotPage() {
+    const tab = getHotTabConfig(activeHotTab);
+    if (!tab) return;
+
+    if (tab.type === 'douban') {
+        loadNextDoubanPage();
+        return;
+    }
+
+    loadNextApiHotPage(tab);
+}
+
 // 加载下一页的统一入口
 function loadNextDoubanPage() {
+    if (activeHotTab !== 'douban') return;
     if (isDoubanLoading || !hasMoreDouban) return;
 
     console.log('瀑布流触底，加载下一页...');
@@ -164,6 +339,173 @@ function loadNextDoubanPage() {
         const infiniteLoader = document.querySelector('#douban-load-more .douban-loader-tech');
         if (infiniteLoader) infiniteLoader.innerHTML = '<span class="text-gray-500 text-xs py-4">已到底部 - 核心数据库同步完毕</span>';
     }
+}
+
+function loadNextApiHotPage(tab) {
+    const state = hotTabState[tab.key];
+    if (!state || state.isLoading || !state.hasMore) return;
+
+    loadHotApiTab(tab, true, state.page + 1);
+}
+
+function renderHotTabFromCache(tabKey) {
+    const container = document.getElementById('douban-results');
+    if (!container) return;
+
+    initMasonryStructure(container, true);
+    clearMasonryColumns();
+
+    const state = hotTabState[tabKey];
+    if (!state || state.items.length === 0) {
+        container.innerHTML = `
+            <div class="col-span-full w-full text-center py-20 text-gray-500 flex flex-col items-center">
+                <div class="mb-4 text-4xl opacity-30">📭</div>
+                <span>暂无更多推荐内容</span>
+            </div>
+        `;
+        return;
+    }
+
+    if (tabKey === 'douban') {
+        renderDoubanCards({ subjects: state.items }, container, false);
+        return;
+    }
+
+    renderHotApiCards(state.items, container, false);
+}
+
+async function loadHotApiTab(tab, isAppend = false, pageOverride = null) {
+    const container = document.getElementById('douban-results');
+    const infiniteLoader = document.querySelector('#douban-load-more .douban-loader-tech');
+    if (!container) return;
+
+    const state = hotTabState[tab.key];
+    if (!state || state.isLoading) return;
+
+    state.isLoading = true;
+
+    if (!isAppend) {
+        container.innerHTML = `
+            <div class="col-span-full py-20 flex flex-col items-center justify-center">
+                <div class="bouncing-loader mb-4">
+                    <div class="bouncing-ball ball-1"></div>
+                    <div class="bouncing-ball ball-2"></div>
+                    <div class="bouncing-ball ball-3"></div>
+                    <div class="bouncing-ball ball-4"></div>
+                </div>
+                <span class="loading-text-tech">SYNCING_HOT_RESOURCES</span>
+            </div>
+        `;
+    } else if (infiniteLoader) {
+        infiniteLoader.classList.remove('hidden');
+    }
+
+    try {
+        const targetPage = pageOverride || (isAppend ? state.page + 1 : 1);
+        const response = await fetchHotSourceData(tab, targetPage);
+        const list = response?.list || [];
+        const normalized = normalizeHotApiItems(list, tab);
+
+        if (!isAppend) {
+            state.items = normalized;
+        } else {
+            state.items.push(...normalized);
+        }
+
+        state.page = targetPage;
+        const pageCount = response?.pagecount || 0;
+        if (!response || normalized.length === 0) {
+            state.hasMore = false;
+        } else {
+            state.hasMore = pageCount ? targetPage < pageCount : normalized.length >= HOT_API_PAGE_SIZE;
+        }
+
+        if (infiniteLoader) infiniteLoader.classList.add('hidden');
+        renderHotApiCards(state.items, container, false);
+    } catch (error) {
+        console.error('获取热门数据失败：', error);
+        if (infiniteLoader) infiniteLoader.classList.add('hidden');
+        if (!isAppend) {
+            container.innerHTML = `
+                <div class="col-span-full text-center py-8">
+                    <div class="text-red-400">❌ 数据链路中断，请检查网络或代理</div>
+                </div>
+            `;
+        }
+    } finally {
+        state.isLoading = false;
+    }
+}
+
+async function fetchHotSourceData(tab, page) {
+    if (!tab.sourceCode || !API_SITES?.[tab.sourceCode]) return null;
+
+    const apiBase = API_SITES[tab.sourceCode].api;
+    const listUrl = buildHotListUrl(apiBase, tab.strategy, page);
+    const listData = await fetchHotApiData(listUrl);
+
+    if (listData?.list?.length) {
+        return listData;
+    }
+
+    const searchUrl = buildHotSearchUrl(apiBase, page);
+    return await fetchHotApiData(searchUrl);
+}
+
+function buildHotListUrl(apiBase, strategy, page) {
+    const params = new URLSearchParams();
+    params.set('ac', 'videolist');
+    params.set('pg', String(page));
+
+    const extraParams = strategy?.params || {};
+    Object.entries(extraParams).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+            params.set(key, String(value));
+        }
+    });
+
+    return `${apiBase}?${params.toString()}`;
+}
+
+function buildHotSearchUrl(apiBase, page) {
+    return apiBase + API_CONFIG.search.pagePath
+        .replace('{query}', encodeURIComponent(''))
+        .replace('{page}', page);
+}
+
+async function fetchHotApiData(url) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+    try {
+        const proxiedUrl = await window.ProxyAuth?.addAuthToProxyUrl
+            ? await window.ProxyAuth.addAuthToProxyUrl(PROXY_URL + encodeURIComponent(url))
+            : PROXY_URL + encodeURIComponent(url);
+
+        const response = await fetch(proxiedUrl, {
+            headers: API_CONFIG.search.headers,
+            signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) return null;
+
+        return await response.json();
+    } catch (error) {
+        clearTimeout(timeoutId);
+        console.warn('热门数据请求失败：', error);
+        return null;
+    }
+}
+
+function normalizeHotApiItems(list, tab) {
+    return (list || []).map(item => ({
+        title: item.vod_name || '',
+        cover: item.vod_pic || '',
+        remarks: item.vod_remarks || item.vod_year || '',
+        sourceLabel: tab.label
+    })).filter(item => item.title);
 }
 
 // 根据设置更新豆瓣区域的显示状态
@@ -182,7 +524,7 @@ function updateDoubanVisibility() {
         const resultsContainer = document.getElementById('douban-results');
         if (resultsContainer && resultsContainer.children.length === 0) {
             doubanPageStart = 0;
-            renderRecommend(doubanCurrentTag, doubanPageSize, doubanPageStart);
+            renderActiveHotTab();
         }
     } else {
         doubanArea.classList.add('hidden');
@@ -300,6 +642,13 @@ function renderDoubanMovieTvSwitch() {
             doubanCurrentTag = '热门';
             doubanPageStart = 0;
             hasMoreDouban = true;
+            if (hotTabState.douban) {
+                hotTabState.douban.currentSwitch = doubanMovieTvCurrentSwitch;
+                hotTabState.douban.currentTag = doubanCurrentTag;
+                hotTabState.douban.pageStart = doubanPageStart;
+                hotTabState.douban.hasMore = hasMoreDouban;
+                hotTabState.douban.items = [];
+            }
 
             // 重新加载豆瓣内容
             renderDoubanTags(movieTags);
@@ -328,6 +677,13 @@ function renderDoubanMovieTvSwitch() {
             doubanCurrentTag = '热门';
             doubanPageStart = 0;
             hasMoreDouban = true;
+            if (hotTabState.douban) {
+                hotTabState.douban.currentSwitch = doubanMovieTvCurrentSwitch;
+                hotTabState.douban.currentTag = doubanCurrentTag;
+                hotTabState.douban.pageStart = doubanPageStart;
+                hotTabState.douban.hasMore = hasMoreDouban;
+                hotTabState.douban.items = [];
+            }
 
             // 重新加载豆瓣内容
             renderDoubanTags(tvTags);
@@ -383,6 +739,12 @@ function renderDoubanTags(tags) {
                 doubanCurrentTag = tag;
                 doubanPageStart = 0;
                 hasMoreDouban = true;
+                if (hotTabState.douban) {
+                    hotTabState.douban.currentTag = doubanCurrentTag;
+                    hotTabState.douban.pageStart = doubanPageStart;
+                    hotTabState.douban.hasMore = hasMoreDouban;
+                    hotTabState.douban.items = [];
+                }
                 renderRecommend(doubanCurrentTag, doubanPageSize, doubanPageStart);
                 renderDoubanTags();
             }
@@ -398,19 +760,8 @@ function setupDoubanRefreshBtn() {
     if (!btn) return;
 
     btn.onclick = function () {
-        // 随机一个起点 (0, 20, 40, 60, 80, 100)，增加新鲜感
-        const maxRandomPages = 6;
-        let randomPage = Math.floor(Math.random() * maxRandomPages);
-        let newStart = randomPage * doubanPageSize;
-
-        // 简单防重复：如果随机到的和当前一样，就+1（如果溢出就归0）
-        if (newStart === doubanPageStart) {
-            randomPage = (randomPage + 1) % maxRandomPages;
-            newStart = randomPage * doubanPageSize;
-        }
-
-        doubanPageStart = newStart;
-        hasMoreDouban = true;
+        const tab = getHotTabConfig(activeHotTab);
+        if (!tab) return;
 
         // 滚动回顶部
         const doubanArea = document.getElementById('doubanArea');
@@ -418,18 +769,51 @@ function setupDoubanRefreshBtn() {
             doubanArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
-        // 强制清空容器，避免 Masonry 布局残留干扰
-        const container = document.getElementById("douban-results");
-        if (container) {
-            container.innerHTML = '';
-            // 如果 Masonry 实例状态也需要重置，可以在这里处理
-            // 但 renderRecommend 会调用 initMasonryStructure 来处理
+        if (tab.type === 'douban') {
+            // 随机一个起点 (0, 20, 40, 60, 80, 100)，增加新鲜感
+            const maxRandomPages = 6;
+            let randomPage = Math.floor(Math.random() * maxRandomPages);
+            let newStart = randomPage * doubanPageSize;
+
+            // 简单防重复：如果随机到的和当前一样，就+1（如果溢出就归0）
+            if (newStart === doubanPageStart) {
+                randomPage = (randomPage + 1) % maxRandomPages;
+                newStart = randomPage * doubanPageSize;
+            }
+
+            doubanPageStart = newStart;
+            hasMoreDouban = true;
+
+            if (hotTabState.douban) {
+                hotTabState.douban.pageStart = doubanPageStart;
+                hotTabState.douban.hasMore = hasMoreDouban;
+                hotTabState.douban.items = [];
+            }
+
+            // 强制清空容器，避免 Masonry 布局残留干扰
+            const container = document.getElementById("douban-results");
+            if (container) {
+                container.innerHTML = '';
+            }
+
+            console.log(`执行换一批：随机偏移量设置为 ${doubanPageStart} (Random Page: ${randomPage})`);
+
+            renderRecommend(doubanCurrentTag, doubanPageSize, doubanPageStart);
+            return;
         }
 
-        console.log(`执行换一批：随机偏移量设置为 ${doubanPageStart} (Random Page: ${randomPage})`);
-
-        // 稍微延迟一下调用，让清除操作视觉上生效（可选，这里直接调用）
-        renderRecommend(doubanCurrentTag, doubanPageSize, doubanPageStart);
+        const state = hotTabState[tab.key];
+        if (state) {
+            const maxRandomPages = 5;
+            let randomPage = Math.floor(Math.random() * maxRandomPages) + 1;
+            if (randomPage === state.page) {
+                randomPage = (randomPage % maxRandomPages) + 1;
+            }
+            state.page = randomPage;
+            state.items = [];
+            state.hasMore = true;
+            loadHotApiTab(tab, false, randomPage);
+        }
     };
 }
 
@@ -464,9 +848,13 @@ function renderRecommend(tag, pageLimit, pageStart, isAppend = false) {
     const container = document.getElementById("douban-results");
     const infiniteLoader = document.querySelector('#douban-load-more .douban-loader-tech');
     if (!container) return;
+    if (activeHotTab !== 'douban') return;
 
     if (isDoubanLoading) return;
     isDoubanLoading = true;
+    if (hotTabState.douban) {
+        hotTabState.douban.isLoading = true;
+    }
 
     // 显示加载状态
     if (!isAppend) {
@@ -500,8 +888,21 @@ function renderRecommend(tag, pageLimit, pageStart, isAppend = false) {
                 }
             }
 
-            renderDoubanCards(data, container, isAppend);
+            const subjects = data.subjects || [];
+            renderDoubanCards({ subjects }, container, isAppend);
             isDoubanLoading = false;
+            if (hotTabState.douban) {
+                if (!isAppend) {
+                    hotTabState.douban.items = [...subjects];
+                } else {
+                    hotTabState.douban.items.push(...subjects);
+                }
+                hotTabState.douban.pageStart = pageStart;
+                hotTabState.douban.currentTag = tag;
+                hotTabState.douban.currentSwitch = doubanMovieTvCurrentSwitch;
+                hotTabState.douban.hasMore = hasMoreDouban;
+                hotTabState.douban.isLoading = false;
+            }
 
             // 关键修复：渲染完成后检查锚点，如果还在视口内且还有更多，则继续加载下一页
             // 解决首屏太长或加载数据太少无法再次触发 IntersectionObserver 的问题
@@ -519,6 +920,9 @@ function renderRecommend(tag, pageLimit, pageStart, isAppend = false) {
         })
         .catch(error => {
             isDoubanLoading = false;
+            if (hotTabState.douban) {
+                hotTabState.douban.isLoading = false;
+            }
             console.error("获取豆瓣数据失败：", error);
             if (infiniteLoader) infiniteLoader.classList.add('hidden');
             if (!isAppend) {
@@ -675,9 +1079,99 @@ function renderDoubanCards(data, container, isAppend = false) {
     });
 }
 
+function renderHotApiCards(items, container, isAppend = false) {
+    initMasonryStructure(container);
+
+    if (!isAppend) {
+        clearMasonryColumns();
+    }
+
+    if (!items || items.length === 0) {
+        if (!isAppend) {
+            container.innerHTML = `
+                <div class="col-span-full w-full text-center py-20 text-gray-500 flex flex-col items-center">
+                    <div class="mb-4 text-4xl opacity-30">📭</div>
+                    <span>暂无更多推荐内容</span>
+                </div>
+            `;
+        }
+        return;
+    }
+
+    const newCards = items.map((item, index) => {
+        const cardDiv = document.createElement('div');
+        cardDiv.className = "douban-card-glass mb-4 bg-[#111] hover:bg-[#222] transition-all duration-300 rounded-xl overflow-hidden flex flex-col transform hover:scale-[1.03] shadow-lg group pointer-events-auto masonry-item-enter";
+        cardDiv.style.animationDelay = `${index * 50}ms`;
+
+        const safeTitle = (item.title || '')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, "\\'");
+        const coverUrl = item.cover || 'https://via.placeholder.com/300x450?text=无封面';
+        const proxiedCoverUrl = PROXY_URL + encodeURIComponent(coverUrl);
+        const remarkText = (item.remarks || '热门推荐').toString()
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+        const sourceLabel = (item.sourceLabel || '热门').toString()
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+
+        cardDiv.innerHTML = `
+            <div class="relative w-full aspect-[2/3] cursor-pointer bg-[#1a1c22] skeleton overflow-hidden" onclick="fillAndSearch('${safeTitle}')">
+                <img src="${coverUrl}" alt="${safeTitle}"
+                    class="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105 smooth-img"
+                    onload="this.classList.add('loaded'); this.parentElement.classList.remove('skeleton');"
+                    onerror="this.onerror=null; this.src='${proxiedCoverUrl}';"
+                    loading="lazy">
+
+                <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
+                <div class="absolute top-2 left-2 text-[10px] px-2 py-0.5 rounded-full bg-black/60 text-white border border-white/10">
+                    ${sourceLabel}
+                </div>
+
+                <div class="absolute bottom-2 left-2 text-[10px] px-2 py-0.5 rounded-full bg-black/60 text-white border border-white/10">
+                    ${remarkText}
+                </div>
+            </div>
+            <div class="px-2.5 pt-2.5 text-center">
+                <button onclick="fillAndSearch('${safeTitle}')" 
+                        class="douban-card-title text-xs sm:text-sm font-bold text-gray-200 truncate w-full group-hover:text-cyan-400 transition-colors duration-300"
+                        title="${safeTitle}">
+                    ${safeTitle}
+                </button>
+            </div>
+        `;
+        return cardDiv;
+    });
+
+    newCards.forEach(card => {
+        let shortestCol = masonryColumns[0];
+        let minHeight = shortestCol.offsetHeight;
+
+        for (let i = 1; i < masonryColumns.length; i++) {
+            const h = masonryColumns[i].offsetHeight;
+            if (h < minHeight) {
+                minHeight = h;
+                shortestCol = masonryColumns[i];
+            }
+        }
+        shortestCol.appendChild(card);
+    });
+}
+
 // Masonry 布局状态管理
 let masonryColumns = [];
 let masonryResizeTimer = null;
+
+function clearMasonryColumns() {
+    masonryColumns.forEach(col => {
+        col.innerHTML = '';
+    });
+}
 
 // 获取当前断点对应的列数
 function getMasonryColumnCount() {
@@ -955,6 +1449,13 @@ function deleteTag(tag) {
         if (doubanCurrentTag === tag) {
             doubanCurrentTag = '热门';
             doubanPageStart = 0;
+            hasMoreDouban = true;
+            if (hotTabState.douban) {
+                hotTabState.douban.currentTag = doubanCurrentTag;
+                hotTabState.douban.pageStart = doubanPageStart;
+                hotTabState.douban.hasMore = hasMoreDouban;
+                hotTabState.douban.items = [];
+            }
             renderRecommend(doubanCurrentTag, doubanPageSize, doubanPageStart);
         }
 
@@ -980,6 +1481,13 @@ function resetTagsToDefault() {
     // 设置当前标签为热门
     doubanCurrentTag = '热门';
     doubanPageStart = 0;
+    hasMoreDouban = true;
+    if (hotTabState.douban) {
+        hotTabState.douban.currentTag = doubanCurrentTag;
+        hotTabState.douban.pageStart = doubanPageStart;
+        hotTabState.douban.hasMore = hasMoreDouban;
+        hotTabState.douban.items = [];
+    }
 
     // 保存到本地存储
     saveUserTags();
