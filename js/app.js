@@ -1170,10 +1170,10 @@ function playVideo(url, vod_name, sourceCode, episodeIndex = 0, vodId = '') {
             const parsed = new URL(currentPath, window.location.origin);
             if (parsed.pathname.startsWith('/s=')) {
                 const keyword = parsed.pathname.replace('/s=', '');
-                return `${parsed.origin}/?s=${encodeURIComponent(decodeURIComponent(keyword))}`;
+                return `${parsed.origin}/s=${encodeURIComponent(decodeURIComponent(keyword))}`;
             }
             if (parsed.searchParams.has('s')) {
-                return `${parsed.origin}/?s=${encodeURIComponent(parsed.searchParams.get('s') || '')}`;
+                return `${parsed.origin}/s=${encodeURIComponent(parsed.searchParams.get('s') || '')}`;
             }
         } catch (e) { }
         return currentPath;
