@@ -20,18 +20,54 @@ const API_SITES = {
     ruyi: {
         api: 'https://cj.rycjapi.com/api.php/provide/vod',
         name: '如意资源',
+        categoryParam: 'class',
+        categories: [
+            { label: '国产', value: '国产' },
+            { label: '欧美', value: '欧美' },
+            { label: '日韩', value: '日韩' },
+            { label: '动作', value: '动作' },
+            { label: '喜剧', value: '喜剧' },
+            { label: '科幻', value: '科幻' }
+        ]
     },
     liteapple: {
         api: 'https://cj.rycjapi.com/api.php/provide/vod',
         name: '小苹果(采集)',
+        categoryParam: 'class',
+        categories: [
+            { label: '国产', value: '国产' },
+            { label: '欧美', value: '欧美' },
+            { label: '日韩', value: '日韩' },
+            { label: '动作', value: '动作' },
+            { label: '喜剧', value: '喜剧' },
+            { label: '科幻', value: '科幻' }
+        ]
     },
     bfzy: {
         api: 'https://bfzyapi.com/api.php/provide/vod',
         name: '暴风资源',
+        categoryParam: 'class',
+        categories: [
+            { label: '国产', value: '国产' },
+            { label: '欧美', value: '欧美' },
+            { label: '日韩', value: '日韩' },
+            { label: '动作', value: '动作' },
+            { label: '喜剧', value: '喜剧' },
+            { label: '科幻', value: '科幻' }
+        ]
     },
     tyyszy: {
         api: 'https://tyyszy.com/api.php/provide/vod',
         name: '天涯资源',
+        categoryParam: 'class',
+        categories: [
+            { label: '国产', value: '国产' },
+            { label: '欧美', value: '欧美' },
+            { label: '日韩', value: '日韩' },
+            { label: '动作', value: '动作' },
+            { label: '喜剧', value: '喜剧' },
+            { label: '科幻', value: '科幻' }
+        ]
     },
     xiaomaomi: {
         api: 'https://zy.xmm.hk/api.php/provide/vod',

@@ -1,6 +1,7 @@
 // 全局变量
 let selectedAPIs = JSON.parse(localStorage.getItem('selectedAPIs') || '["tyyszy", "bfzy", "ruyi", "liteapple"]'); // 默认选中资源
 let customAPIs = JSON.parse(localStorage.getItem('customAPIs') || '[]'); // 存储自定义API列表
+const categorySelections = {};
 
 // 添加当前播放的集数索引
 let currentEpisodeIndex = 0;
@@ -24,6 +25,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // 渲染搜索历史
     renderSearchHistory();
+
+    // 渲染分类标签
+    renderCategoryTags();
 
     // 设置默认API选择（如果是第一次加载）
     if (!localStorage.getItem('hasInitializedDefaults')) {
@@ -177,6 +181,134 @@ function initAPICheckboxes() {
 
     // 初始检查成人内容状态
     checkAdultAPIsSelected();
+}
+
+function normalizeCategories(categories) {
+    if (!Array.isArray(categories)) return [];
+    return categories
+        .map(category => {
+            if (typeof category === 'string') {
+                return { label: category, value: category };
+            }
+            return category;
+        })
+        .filter(category => category && category.label && category.value);
+}
+
+function getCategoryConfig(apiId) {
+    const source = API_SITES[apiId];
+    if (!source || !source.categoryParam || !source.categories) return null;
+    const categories = normalizeCategories(source.categories);
+    if (categories.length === 0) return null;
+    return {
+        name: source.name,
+        param: source.categoryParam,
+        categories
+    };
+}
+
+function hasActiveCategoryFilters() {
+    return Object.keys(categorySelections).length > 0;
+}
+
+function getCategorySummary() {
+    return Object.values(categorySelections)
+        .map(category => category.label)
+        .filter(Boolean)
+        .join('/') || '分类';
+}
+
+function pruneCategorySelections() {
+    const availableApis = new Set(selectedAPIs.filter(apiId => !apiId.startsWith('custom_')));
+    Object.keys(categorySelections).forEach(apiId => {
+        if (!availableApis.has(apiId)) {
+            delete categorySelections[apiId];
+        }
+    });
+}
+
+function createCategoryButton(label, isActive, onClick) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = `category-tag${isActive ? ' active' : ''}`;
+    button.textContent = label;
+    button.addEventListener('click', onClick);
+    return button;
+}
+
+function handleCategorySelection(apiId, category) {
+    if (!category) {
+        delete categorySelections[apiId];
+    } else {
+        categorySelections[apiId] = {
+            label: category.label,
+            value: category.value,
+            param: category.param
+        };
+    }
+    renderCategoryTags();
+    triggerCategorySearch();
+}
+
+function renderCategoryTags() {
+    const area = document.getElementById('categoryFilterArea');
+    const container = document.getElementById('categoryTagGroups');
+    if (!area || !container) return;
+
+    container.innerHTML = '';
+    let hasTags = false;
+
+    selectedAPIs.forEach(apiId => {
+        if (apiId.startsWith('custom_')) return;
+        const config = getCategoryConfig(apiId);
+        if (!config) return;
+
+        hasTags = true;
+        const group = document.createElement('div');
+        group.className = 'category-group';
+
+        const title = document.createElement('div');
+        title.className = 'category-group-title';
+        title.textContent = config.name;
+        group.appendChild(title);
+
+        const tagsRow = document.createElement('div');
+        tagsRow.className = 'category-tags-row';
+
+        const isAllActive = !categorySelections[apiId];
+        tagsRow.appendChild(createCategoryButton('全部', isAllActive, () => handleCategorySelection(apiId, null)));
+
+        config.categories.forEach(category => {
+            const isActive = categorySelections[apiId]?.value === category.value;
+            tagsRow.appendChild(createCategoryButton(category.label, isActive, () => handleCategorySelection(apiId, {
+                label: category.label,
+                value: category.value,
+                param: config.param
+            })));
+        });
+
+        group.appendChild(tagsRow);
+        container.appendChild(group);
+    });
+
+    area.classList.toggle('hidden', !hasTags);
+}
+
+function triggerCategorySearch() {
+    const query = document.getElementById('searchInput')?.value.trim() || '';
+    if (!query && !hasActiveCategoryFilters()) return;
+    search(true);
+}
+
+function getCategorySearchOptions(apiId) {
+    const selection = categorySelections[apiId];
+    if (!selection) return null;
+    const config = getCategoryConfig(apiId);
+    if (!config) return null;
+    return {
+        categoryParam: config.param,
+        categoryValue: selection.value
+    };
 }
 
 // 添加成人API列表
@@ -422,6 +554,9 @@ function updateSelectedAPIs() {
 
     // 更新显示选中的API数量
     updateSelectedApiCount();
+
+    pruneCategorySelections();
+    renderCategoryTags();
 }
 
 // 更新选中的API数量显示
@@ -741,11 +876,14 @@ window.mergedSearchResults = new Map();
 // 搜索功能 - 聚合优化版：支持去重和多源合并
 async function search(isHistoryNav = false) {
     const query = document.getElementById('searchInput').value.trim();
-    if (!query) { showToast('请输入搜索内容', 'info'); return; }
+    const hasCategoryFilters = hasActiveCategoryFilters();
+    if (!query && !hasCategoryFilters) { showToast('请输入搜索内容', 'info'); return; }
     if (selectedAPIs.length === 0) { showToast('请至少选择一个API源', 'warning'); return; }
 
     showLoading('正在全网检索并聚合资源...');
-    saveSearchHistory(query);
+    if (query) {
+        saveSearchHistory(query);
+    }
 
     // 1. 准备搜索界面
     const resultsDiv = document.getElementById('results');
@@ -765,25 +903,27 @@ async function search(isHistoryNav = false) {
     window.mergedSearchResults.clear();
 
     // 更新URL
-    if (!isHistoryNav) {
+    if (!isHistoryNav && query) {
         try {
             const encodedQuery = encodeURIComponent(query);
             window.history.pushState({ search: query }, `搜索: ${query} - 南方许`, `/s=${encodedQuery}`);
         } catch (e) { }
     }
-    document.title = `搜索: ${query} - 南方许`;
-    try {
-        const safeSearchUrl = `${window.location.origin}/?s=${encodeURIComponent(query)}`;
-        localStorage.setItem('lastSearchPage', safeSearchUrl);
-        sessionStorage.setItem('playerReturnUrl', safeSearchUrl);
-    } catch (e) { }
+    document.title = query ? `搜索: ${query} - 南方许` : `分类: ${getCategorySummary()} - 南方许`;
+    if (query) {
+        try {
+            const safeSearchUrl = `${window.location.origin}/?s=${encodeURIComponent(query)}`;
+            localStorage.setItem('lastSearchPage', safeSearchUrl);
+            sessionStorage.setItem('playerReturnUrl', safeSearchUrl);
+        } catch (e) { }
+    }
 
     const yellowFilterEnabled = localStorage.getItem('yellowFilterEnabled') === 'true';
     const bannedTags = ['伦理片', '福利', '里番动漫', '门事件', '萝莉少女', '制服诱惑', '国产传媒', 'cosplay', '黑丝诱惑', '无码', '日本无码', '有码', '日本有码', 'SWAG', '网红主播', '色情片', '同性片', '福利视频', '福利片'];
 
     // 2. 并行发起所有 API 请求
     const promises = selectedAPIs.map(apiId =>
-        searchByAPIAndKeyWord(apiId, query)
+        searchByAPIAndKeyWord(apiId, query, getCategorySearchOptions(apiId))
             .then(results => ({ apiId, results, status: 'fulfilled' }))
             .catch(error => ({ apiId, error, status: 'rejected' }))
     );

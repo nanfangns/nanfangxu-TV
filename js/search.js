@@ -1,4 +1,11 @@
-async function searchByAPIAndKeyWord(apiId, query) {
+function appendCategoryParams(url, options) {
+    if (!options || !options.categoryParam) return url;
+    if (options.categoryValue === undefined || options.categoryValue === null || options.categoryValue === '') return url;
+    const connector = url.includes('?') ? '&' : '?';
+    return `${url}${connector}${encodeURIComponent(options.categoryParam)}=${encodeURIComponent(options.categoryValue)}`;
+}
+
+async function searchByAPIAndKeyWord(apiId, query, options = {}) {
     try {
         let apiUrl, apiName, apiBaseUrl;
         
@@ -9,13 +16,13 @@ async function searchByAPIAndKeyWord(apiId, query) {
             if (!customApi) return [];
             
             apiBaseUrl = customApi.url;
-            apiUrl = apiBaseUrl + API_CONFIG.search.path + encodeURIComponent(query);
+            apiUrl = appendCategoryParams(apiBaseUrl + API_CONFIG.search.path + encodeURIComponent(query || ''), options);
             apiName = customApi.name;
         } else {
             // 内置API
             if (!API_SITES[apiId]) return [];
             apiBaseUrl = API_SITES[apiId].api;
-            apiUrl = apiBaseUrl + API_CONFIG.search.path + encodeURIComponent(query);
+            apiUrl = appendCategoryParams(apiBaseUrl + API_CONFIG.search.path + encodeURIComponent(query || ''), options);
             apiName = API_SITES[apiId].name;
         }
         
@@ -64,9 +71,9 @@ async function searchByAPIAndKeyWord(apiId, query) {
             
             for (let page = 2; page <= pagesToFetch + 1; page++) {
                 // 构建分页URL
-                const pageUrl = apiBaseUrl + API_CONFIG.search.pagePath
+                const pageUrl = appendCategoryParams(apiBaseUrl + API_CONFIG.search.pagePath
                     .replace('{query}', encodeURIComponent(query))
-                    .replace('{page}', page);
+                    .replace('{page}', page), options);
                 
                 // 创建获取额外页的Promise
                 const pagePromise = (async () => {
