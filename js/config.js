@@ -118,6 +118,56 @@ const API_SITES = {
         name: '空内容测试源',
         adult: true
     },
+    jp91: {
+        api: 'https://91jpzyw.com/api.php/provide/vod/at/json',
+        name: '91精品',
+        adult: true
+    },
+    xzy: {
+        api: 'https://xzybb1.com/api.php/provide/vod/at/xml',
+        name: '幸资源',
+        adult: true
+    },
+    xbzy: {
+        api: 'https://xingba222.com/api.php/provide/vod/at/xml',
+        name: '杏吧资源',
+        adult: true
+    },
+    sgn: {
+        api: 'https://api.sexnguon.com/api.php/provide/vod/',
+        name: '色南国资源',
+        adult: true
+    },
+    md91: {
+        api: 'https://91md.me/api.php/provide/vod/',
+        name: '91麻豆',
+        adult: true
+    },
+    lbzy: {
+        api: 'https://lbapi9.com/api.php/provide/vod/',
+        name: '乐播资源',
+        adult: true
+    },
+    ttzy: {
+        api: 'https://apittzy.com/api.php/provide/vod/',
+        name: '探探资源',
+        adult: true
+    },
+    cr51: {
+        api: 'https://kkzy.me/api.php/provide/vod/',
+        name: '成人51',
+        adult: true
+    },
+    javmy: {
+        api: 'http://mygzycj.com/api.php?ac=list',
+        name: 'JAV名优',
+        adult: true
+    },
+    syys: {
+        api: 'https://shayuapi.com/api.php/Seacms/vod/at/xml/',
+        name: '鲨鱼影视',
+        adult: true
+    },
 };
 
 // 定义合并方法
