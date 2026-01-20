@@ -29,9 +29,10 @@ function goBack(event) {
             const parsed = new URL(url, window.location.origin);
             if (parsed.pathname.startsWith('/s=')) {
                 const keyword = parsed.pathname.replace('/s=', '');
-                const normalized = new URL('/', parsed.origin);
-                normalized.searchParams.set('s', decodeURIComponent(keyword));
-                return normalized.toString();
+                return `${parsed.origin}/s=${encodeURIComponent(decodeURIComponent(keyword))}`;
+            }
+            if (parsed.searchParams.has('s')) {
+                return `${parsed.origin}/s=${encodeURIComponent(parsed.searchParams.get('s') || '')}`;
             }
             return parsed.toString();
         } catch (e) {
