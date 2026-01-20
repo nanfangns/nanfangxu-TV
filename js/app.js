@@ -1164,6 +1164,7 @@ async function loadSourceDetail(sourceCode, vodId, sourceName) {
         }
 
         // [修复] 更新全局 currentEpisodes，确保点击播放时能传递正确的集数列表
+        currentEpisodes = episodes;
         window.currentEpisodes = episodes;
 
         // 更新 UI
