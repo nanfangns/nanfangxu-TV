@@ -735,15 +735,16 @@ function createVideoCardHtml(item, hasCover) {
     `;
 }
 
-// 搜索功能 - 极致优化版：分段增量渲染
-async function search(isHistoryNav = false) {
-    // 搜索功能开始
+// 全局变量用于存储合并后的搜索结果
+window.mergedSearchResults = new Map();
 
+// 搜索功能 - 聚合优化版：支持去重和多源合并
+async function search(isHistoryNav = false) {
     const query = document.getElementById('searchInput').value.trim();
     if (!query) { showToast('请输入搜索内容', 'info'); return; }
     if (selectedAPIs.length === 0) { showToast('请至少选择一个API源', 'warning'); return; }
 
-    showLoading('正在同步全网资源...');
+    showLoading('正在全网检索并聚合资源...');
     saveSearchHistory(query);
 
     // 1. 准备搜索界面
@@ -760,6 +761,9 @@ async function search(isHistoryNav = false) {
     resultsArea.classList.remove('hidden');
     if (doubanArea) doubanArea.classList.add('hidden');
 
+    // 重置合并结果 Map
+    window.mergedSearchResults.clear();
+
     // 更新URL
     if (!isHistoryNav) {
         try {
@@ -774,57 +778,156 @@ async function search(isHistoryNav = false) {
         sessionStorage.setItem('playerReturnUrl', safeSearchUrl);
     } catch (e) { }
 
-    let totalResultsCount = 0;
-    let completedAPIs = 0;
     const yellowFilterEnabled = localStorage.getItem('yellowFilterEnabled') === 'true';
     const bannedTags = ['伦理片', '福利', '里番动漫', '门事件', '萝莉少女', '制服诱惑', '国产传媒', 'cosplay', '黑丝诱惑', '无码', '日本无码', '有码', '日本有码', 'SWAG', '网红主播', '色情片', '同性片', '福利视频', '福利片'];
 
-    // 2. 并行发起请求并即时渲染
-    const fetchAndRender = async (apiId) => {
-        try {
-            const results = await searchByAPIAndKeyWord(apiId, query);
-            if (Array.isArray(results) && results.length > 0) {
-                let filteredResults = results;
+    // 2. 并行发起所有 API 请求
+    const promises = selectedAPIs.map(apiId =>
+        searchByAPIAndKeyWord(apiId, query)
+            .then(results => ({ apiId, results, status: 'fulfilled' }))
+            .catch(error => ({ apiId, error, status: 'rejected' }))
+    );
+
+    // 3. 等待所有请求完成并处理结果
+    try {
+        const responses = await Promise.all(promises);
+
+        for (const response of responses) {
+            if (response.status === 'fulfilled' && Array.isArray(response.results)) {
+                let filteredResults = response.results;
                 if (yellowFilterEnabled) {
-                    filteredResults = results.filter(item => !bannedTags.some(tag => (item.type_name || '').includes(tag)));
+                    filteredResults = response.results.filter(item => !bannedTags.some(tag => (item.type_name || '').includes(tag)));
                 }
 
-                if (filteredResults.length > 0) {
-                    const html = filteredResults.map(item => {
-                        const hasCover = item.vod_pic && item.vod_pic.startsWith('http');
-                        return createVideoCardHtml(item, hasCover);
-                    }).join('');
+                // 聚合逻辑
+                filteredResults.forEach(item => {
+                    const safeName = (item.vod_name || '未知').trim();
+                    const year = (item.vod_year || '').trim();
+                    // 生成唯一 Key: 片名|年份 (对于没有年份的，只用片名)
+                    // 为了防止不同年份的同名剧被错误合并，尽量带上年份。但有些源年份为空，可能导致无法合并。
+                    // 策略：如果年份存在且不为0，则加入Key；否则只用片名。这能最大程度合并。
+                    const key = year && year !== '0' ? `${safeName}|${year}` : safeName;
 
-                    resultsDiv.insertAdjacentHTML('beforeend', html);
-                    totalResultsCount += filteredResults.length;
-                    if (searchResultsCount) searchResultsCount.textContent = totalResultsCount;
-                }
-            }
-        } catch (err) {
-            console.error(`API ${apiId} 搜索异常:`, err);
-        } finally {
-            completedAPIs++;
-            // 当第一个API返回结果或者所有API都尝试过后，隐藏顶层loading
-            if (totalResultsCount > 0 || completedAPIs === selectedAPIs.length) {
-                hideLoading();
-            }
-            // 如果全部结束但没结果
-            if (completedAPIs === selectedAPIs.length && totalResultsCount === 0) {
-                resultsDiv.innerHTML = `
-                    <div class="col-span-full text-center py-20 animate-fadeIn">
-                        <svg class="mx-auto h-16 w-16 text-gray-600 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <h3 class="text-xl font-medium text-gray-400">未发现匹配资源</h3>
-                        <p class="mt-2 text-gray-500">尝试缩减关键词或在侧边栏选中更多接口</p>
-                    </div>
-                `;
+                    if (!window.mergedSearchResults.has(key)) {
+                        window.mergedSearchResults.set(key, {
+                            key: key,
+                            title: safeName,
+                            year: year,
+                            type: item.type_name,
+                            cover: item.vod_pic,
+                            remarks: item.vod_remarks,
+                            // 存储所有来源信息
+                            sources: []
+                        });
+                    }
+
+                    const mergedItem = window.mergedSearchResults.get(key);
+
+                    // 优化：如果有更高清的图片，优先更新图片 (简单的逻辑：优先取有 http 的)
+                    if (!mergedItem.cover || !mergedItem.cover.startsWith('http')) {
+                        if (item.vod_pic && item.vod_pic.startsWith('http')) {
+                            mergedItem.cover = item.vod_pic;
+                        }
+                    }
+
+                    mergedItem.sources.push({
+                        source_code: item.source_code,
+                        source_name: item.source_name,
+                        vod_id: item.vod_id,
+                        api_url: item.api_url,
+                        last_update: item.vod_time // 可选：记录更新时间
+                    });
+                });
             }
         }
-    };
 
-    // 同时启动所有API请求
-    selectedAPIs.forEach(apiId => fetchAndRender(apiId));
+        // 4. 渲染合并后的结果
+        renderMergedResults();
+
+    } catch (error) {
+        console.error('搜索聚合过程出错:', error);
+        showToast('搜索过程中发生错误', 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+// 渲染合并后的结果列表
+function renderMergedResults() {
+    const resultsDiv = document.getElementById('results');
+    const searchResultsCount = document.getElementById('searchResultsCount');
+
+    // 转换为数组并按相关性排序（目前简单按来源数量排序，或者保持原序? 保持原序较好，因为通常第一个结果最匹配）
+    // 但 Map 遍历顺序是插入顺序，大概率也是按相关性的（取决于第一个返回的API）。
+    // 我们可以根据来源数量多少来微调排序，让热门资源排前面？暂不复杂化。
+    const mergedList = Array.from(window.mergedSearchResults.values());
+
+    if (searchResultsCount) searchResultsCount.textContent = mergedList.length;
+
+    if (mergedList.length === 0) {
+        resultsDiv.innerHTML = `
+            <div class="col-span-full text-center py-20 animate-fadeIn">
+                <svg class="mx-auto h-16 w-16 text-gray-600 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h3 class="text-xl font-medium text-gray-400">未发现匹配资源</h3>
+                <p class="mt-2 text-gray-500">尝试缩减关键词或在侧边栏选中更多接口</p>
+            </div>
+        `;
+        return;
+    }
+
+    const html = mergedList.map(item => createMergedVideoCardHtml(item)).join('');
+    resultsDiv.innerHTML = html;
+}
+
+// 生成合并后的视频卡片 HTML
+function createMergedVideoCardHtml(item) {
+    const hasCover = item.cover && item.cover.startsWith('http');
+    const safeKey = item.key.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    const sourceCount = item.sources.length;
+
+    return `
+        <div class="card-hover bg-[#0a0f1a]/80 backdrop-blur-sm rounded-xl overflow-hidden cursor-pointer transition-all h-full shadow-lg border border-white/5 animate-fadeIn" 
+             onclick="openMergedDetail('${safeKey}')">
+            <div class="flex h-full">
+                ${hasCover ? `
+                <div class="relative flex-shrink-0 search-card-img-container bg-[#1a1c22] overflow-hidden skeleton" style="width: 100px; height: 140px;">
+                    <img src="${item.cover}" alt="${item.title}" 
+                         class="h-full w-full object-cover smooth-img" 
+                         onload="this.classList.add('loaded'); this.parentElement.classList.remove('skeleton');"
+                         onerror="this.onerror=null; this.src='https://via.placeholder.com/300x450?text=无封面'; this.classList.add('object-contain','loaded'); this.parentElement.classList.remove('skeleton');" 
+                         loading="lazy">
+                    <div class="absolute inset-0 bg-gradient-to-r from-black/30 to-transparent"></div>
+                </div>` : ''}
+                
+                <div class="p-3 flex flex-col flex-grow">
+                    <div class="flex-grow">
+                        <h3 class="font-semibold mb-2 break-words line-clamp-2 ${hasCover ? '' : 'text-center'}" title="${item.title}">${item.title}</h3>
+                        <div class="flex flex-wrap ${hasCover ? '' : 'justify-center'} gap-1 mb-2">
+                             ${(item.type || '').toString().replace(/</g, '&lt;') ?
+            `<span class="text-xs py-0.5 px-1.5 rounded bg-opacity-20 bg-blue-500 text-blue-300">
+                                  ${(item.type || '').toString().replace(/</g, '&lt;')}
+                              </span>` : ''}
+                            ${(item.year || '') ?
+            `<span class="text-xs py-0.5 px-1.5 rounded bg-opacity-20 bg-blue-500 google-text-accent">
+                                  ${item.year}
+                              </span>` : ''}
+                        </div>
+                        <p class="text-gray-400 text-sm line-clamp-2 overflow-hidden ${hasCover ? '' : 'text-center'} mb-2">
+                            ${(item.remarks || '暂无介绍').toString().replace(/</g, '&lt;')}
+                        </p>
+                    </div>
+                    <div class="flex justify-between items-center mt-auto pt-2 border-t border-gray-800/50">
+                        <div class="source-count-badge">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                            ${sourceCount}个源
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
 }
 
 // 切换清空按钮的显示状态
@@ -871,288 +974,243 @@ function hookInput() {
 }
 document.addEventListener('DOMContentLoaded', hookInput);
 
-// 显示详情 - 优化版：客户端直接请求，绕过后端代理
-async function showDetails(id, vod_name, sourceCode) {
-    if (!id) {
-        showToast('视频ID无效', 'error');
+// 打开合并后的详情页
+function openMergedDetail(key) {
+    const item = window.mergedSearchResults.get(key);
+    if (!item) {
+        showToast('无法获取视频详情，请重新搜索', 'error');
         return;
     }
-
-    // 判断是查单个源还是所有源
-    const shouldQueryAllSources = !sourceCode || sourceCode === '' || sourceCode === 'undefined';
-    const sourcesToQuery = shouldQueryAllSources ? selectedAPIs : [sourceCode];
-
-    const loadingMessage = shouldQueryAllSources ?
-        `正在从 ${sourcesToQuery.length} 个源查询资源...` :
-        '正在查询资源...';
-
-    showLoading(loadingMessage);
 
     const modal = document.getElementById('modal');
     const modalTitle = document.getElementById('modalTitle');
     const modalContent = document.getElementById('modalContent');
 
+    // 设置标题
+    modalTitle.innerHTML = `<span class="break-words">${item.title}</span> <span class="text-sm font-normal text-gray-400">(${item.year || '未知年份'})</span>`;
+    currentVideoTitle = item.title;
+
+    // 初始模态框结构 - 包含 Tab 容器 和 内容容器
+    modalContent.innerHTML = `
+        <!-- 源切换 Tab 栏 -->
+        <div class="source-tabs-container" id="sourceTabs">
+            <!-- Tabs will be inserted here -->
+        </div>
+
+        <!-- 详情内容加载区 -->
+        <div id="sourceDetailContainer" class="detail-loading-container animate-fade-in">
+            <!-- Content will be loaded here -->
+        </div>
+    `;
+
+    modal.classList.remove('hidden');
+
+    // 渲染 Tabs
+    const tabsContainer = document.getElementById('sourceTabs');
+    item.sources.forEach((source, index) => {
+        const btn = document.createElement('button');
+        btn.className = 'source-tab-btn';
+        btn.textContent = source.source_name;
+        btn.dataset.index = index;
+        btn.onclick = () => switchSourceTab(key, index);
+        tabsContainer.appendChild(btn);
+    });
+
+    // 默认选中第一个源
+    if (item.sources.length > 0) {
+        switchSourceTab(key, 0);
+    }
+}
+
+// 切换数据源 Tab
+function switchSourceTab(key, index) {
+    const item = window.mergedSearchResults.get(key);
+    if (!item || !item.sources[index]) return;
+
+    // 更新 Tab 样式
+    const tabs = document.querySelectorAll('.source-tab-btn');
+    tabs.forEach((tab, idx) => {
+        if (idx === index) {
+            tab.classList.add('active');
+            // 确保活动 Tab 可见 (滚动)
+            tab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        } else {
+            tab.classList.remove('active');
+        }
+    });
+
+    const source = item.sources[index];
+    loadSourceDetail(source.source_code, source.vod_id, source.source_name);
+}
+
+// 加载特定源的详情内容
+async function loadSourceDetail(sourceCode, vodId, sourceName) {
+    const container = document.getElementById('sourceDetailContainer');
+
+    // 显示加载中
+    container.innerHTML = `
+        <div class="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-cyan-500 mb-4"></div>
+        <p class="text-gray-400 text-sm">正在请求 ${sourceName} ...</p>
+    `;
+
     try {
-        // 显示初始标题
-        modalTitle.innerHTML = `<span class="break-words">${vod_name || '未知视频'}</span>`;
-        currentVideoTitle = vod_name || '未知视频';
+        // 获取 API 基础信息
+        // 内置或自定义
+        let apiBaseUrl = '';
+        if (sourceCode.startsWith('custom_')) {
+            const api = getCustomApiInfo(sourceCode.replace('custom_', ''));
+            if (api) apiBaseUrl = api.url;
+        } else if (API_SITES[sourceCode]) {
+            apiBaseUrl = API_SITES[sourceCode].api;
+        }
 
-        // 先显示加载状态
-        modalContent.innerHTML = `
-            <div class="text-center py-12">
-                <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500 mb-4"></div>
-                <p class="text-gray-400">${loadingMessage}</p>
-            </div>
-        `;
-        modal.classList.remove('hidden');
+        if (!apiBaseUrl) throw new Error('未找到API配置');
 
-        // 并行从所有选中的源查询（客户端直接请求）
-        const timestamp = new Date().getTime();
-        const detailPromises = sourcesToQuery.map(async (apiId) => {
-            try {
-                let apiBaseUrl, apiName;
+        // 构建详情URL
+        const detailUrl = apiBaseUrl + API_CONFIG.detail.path + vodId;
 
-                // 处理自定义API源
-                if (apiId.startsWith('custom_')) {
-                    const customIndex = apiId.replace('custom_', '');
-                    const customApi = getCustomApiInfo(customIndex);
-                    if (!customApi) return null;
+        // 代理请求
+        const proxiedUrl = await window.ProxyAuth?.addAuthToProxyUrl ?
+            await window.ProxyAuth.addAuthToProxyUrl(PROXY_URL + encodeURIComponent(detailUrl)) :
+            PROXY_URL + encodeURIComponent(detailUrl);
 
-                    apiBaseUrl = customApi.url;
-                    apiName = customApi.name;
-                } else {
-                    // 内置API
-                    if (!API_SITES[apiId]) return null;
-                    apiBaseUrl = API_SITES[apiId].api;
-                    apiName = API_SITES[apiId].name;
-                }
-
-                // 构建详情URL
-                const detailUrl = apiBaseUrl + API_CONFIG.detail.path + id;
-
-                // 添加鉴权参数到代理URL
-                const proxiedUrl = await window.ProxyAuth?.addAuthToProxyUrl ?
-                    await window.ProxyAuth.addAuthToProxyUrl(PROXY_URL + encodeURIComponent(detailUrl)) :
-                    PROXY_URL + encodeURIComponent(detailUrl);
-
-                const response = await fetch(proxiedUrl, {
-                    headers: API_CONFIG.detail.headers,
-                    signal: AbortSignal.timeout(10000)
-                });
-
-                if (!response.ok) return null;
-
-                const data = await response.json();
-
-                // 检查返回的数据是否有效
-                if (!data || !data.list || !Array.isArray(data.list) || data.list.length === 0) {
-                    return null;
-                }
-
-                // 获取第一个匹配的视频详情
-                const videoDetail = data.list[0];
-
-                // 提取播放地址
-                let episodes = [];
-
-                if (videoDetail.vod_play_url) {
-                    // 分割不同播放源
-                    const playSources = videoDetail.vod_play_url.split('$$$');
-
-                    // 提取第一个播放源的集数
-                    if (playSources.length > 0) {
-                        const mainSource = playSources[0];
-                        const episodeList = mainSource.split('#');
-
-                        // 从每个集数中提取URL
-                        episodes = episodeList.map(ep => {
-                            const parts = ep.split('$');
-                            return parts.length > 1 ? parts[1] : '';
-                        }).filter(url => url && (url.startsWith('http://') || url.startsWith('https://')));
-                    }
-                }
-
-                // 如果有集数数据，返回结果
-                if (episodes.length > 0) {
-                    return {
-                        episodes: episodes,
-                        sourceCode: apiId,
-                        sourceName: apiName,
-                        videoInfo: {
-                            title: videoDetail.vod_name,
-                            cover: videoDetail.vod_pic,
-                            desc: videoDetail.vod_content,
-                            type: videoDetail.type_name,
-                            year: videoDetail.vod_year,
-                            area: videoDetail.vod_area,
-                            director: videoDetail.vod_director,
-                            actor: videoDetail.vod_actor,
-                            remarks: videoDetail.vod_remarks,
-                            source_name: apiName,
-                            source_code: apiId
-                        }
-                    };
-                }
-                return null;
-            } catch (error) {
-                console.warn(`从源 ${apiId} 获取详情失败:`, error);
-                return null;
-            }
+        const response = await fetch(proxiedUrl, {
+            headers: API_CONFIG.detail.headers,
+            signal: AbortSignal.timeout(10000)
         });
 
-        // 等待所有查询完成
-        const allResults = await Promise.all(detailPromises);
-        const validResults = allResults.filter(r => r !== null);
+        if (!response.ok) throw new Error('API请求失败');
 
-        hideLoading();
+        const data = await response.json();
+        if (!data || !data.list || !data.list[0]) throw new Error('无数据返回');
 
-        if (validResults.length === 0) {
-            modalContent.innerHTML = `
-                <div class="text-center py-8">
-                    <div class="text-red-400 mb-2">❌ 所有源都未找到播放资源</div>
-                    <div class="text-gray-500 text-sm">该视频可能暂时无法播放，请尝试其他视频</div>
-                </div>
-            `;
-            return;
-        }
+        const videoDetail = data.list[0];
 
-        // 使用第一个有效结果的详情信息
-        const primaryResult = validResults[0];
-        const sourceName = ` <span class="text-sm font-normal text-gray-400">(找到 ${validResults.length} 个源)</span>`;
-        modalTitle.innerHTML = `<span class="break-words">${vod_name || '未知视频'}</span>${sourceName}`;
-
-        // 构建详情信息HTML
-        let detailInfoHtml = '';
-        if (primaryResult.videoInfo) {
-            const descriptionText = primaryResult.videoInfo.desc ? primaryResult.videoInfo.desc.replace(/<[^>]+>/g, '').trim() : '';
-            const hasGridContent = primaryResult.videoInfo.type || primaryResult.videoInfo.year || primaryResult.videoInfo.area || primaryResult.videoInfo.director || primaryResult.videoInfo.actor || primaryResult.videoInfo.remarks;
-
-            if (hasGridContent || descriptionText) {
-                detailInfoHtml = `
-                <div class="modal-detail-info">
-                    ${hasGridContent ? `
-                    <div class="detail-grid">
-                        ${primaryResult.videoInfo.type ? `<div class="detail-item"><span class="detail-label">类型:</span> <span class="detail-value">${primaryResult.videoInfo.type}</span></div>` : ''}
-                        ${primaryResult.videoInfo.year ? `<div class="detail-item"><span class="detail-label">年份:</span> <span class="detail-value">${primaryResult.videoInfo.year}</span></div>` : ''}
-                        ${primaryResult.videoInfo.area ? `<div class="detail-item"><span class="detail-label">地区:</span> <span class="detail-value">${primaryResult.videoInfo.area}</span></div>` : ''}
-                        ${primaryResult.videoInfo.director ? `<div class="detail-item"><span class="detail-label">导演:</span> <span class="detail-value">${primaryResult.videoInfo.director}</span></div>` : ''}
-                        ${primaryResult.videoInfo.actor ? `<div class="detail-item"><span class="detail-label">主演:</span> <span class="detail-value">${primaryResult.videoInfo.actor}</span></div>` : ''}
-                        ${primaryResult.videoInfo.remarks ? `<div class="detail-item"><span class="detail-label">备注:</span> <span class="detail-value">${primaryResult.videoInfo.remarks}</span></div>` : ''}
-                    </div>` : ''}
-                    ${descriptionText ? `
-                    <div class="detail-desc">
-                        <p class="detail-label">简介:</p>
-                        <p class="detail-desc-content">${descriptionText}</p>
-                    </div>` : ''}
-                </div>
-                `;
+        // 解析播放列表
+        let episodes = [];
+        if (videoDetail.vod_play_url) {
+            const playSources = videoDetail.vod_play_url.split('$$$');
+            // 通常取第一个m3u8源，或者根据播放器配置优选。这里简化取第一个。
+            if (playSources.length > 0) {
+                const mainSource = playSources[0]; // 这是一个包含所有集数的字符串
+                const episodeList = mainSource.split('#');
+                episodes = episodeList.map(ep => {
+                    const parts = ep.split('$');
+                    return parts.length > 1 ? parts[1] : '';
+                }).filter(url => url && (url.startsWith('http://') || url.startsWith('https://')));
             }
         }
 
-        // 为每个源生成播放列表区域
-        const sourceSections = validResults.map((result, index) => {
-            currentEpisodes = result.episodes;
-            currentEpisodeIndex = 0;
-
-            return `
-                <div class="source-section mb-6 ${index > 0 ? 'mt-8 pt-6 border-t border-gray-800' : ''}">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="flex items-center gap-3">
-                            <span class="bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-sm px-3 py-1 rounded-full font-semibold">
-                                ${result.sourceName}
-                            </span>
-                            <span class="text-gray-400 text-sm">共 ${result.episodes.length} 集</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <button onclick="toggleEpisodeOrderForSource('${result.sourceCode}', '${id}', ${index})" 
-                                    id="toggleBtn-${index}"
-                                    class="px-3 py-1.5 bg-[#333] hover:bg-[#444] border border-[#444] rounded text-sm transition-colors flex items-center gap-1">
-                                <svg class="w-4 h-4 transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" id="arrowIcon-${index}">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
-                                </svg>
-                                <span id="toggleText-${index}">倒序排列</span>
-                            </button>
-                            <button onclick="copyLinksForSource(${index})" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm transition-colors">
-                                复制链接
-                            </button>
-                        </div>
-                    </div>
-                    <div id="episodesGrid-${index}" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
-                        ${result.episodes.map((episode, epIndex) => `
-                            <button onclick="playVideo('${episode}','${vod_name.replace(/"/g, '&quot;')}', '${result.sourceCode}', ${epIndex}, '${id}')" 
-                                    class="px-4 py-2 bg-[#222] hover:bg-[#333] border border-[#333] rounded-lg transition-colors text-center episode-btn">
-                                ${epIndex + 1}
-                            </button>
-                        `).join('')}
-                    </div>
-                </div>
-            `;
-        }).join('');
-
-        // 保存所有源的数据到全局变量以供后续使用
-        window.allSourcesData = validResults;
-
-        modalContent.innerHTML = `
-            ${detailInfoHtml}
-            <div class="sources-container">
-                ${sourceSections}
-            </div>
-        `;
+        // 更新 UI
+        renderSourceDetailContent(container, videoDetail, episodes, sourceCode, vodId, sourceName);
 
     } catch (error) {
-        console.error('获取详情错误:', error);
-        hideLoading();
-        modalContent.innerHTML = `
+        console.error('加载源详情失败:', error);
+        container.innerHTML = `
             <div class="text-center py-8">
-                <div class="text-red-400 mb-2">❌ 获取详情失败</div>
-                <div class="text-gray-500 text-sm">请稍后重试</div>
+                <div class="text-red-400 mb-2">❌ 获取资源失败</div>
+                <div class="text-gray-500 text-sm">${error.message || '请尝试切换其他源'}</div>
+                <button onclick="loadSourceDetail('${sourceCode}', '${vodId}', '${sourceName}')" 
+                        class="mt-4 px-4 py-2 bg-[#333] hover:bg-[#444] rounded text-sm text-white transition-colors">
+                    重试
+                </button>
             </div>
         `;
     }
 }
 
-// 为特定源切换排序
-function toggleEpisodeOrderForSource(sourceCode, vodId, sourceIndex) {
-    const sourceData = window.allSourcesData[sourceIndex];
-    if (!sourceData) return;
+// 渲染详情内容 (简介 + 选集)
+function renderSourceDetailContent(container, info, episodes, sourceCode, vodId, sourceName) {
+    // 简介信息
+    const descriptionText = info.vod_content ? info.vod_content.replace(/<[^>]+>/g, '').trim() : '暂无简介';
 
-    // 切换该源的排序状态
-    sourceData.reversed = !sourceData.reversed;
+    // 更新全局 currentEpisodes (用于播放器跳转上一集下一集，虽在此处不是必须，但保持一致性)
+    // 注意：这里的 currentEpisodes 会被播放器页面覆盖，但在详情页点击播放时需要用到?
+    // 其实 playVideo 会传递 index 和 source，播放器页面会重新获取或者使用传过去的。
+    // 为了支持 toggleEpisodeOrder，我们需要局部存储当前的 episodes
+    // 我们可以直接把 episodes 存到 container 的 dataset 或者闭包，或者简单点重新渲染。
 
-    const episodesGrid = document.getElementById(`episodesGrid-${sourceIndex}`);
-    const toggleText = document.getElementById(`toggleText-${sourceIndex}`);
-    const arrowIcon = document.getElementById(`arrowIcon-${sourceIndex}`);
+    // 选集排序状态 (默认正序)
+    let isReversed = false;
 
-    if (!episodesGrid) return;
+    // 内部函数：渲染集数按钮
+    const renderEpisodesBtns = (reversed) => {
+        const displayEpisodes = reversed ? [...episodes].reverse() : episodes;
+        return displayEpisodes.map((epUrl, idx) => {
+            // 计算真实索引
+            const realIdx = reversed ? episodes.length - 1 - idx : idx;
+            return `
+                <button onclick="playVideo('${epUrl}','${info.vod_name.replace(/"/g, '&quot;')}', '${sourceCode}', ${realIdx}, '${vodId}')" 
+                        class="px-4 py-2 bg-[#222] hover:bg-[#333] border border-[#333] rounded-lg transition-colors text-center episode-btn relative overflow-hidden group">
+                    <span class="relative z-10">${realIdx + 1}</span>
+                </button>
+            `;
+        }).join('');
+    };
 
-    const episodes = sourceData.reversed ? [...sourceData.episodes].reverse() : sourceData.episodes;
+    container.innerHTML = `
+        <div class="animate-fade-in">
+            <!-- 简介区域 -->
+            <div class="modal-detail-info mb-6">
+                <div class="detail-grid">
+                    ${info.type_name ? `<div class="detail-item"><span class="detail-label">类型:</span> <span class="detail-value">${info.type_name}</span></div>` : ''}
+                    ${info.vod_year ? `<div class="detail-item"><span class="detail-label">年份:</span> <span class="detail-value">${info.vod_year}</span></div>` : ''}
+                    ${info.vod_area ? `<div class="detail-item"><span class="detail-label">地区:</span> <span class="detail-value">${info.vod_area}</span></div>` : ''}
+                    ${info.vod_director ? `<div class="detail-item"><span class="detail-label">导演:</span> <span class="detail-value">${info.vod_director}</span></div>` : ''}
+                    ${info.vod_actor ? `<div class="detail-item"><span class="detail-label">主演:</span> <span class="detail-value">${info.vod_actor}</span></div>` : ''}
+                </div>
+                <div class="detail-desc mt-3">
+                    <p class="detail-label">简介:</p>
+                    <p class="detail-desc-content line-clamp-3 hover:line-clamp-none transition-all cursor-pointer" title="点击展开">${descriptionText}</p>
+                </div>
+            </div>
 
-    episodesGrid.innerHTML = episodes.map((episode, index) => {
-        const realIndex = sourceData.reversed ? sourceData.episodes.length - 1 - index : index;
-        return `
-            <button onclick="playVideo('${episode}','${currentVideoTitle.replace(/"/g, '&quot;')}', '${sourceCode}', ${realIndex}, '${vodId}')" 
-                    class="px-4 py-2 bg-[#222] hover:bg-[#333] border border-[#333] rounded-lg transition-colors text-center episode-btn">
-                ${realIndex + 1}
-            </button>
-        `;
-    }).join('');
+            <!-- 工具栏 -->
+            <div class="flex items-center justify-between mb-4 border-t border-gray-800 pt-4">
+                <div class="flex items-center gap-2">
+                     <span class="text-sm text-gray-400">共 ${episodes.length} 集</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="reverseOrderBtn" class="px-3 py-1.5 bg-[#333] hover:bg-[#444] border border-[#444] rounded text-sm transition-colors flex items-center gap-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+                        </svg>
+                        <span>倒序排列</span>
+                    </button>
+                    <button id="copyLinksBtn" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm transition-colors">
+                        复制链接
+                    </button>
+                </div>
+            </div>
 
-    if (toggleText) toggleText.textContent = sourceData.reversed ? '正序排列' : '倒序排列';
-    if (arrowIcon) arrowIcon.style.transform = sourceData.reversed ? 'rotate(180deg)' : 'rotate(0deg)';
-}
+            <!-- 选集列表 -->
+            ${episodes.length > 0 ? `
+                <div id="episodesList" class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2 max-h-[400px] overflow-y-auto">
+                    ${renderEpisodesBtns(false)}
+                </div>
+            ` : `<div class="text-center text-gray-500 py-10">暂无播放资源</div>`}
+        </div>
+    `;
 
-// 为特定源复制链接
-function copyLinksForSource(sourceIndex) {
-    const sourceData = window.allSourcesData[sourceIndex];
-    if (!sourceData) return;
+    // 绑定事件
+    if (episodes.length > 0) {
+        // 倒序按钮
+        container.querySelector('#reverseOrderBtn').onclick = function () {
+            isReversed = !isReversed;
+            const listEl = container.querySelector('#episodesList');
+            listEl.innerHTML = renderEpisodesBtns(isReversed);
+            this.querySelector('span').textContent = isReversed ? '正序排列' : '倒序排列';
+            this.querySelector('svg').style.transform = isReversed ? 'rotate(180deg)' : 'rotate(0deg)';
+        };
 
-    const episodes = sourceData.reversed ? [...sourceData.episodes].reverse() : sourceData.episodes;
-    const linkList = episodes.join('\r\n');
-    navigator.clipboard.writeText(linkList).then(() => {
-        showToast(`已复制 ${sourceData.sourceName} 的播放链接`, 'success');
-    }).catch(err => {
-        showToast('复制失败，请检查浏览器权限', 'error');
-    });
+        // 复制链接按钮
+        container.querySelector('#copyLinksBtn').onclick = function () {
+            const links = (isReversed ? [...episodes].reverse() : episodes).join('\n');
+            navigator.clipboard.writeText(links).then(() => {
+                showToast(`已复制 ${episodes.length} 条链接`, 'success');
+            }).catch(() => showToast('复制失败', 'error'));
+        };
+    }
 }
 
 
