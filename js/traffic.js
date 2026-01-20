@@ -74,7 +74,12 @@
         }
     }
 
+    function isInIframe() {
+        return window.self !== window.top;
+    }
+
     function init() {
+        if (isInIframe()) return;
         createWidget();
         const refresh = async () => {
             await pingOnline();
