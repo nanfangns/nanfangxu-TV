@@ -15,12 +15,21 @@
 
     <script src="libs/tailwindcss.min.js"></script>
     <link rel="stylesheet" href="css/styles.css">
+    <script>
+        (() => {
+            const storedTheme = localStorage.getItem('siteTheme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const theme = storedTheme === 'dark' || storedTheme === 'light' ? storedTheme : (prefersDark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', theme);
+            document.documentElement.style.colorScheme = theme;
+        })();
+    </script>
 
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #050505;
-            color: white;
+            background-color: var(--page-bg-color);
+            color: var(--text-color);
         }
 
         .font-tech {
@@ -37,6 +46,57 @@
         .glass-panel:hover {
             border-color: rgba(255, 255, 255, 0.15);
             background: rgba(17, 17, 22, 0.8);
+        }
+
+        .admin-toggle-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: white;
+        }
+
+        .admin-toggle-btn:hover {
+            background: rgba(255, 255, 255, 0.18);
+        }
+
+        [data-theme="light"] .glass-panel {
+            background: rgba(255, 255, 255, 0.8);
+            border-color: rgba(148, 163, 184, 0.3);
+        }
+
+        [data-theme="light"] .glass-panel:hover {
+            background: rgba(255, 255, 255, 0.95);
+            border-color: rgba(59, 130, 246, 0.4);
+        }
+
+        [data-theme="light"] .admin-toggle-btn {
+            background: rgba(15, 23, 42, 0.05);
+            border-color: rgba(148, 163, 184, 0.4);
+            color: #0f172a;
+        }
+
+        [data-theme="light"] .admin-toggle-btn:hover {
+            background: rgba(59, 130, 246, 0.08);
+        }
+
+        [data-theme="light"] .admin-sidebar {
+            background: rgba(248, 250, 252, 0.98);
+            border-right-color: rgba(148, 163, 184, 0.35);
+        }
+
+        [data-theme="light"] .admin-sidebar .text-white {
+            color: #0f172a !important;
+        }
+
+        [data-theme="light"] .admin-sidebar .text-gray-400 {
+            color: #475569 !important;
+        }
+
+        [data-theme="light"] .admin-sidebar .text-gray-600 {
+            color: #64748b !important;
+        }
+
+        [data-theme="light"] .admin-sidebar .bg-white\/5 {
+            background-color: rgba(59, 130, 246, 0.08) !important;
         }
 
         /* Scrollbar */
@@ -93,7 +153,7 @@
 
     <!-- SIDEBAR: Fixed Left + Glass Effect -->
     <aside
-        class="fixed top-0 left-0 bottom-0 w-72 bg-[#0a0a0f]/95 backdrop-blur-xl border-r border-white/5 z-50 flex flex-col">
+        class="admin-sidebar fixed top-0 left-0 bottom-0 w-72 bg-[#0a0a0f]/95 backdrop-blur-xl border-r border-white/5 z-50 flex flex-col">
         <!-- Logo -->
         <div class="h-24 flex items-center px-8 border-b border-white/5 relative overflow-hidden">
             <div class="absolute inset-0 bg-gradient-to-r from-yellow-500/5 to-transparent opacity-50"></div>
@@ -179,6 +239,13 @@
                     </div>
                     <div class="text-[10px] text-gray-500 font-tech tracking-wider">ROOT ACCESS</div>
                 </div>
+            </div>
+            <div class="flex items-center justify-between mt-4 text-[10px] text-gray-500 font-tech tracking-wider">
+                <span>主题模式: <span data-theme-status>夜间</span></span>
+                <button type="button" data-theme-toggle
+                    class="admin-toggle-btn px-3 py-1 rounded-lg text-[10px] font-bold tracking-widest uppercase">
+                    切换
+                </button>
             </div>
         </div>
     </aside>
@@ -474,6 +541,7 @@
 
         setInterval(fetchStats, 30000);
     </script>
+    <script src="js/theme.js?v=1.0"></script>
 </body>
 
 </html>
