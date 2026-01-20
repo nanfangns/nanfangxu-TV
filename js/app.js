@@ -672,6 +672,7 @@ function resetSearchArea(skipPushState = false) {
         }
     }
     document.title = `南方许 - 免费在线视频搜索与观看平台`;
+    resetSearchPagination();
 }
 
 // 获取自定义API信息
@@ -737,6 +738,189 @@ function createVideoCardHtml(item, hasCover) {
 
 // 全局变量用于存储合并后的搜索结果
 window.mergedSearchResults = new Map();
+let searchPaginationState = new Map();
+let searchObserver = null;
+let searchLoadingMore = false;
+let searchHasMore = false;
+let currentSearchKeyword = '';
+
+function resetSearchPagination() {
+    searchPaginationState = new Map();
+    searchLoadingMore = false;
+    searchHasMore = false;
+    currentSearchKeyword = '';
+
+    if (searchObserver) {
+        searchObserver.disconnect();
+        searchObserver = null;
+    }
+
+    const loadMoreContainer = document.getElementById('search-load-more');
+    if (loadMoreContainer) {
+        loadMoreContainer.classList.add('hidden');
+    }
+}
+
+function updateSearchLoadMoreState({ loading = false, done = false } = {}) {
+    const loadMoreContainer = document.getElementById('search-load-more');
+    if (!loadMoreContainer) return;
+
+    const loader = loadMoreContainer.querySelector('.search-loader-tech');
+    const doneMessage = loadMoreContainer.querySelector('.search-load-more-text');
+
+    if (loader) {
+        loader.classList.toggle('hidden', !loading);
+    }
+    if (doneMessage) {
+        doneMessage.classList.toggle('hidden', !done);
+    }
+}
+
+function updateSearchLoadMoreVisibility() {
+    const loadMoreContainer = document.getElementById('search-load-more');
+    if (!loadMoreContainer) return;
+
+    if (searchHasMore) {
+        loadMoreContainer.classList.remove('hidden');
+        updateSearchLoadMoreState({ loading: false, done: false });
+    } else {
+        updateSearchLoadMoreState({ loading: false, done: true });
+        loadMoreContainer.classList.remove('hidden');
+    }
+}
+
+function initializeSearchObserver() {
+    const loadMoreContainer = document.getElementById('search-load-more');
+    if (!loadMoreContainer) return;
+
+    if (searchObserver) {
+        searchObserver.disconnect();
+    }
+
+    searchObserver = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) {
+            loadMoreSearchResults();
+        }
+    });
+
+    searchObserver.observe(loadMoreContainer);
+}
+
+function updateSearchPaginationState(responses) {
+    searchPaginationState = new Map();
+    searchHasMore = false;
+
+    responses.forEach((response) => {
+        if (response.status !== 'fulfilled') return;
+
+        const totalPages = Math.max(1, parseInt(response.pageCount || 1, 10));
+        searchPaginationState.set(response.apiId, {
+            currentPage: 1,
+            totalPages: Number.isNaN(totalPages) ? 1 : totalPages
+        });
+
+        if (totalPages > 1) {
+            searchHasMore = true;
+        }
+    });
+
+    updateSearchLoadMoreVisibility();
+    if (searchHasMore) {
+        initializeSearchObserver();
+    }
+}
+
+function filterSearchResults(results, yellowFilterEnabled, bannedTags) {
+    if (!yellowFilterEnabled) return results;
+    return results.filter(item => !bannedTags.some(tag => (item.type_name || '').includes(tag)));
+}
+
+async function loadMoreSearchResults() {
+    if (searchLoadingMore || !searchHasMore || !currentSearchKeyword) return;
+    if (selectedAPIs.length === 0) return;
+
+    searchLoadingMore = true;
+    updateSearchLoadMoreState({ loading: true, done: false });
+
+    const yellowFilterEnabled = localStorage.getItem('yellowFilterEnabled') === 'true';
+    const bannedTags = ['伦理片', '福利', '里番动漫', '门事件', '萝莉少女', '制服诱惑', '国产传媒', 'cosplay', '黑丝诱惑', '无码', '日本无码', '有码', '日本有码', 'SWAG', '网红主播', '色情片', '同性片', '福利视频', '福利片'];
+
+    const loadPromises = selectedAPIs.map(async (apiId) => {
+        const state = searchPaginationState.get(apiId);
+        if (!state || state.currentPage >= state.totalPages) {
+            return { apiId, results: [], pageCount: state?.totalPages || 1, status: 'skipped' };
+        }
+
+        const nextPage = state.currentPage + 1;
+        try {
+            const { results, pageCount } = await searchByAPIAndKeyWord(apiId, currentSearchKeyword, nextPage);
+            return { apiId, results, pageCount, nextPage, status: 'fulfilled' };
+        } catch (error) {
+            return { apiId, error, status: 'rejected' };
+        }
+    });
+
+    try {
+        const responses = await Promise.all(loadPromises);
+
+        responses.forEach((response) => {
+            if (response.status !== 'fulfilled') return;
+
+            const state = searchPaginationState.get(response.apiId);
+            if (!state) return;
+
+            const totalPages = Math.max(state.totalPages, parseInt(response.pageCount || state.totalPages, 10));
+            state.totalPages = Number.isNaN(totalPages) ? state.totalPages : totalPages;
+
+            if (response.nextPage) {
+                state.currentPage = response.nextPage;
+            }
+
+            const filteredResults = filterSearchResults(response.results || [], yellowFilterEnabled, bannedTags);
+            filteredResults.forEach(item => {
+                const safeName = (item.vod_name || '未知').trim();
+                const year = (item.vod_year || '').trim();
+                const key = year && year !== '0' ? `${safeName}|${year}` : safeName;
+
+                if (!window.mergedSearchResults.has(key)) {
+                    window.mergedSearchResults.set(key, {
+                        key: key,
+                        title: safeName,
+                        year: year,
+                        type: item.type_name,
+                        cover: item.vod_pic,
+                        remarks: item.vod_remarks,
+                        sources: []
+                    });
+                }
+
+                const mergedItem = window.mergedSearchResults.get(key);
+
+                if (!mergedItem.cover || !mergedItem.cover.startsWith('http')) {
+                    if (item.vod_pic && item.vod_pic.startsWith('http')) {
+                        mergedItem.cover = item.vod_pic;
+                    }
+                }
+
+                mergedItem.sources.push({
+                    source_code: item.source_code,
+                    source_name: item.source_name,
+                    vod_id: item.vod_id,
+                    api_url: item.api_url,
+                    last_update: item.vod_time
+                });
+            });
+        });
+
+        renderMergedResults();
+    } catch (error) {
+        console.error('加载更多搜索结果失败:', error);
+    } finally {
+        searchLoadingMore = false;
+        searchHasMore = Array.from(searchPaginationState.values()).some(state => state.currentPage < state.totalPages);
+        updateSearchLoadMoreVisibility();
+    }
+}
 
 // 搜索功能 - 聚合优化版：支持去重和多源合并
 async function search(isHistoryNav = false) {
@@ -744,6 +928,7 @@ async function search(isHistoryNav = false) {
     if (!query) { showToast('请输入搜索内容', 'info'); return; }
     if (selectedAPIs.length === 0) { showToast('请至少选择一个API源', 'warning'); return; }
 
+    resetSearchPagination();
     showLoading('正在全网检索并聚合资源...');
     saveSearchHistory(query);
 
@@ -763,6 +948,7 @@ async function search(isHistoryNav = false) {
 
     // 重置合并结果 Map
     window.mergedSearchResults.clear();
+    currentSearchKeyword = query;
 
     // 更新URL
     if (!isHistoryNav) {
@@ -783,8 +969,8 @@ async function search(isHistoryNav = false) {
 
     // 2. 并行发起所有 API 请求
     const promises = selectedAPIs.map(apiId =>
-        searchByAPIAndKeyWord(apiId, query)
-            .then(results => ({ apiId, results, status: 'fulfilled' }))
+        searchByAPIAndKeyWord(apiId, query, 1)
+            .then(({ results, pageCount }) => ({ apiId, results, pageCount, status: 'fulfilled' }))
             .catch(error => ({ apiId, error, status: 'rejected' }))
     );
 
@@ -794,10 +980,7 @@ async function search(isHistoryNav = false) {
 
         for (const response of responses) {
             if (response.status === 'fulfilled' && Array.isArray(response.results)) {
-                let filteredResults = response.results;
-                if (yellowFilterEnabled) {
-                    filteredResults = response.results.filter(item => !bannedTags.some(tag => (item.type_name || '').includes(tag)));
-                }
+                const filteredResults = filterSearchResults(response.results, yellowFilterEnabled, bannedTags);
 
                 // 聚合逻辑
                 filteredResults.forEach(item => {
@@ -843,6 +1026,7 @@ async function search(isHistoryNav = false) {
 
         // 4. 渲染合并后的结果
         renderMergedResults();
+        updateSearchPaginationState(responses);
 
     } catch (error) {
         console.error('搜索聚合过程出错:', error);
