@@ -738,7 +738,7 @@ function createVideoCardHtml(item, hasCover) {
 // 全局变量用于存储合并后的搜索结果
 window.mergedSearchResults = new Map();
 
-// 搜索功能 - 聚合优化版：支持去重和多源合并
+// 搜索功能 - 聚合优化版：支持去重、多源合并、流式增量加载
 async function search(isHistoryNav = false) {
     const query = document.getElementById('searchInput').value.trim();
     if (!query) { showToast('请输入搜索内容', 'info'); return; }
@@ -781,78 +781,139 @@ async function search(isHistoryNav = false) {
     const yellowFilterEnabled = localStorage.getItem('yellowFilterEnabled') === 'true';
     const bannedTags = ['伦理片', '福利', '里番动漫', '门事件', '萝莉少女', '制服诱惑', '国产传媒', 'cosplay', '黑丝诱惑', '无码', '日本无码', '有码', '日本有码', 'SWAG', '网红主播', '色情片', '同性片', '福利视频', '福利片'];
 
-    // 2. 并行发起所有 API 请求
-    const promises = selectedAPIs.map(apiId =>
-        searchByAPIAndKeyWord(apiId, query)
-            .then(results => ({ apiId, results, status: 'fulfilled' }))
-            .catch(error => ({ apiId, error, status: 'rejected' }))
-    );
+    // 定义增量更新/插入卡片的函数
+    const updateOrInsertCard = (item) => {
+        const safeName = (item.vod_name || '未知').trim();
+        const year = (item.vod_year || '').trim();
+        // 生成唯一 Key
+        const key = year && year !== '0' ? `${safeName}|${year}` : safeName;
+        const safeKey = key.replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
-    // 3. 等待所有请求完成并处理结果
-    try {
-        const responses = await Promise.all(promises);
+        let mergedItem;
 
-        for (const response of responses) {
-            if (response.status === 'fulfilled' && Array.isArray(response.results)) {
-                let filteredResults = response.results;
-                if (yellowFilterEnabled) {
-                    filteredResults = response.results.filter(item => !bannedTags.some(tag => (item.type_name || '').includes(tag)));
+        if (window.mergedSearchResults.has(key)) {
+            // 已存在，更新源列表
+            mergedItem = window.mergedSearchResults.get(key);
+
+            // 优化封面
+            if ((!mergedItem.cover || !mergedItem.cover.startsWith('http')) && (item.vod_pic && item.vod_pic.startsWith('http'))) {
+                mergedItem.cover = item.vod_pic;
+                // 更新 DOM 中的封面
+                const cardEl = document.querySelector(`div[data-key="${safeKey}"]`);
+                if (cardEl) {
+                    const imgEl = cardEl.querySelector('img');
+                    if (imgEl) imgEl.src = item.vod_pic;
                 }
+            }
 
-                // 聚合逻辑
-                filteredResults.forEach(item => {
-                    const safeName = (item.vod_name || '未知').trim();
-                    const year = (item.vod_year || '').trim();
-                    // 生成唯一 Key: 片名|年份 (对于没有年份的，只用片名)
-                    // 为了防止不同年份的同名剧被错误合并，尽量带上年份。但有些源年份为空，可能导致无法合并。
-                    // 策略：如果年份存在且不为0，则加入Key；否则只用片名。这能最大程度合并。
-                    const key = year && year !== '0' ? `${safeName}|${year}` : safeName;
+            mergedItem.sources.push({
+                source_code: item.source_code,
+                source_name: item.source_name,
+                vod_id: item.vod_id,
+                api_url: item.api_url,
+                last_update: item.vod_time
+            });
 
-                    if (!window.mergedSearchResults.has(key)) {
-                        window.mergedSearchResults.set(key, {
-                            key: key,
-                            title: safeName,
-                            year: year,
-                            type: item.type_name,
-                            cover: item.vod_pic,
-                            remarks: item.vod_remarks,
-                            // 存储所有来源信息
-                            sources: []
-                        });
-                    }
+            // 更新 DOM 中的角标
+            // 由于 key 可能包含特殊字符，建议用 Base64 或者 hash 做 DOM ID，这里简单替换
+            // 为了稳健，我们直接遍历查找或者在 render 时生成更安全的 ID
+            // 这里我们采用 data-key 属性查找更安全
+            const cardEl = document.querySelector(`div[data-key="${safeKey}"]`);
+            if (cardEl) {
+                const badgeEl = cardEl.querySelector('.source-count-badge');
+                if (badgeEl) {
+                    badgeEl.innerHTML = `
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                        ${mergedItem.sources.length}个源
+                    `;
+                }
+            }
+        } else {
+            // 新增
+            mergedItem = {
+                key: key,
+                title: safeName,
+                year: year,
+                type: item.type_name,
+                cover: item.vod_pic,
+                remarks: item.vod_remarks,
+                sources: [{
+                    source_code: item.source_code,
+                    source_name: item.source_name,
+                    vod_id: item.vod_id,
+                    api_url: item.api_url,
+                    last_update: item.vod_time
+                }]
+            };
+            window.mergedSearchResults.set(key, mergedItem);
 
-                    const mergedItem = window.mergedSearchResults.get(key);
+            // 插入 DOM
+            const html = createMergedVideoCardHtml(mergedItem);
+            resultsDiv.insertAdjacentHTML('beforeend', html);
 
-                    // 优化：如果有更高清的图片，优先更新图片 (简单的逻辑：优先取有 http 的)
-                    if (!mergedItem.cover || !mergedItem.cover.startsWith('http')) {
-                        if (item.vod_pic && item.vod_pic.startsWith('http')) {
-                            mergedItem.cover = item.vod_pic;
-                        }
-                    }
-
-                    mergedItem.sources.push({
-                        source_code: item.source_code,
-                        source_name: item.source_name,
-                        vod_id: item.vod_id,
-                        api_url: item.api_url,
-                        last_update: item.vod_time // 可选：记录更新时间
-                    });
-                });
+            // 更新总数显示
+            if (searchResultsCount) {
+                searchResultsCount.textContent = window.mergedSearchResults.size;
             }
         }
+    };
 
-        // 4. 渲染合并后的结果
-        renderMergedResults();
+    // 2. 流式加载控制
+    let completedAPIs = 0;
+    let hasResult = false;
+    let minimumLoadTimer = null;
 
-    } catch (error) {
-        console.error('搜索聚合过程出错:', error);
-        showToast('搜索过程中发生错误', 'error');
-    } finally {
+    // 强行在 2 秒后隐藏 Loading (无论是否加载完)，实现“即搜即看”体验
+    minimumLoadTimer = setTimeout(() => {
         hideLoading();
-    }
+        // 如果此时没有任何结果，可能网络慢，Loading 消失后用户可以看到空白或部分结果
+    }, 2000);
+
+    // 3. 并行发起请求（不阻塞，流式处理）
+    selectedAPIs.forEach(apiId => {
+        searchByAPIAndKeyWord(apiId, query)
+            .then(results => {
+                if (Array.isArray(results)) {
+                    let filteredResults = results;
+                    if (yellowFilterEnabled) {
+                        filteredResults = results.filter(item => !bannedTags.some(tag => (item.type_name || '').includes(tag)));
+                    }
+
+                    if (filteredResults.length > 0) {
+                        hasResult = true;
+                        // 第一次有结果时，如果还没到2秒，也可以考虑提前隐藏 Loading？
+                        // 用户说“出现2到3秒就行”，保持 2s 比较稳妥，或者 let loading finish automatically if fast.
+                        // 但为了那种“流式”感，2秒强制结束 loading 是个好策略。
+                        filteredResults.forEach(item => updateOrInsertCard(item));
+                    }
+                }
+            })
+            .catch(err => console.warn(`API ${apiId} error:`, err))
+            .finally(() => {
+                completedAPIs++;
+                // 全部完成后
+                if (completedAPIs === selectedAPIs.length) {
+                    clearTimeout(minimumLoadTimer); // 如果全部完成早于2秒，清除定时器
+                    hideLoading(); // 确保 Loading 关闭
+
+                    // 如果最终一个结果都没有
+                    if (window.mergedSearchResults.size === 0) {
+                        resultsDiv.innerHTML = `
+                            <div class="col-span-full text-center py-20 animate-fadeIn">
+                                <svg class="mx-auto h-16 w-16 text-gray-600 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <h3 class="text-xl font-medium text-gray-400">未发现匹配资源</h3>
+                                <p class="mt-2 text-gray-500">尝试缩减关键词或在侧边栏选中更多接口</p>
+                            </div>
+                        `;
+                    }
+                }
+            });
+    });
 }
 
-// 渲染合并后的结果列表
+// 渲染合并后的结果列表 (保留但不再被 search 直接调用，用于辅助)
 function renderMergedResults() {
     const resultsDiv = document.getElementById('results');
     const searchResultsCount = document.getElementById('searchResultsCount');
@@ -881,7 +942,7 @@ function renderMergedResults() {
     resultsDiv.innerHTML = html;
 }
 
-// 生成合并后的视频卡片 HTML
+// 生成合并后的视频卡片 HTML (修改版：增加 data-key)
 function createMergedVideoCardHtml(item) {
     const hasCover = item.cover && item.cover.startsWith('http');
     const safeKey = item.key.replace(/'/g, "\\'").replace(/"/g, '&quot;');
@@ -889,6 +950,7 @@ function createMergedVideoCardHtml(item) {
 
     return `
         <div class="card-hover bg-[#0a0f1a]/80 backdrop-blur-sm rounded-xl overflow-hidden cursor-pointer transition-all h-full shadow-lg border border-white/5 animate-fadeIn" 
+             data-key="${safeKey}"
              onclick="openMergedDetail('${safeKey}')">
             <div class="flex h-full">
                 ${hasCover ? `
@@ -1100,6 +1162,9 @@ async function loadSourceDetail(sourceCode, vodId, sourceName) {
                 }).filter(url => url && (url.startsWith('http://') || url.startsWith('https://')));
             }
         }
+
+        // [修复] 更新全局 currentEpisodes，确保点击播放时能传递正确的集数列表
+        window.currentEpisodes = episodes;
 
         // 更新 UI
         renderSourceDetailContent(container, videoDetail, episodes, sourceCode, vodId, sourceName);
