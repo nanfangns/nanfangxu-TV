@@ -1351,10 +1351,6 @@ function showVideoPlayer(url) {
     videoPlayerFrame.className = 'fixed w-full h-screen z-40';
     videoPlayerFrame.src = url;
     document.body.appendChild(videoPlayerFrame);
-    const visitorWidget = document.getElementById('live-visitor-widget');
-    if (visitorWidget) {
-        visitorWidget.classList.add('hidden');
-    }
     // 将焦点移入iframe
     videoPlayerFrame.focus();
 }
@@ -1364,10 +1360,6 @@ function closeVideoPlayer(home = false) {
     videoPlayerFrame = document.getElementById('VideoPlayerFrame');
     if (videoPlayerFrame) {
         videoPlayerFrame.remove();
-        const visitorWidget = document.getElementById('live-visitor-widget');
-        if (visitorWidget) {
-            visitorWidget.classList.remove('hidden');
-        }
         // 恢复搜索结果显示
         document.getElementById('resultsArea').classList.remove('hidden');
         // 关闭播放器时也隐藏详情弹窗
