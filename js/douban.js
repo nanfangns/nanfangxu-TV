@@ -20,20 +20,22 @@ const HOT_TABS = [
         label: 'IKUN热门',
         type: 'api',
         sourceCode: 'ikun',
-        strategy: {
-            type: 'list',
-            params: { by: 'hits', h: '24' }
-        }
+        filters: [
+            { key: 'hot', label: '热门', strategy: { type: 'list', params: { by: 'hits', h: '24' } } },
+            { key: 'new', label: '最新', strategy: { type: 'list', params: { by: 'time', h: '24' } } },
+            { key: 'score', label: '评分', strategy: { type: 'list', params: { by: 'score', h: '24' } } }
+        ]
     },
     {
         key: 'lzi',
         label: '量子热门',
         type: 'api',
         sourceCode: 'lzi',
-        strategy: {
-            type: 'list',
-            params: { by: 'hits', h: '24' }
-        }
+        filters: [
+            { key: 'hot', label: '热门', strategy: { type: 'list', params: { by: 'hits', h: '24' } } },
+            { key: 'new', label: '最新', strategy: { type: 'list', params: { by: 'time', h: '24' } } },
+            { key: 'score', label: '评分', strategy: { type: 'list', params: { by: 'score', h: '24' } } }
+        ]
     }
 ];
 
@@ -82,6 +84,7 @@ function saveUserTags() {
 
 function initHotTabState() {
     HOT_TABS.forEach(tab => {
+        const filterKey = tab.filters?.[0]?.key || 'default';
         hotTabState[tab.key] = {
             items: [],
             isLoading: false,
@@ -89,7 +92,16 @@ function initHotTabState() {
             page: 1,
             pageStart: 0,
             currentTag: '热门',
-            currentSwitch: 'movie'
+            currentSwitch: 'movie',
+            activeFilterKey: filterKey,
+            filterStates: tab.type === 'api' ? {
+                [filterKey]: {
+                    items: [],
+                    isLoading: false,
+                    hasMore: true,
+                    page: 1
+                }
+            } : {}
         };
     });
 }
@@ -111,9 +123,11 @@ function updateHotTabControls() {
     const isDouban = activeHotTab === 'douban';
     const doubanControls = document.getElementById('douban-controls');
     const doubanTagsWrapper = document.getElementById('douban-tags-wrapper');
+    const hotApiTagsWrapper = document.getElementById('hot-api-tags-wrapper');
 
     if (doubanControls) doubanControls.classList.toggle('hidden', !isDouban);
     if (doubanTagsWrapper) doubanTagsWrapper.classList.toggle('hidden', !isDouban);
+    if (hotApiTagsWrapper) hotApiTagsWrapper.classList.toggle('hidden', isDouban);
 }
 
 function syncDoubanStateFromCache() {
@@ -162,6 +176,52 @@ function renderHotTabs() {
     updateHotTabButtons();
 }
 
+function getActiveApiFilter(tab) {
+    if (!tab || tab.type !== 'api') return null;
+    const state = hotTabState[tab.key];
+    const filterKey = state?.activeFilterKey || tab.filters?.[0]?.key;
+    return tab.filters?.find(filter => filter.key === filterKey) || tab.filters?.[0] || null;
+}
+
+function getApiFilterState(tab, filterKey) {
+    const tabState = hotTabState[tab.key];
+    if (!tabState.filterStates[filterKey]) {
+        tabState.filterStates[filterKey] = {
+            items: [],
+            isLoading: false,
+            hasMore: true,
+            page: 1
+        };
+    }
+    return tabState.filterStates[filterKey];
+}
+
+function renderHotApiFilters() {
+    const tab = getHotTabConfig(activeHotTab);
+    const container = document.getElementById('hot-api-tags');
+    if (!container || !tab || tab.type !== 'api') return;
+
+    const tabState = hotTabState[tab.key];
+    const activeKey = tabState.activeFilterKey || tab.filters?.[0]?.key;
+
+    container.innerHTML = '';
+    (tab.filters || []).forEach(filter => {
+        const btn = document.createElement('button');
+        btn.className = 'douban-tag';
+        if (filter.key === activeKey) {
+            btn.classList.add('active');
+        }
+        btn.textContent = filter.label;
+        btn.addEventListener('click', () => {
+            if (tabState.activeFilterKey === filter.key) return;
+            tabState.activeFilterKey = filter.key;
+            renderHotApiFilters();
+            renderActiveHotTab();
+        });
+        container.appendChild(btn);
+    });
+}
+
 function setActiveHotTab(tabKey) {
     if (tabKey === activeHotTab) return;
 
@@ -174,6 +234,8 @@ function setActiveHotTab(tabKey) {
         syncDoubanStateFromCache();
         updateDoubanToggleUI();
         renderDoubanTags();
+    } else {
+        renderHotApiFilters();
     }
 
     renderActiveHotTab();
@@ -243,6 +305,7 @@ function initDouban() {
     // 渲染热门来源 Tab
     renderHotTabs();
     updateHotTabControls();
+    renderHotApiFilters();
 
     // 渲染电影/电视剧切换
     renderDoubanMovieTvSwitch();
@@ -272,11 +335,12 @@ function initInfiniteScroll() {
 
     doubanObserver = new IntersectionObserver((entries) => {
         const entry = entries[0];
+        const activeState = getActiveHotLoadState();
         // 如果启用豆瓣 且 露出底部 且 不在加载中 且 还有更多数据
         if (entry.isIntersecting &&
             localStorage.getItem('doubanEnabled') === 'true' &&
-            !isDoubanLoading &&
-            hasMoreDouban &&
+            !activeState.isLoading &&
+            activeState.hasMore &&
             document.getElementById('doubanArea') &&
             !document.getElementById('doubanArea').classList.contains('hidden')) {
 
@@ -288,6 +352,20 @@ function initInfiniteScroll() {
     });
 
     doubanObserver.observe(loaderAnchor);
+}
+
+function getActiveHotLoadState() {
+    if (activeHotTab === 'douban') {
+        return { isLoading: isDoubanLoading, hasMore: hasMoreDouban };
+    }
+
+    const tab = getHotTabConfig(activeHotTab);
+    if (!tab) return { isLoading: false, hasMore: false };
+
+    const filter = getActiveApiFilter(tab);
+    const filterKey = filter?.key || 'default';
+    const filterState = getApiFilterState(tab, filterKey);
+    return { isLoading: filterState.isLoading, hasMore: filterState.hasMore };
 }
 
 function renderActiveHotTab() {
@@ -303,7 +381,10 @@ function renderActiveHotTab() {
         return;
     }
 
-    if (hotTabState[tab.key]?.items.length > 0) {
+    const filter = getActiveApiFilter(tab);
+    const filterKey = filter?.key || 'default';
+    const filterState = getApiFilterState(tab, filterKey);
+    if (filterState.items.length > 0) {
         renderHotTabFromCache(tab.key);
     } else {
         loadHotApiTab(tab, false);
@@ -343,9 +424,12 @@ function loadNextDoubanPage() {
 
 function loadNextApiHotPage(tab) {
     const state = hotTabState[tab.key];
-    if (!state || state.isLoading || !state.hasMore) return;
+    const filter = getActiveApiFilter(tab);
+    const filterKey = filter?.key || 'default';
+    const filterState = getApiFilterState(tab, filterKey);
+    if (!state || filterState.isLoading || !filterState.hasMore) return;
 
-    loadHotApiTab(tab, true, state.page + 1);
+    loadHotApiTab(tab, true, filterState.page + 1);
 }
 
 function renderHotTabFromCache(tabKey) {
@@ -371,7 +455,10 @@ function renderHotTabFromCache(tabKey) {
         return;
     }
 
-    renderHotApiCards(state.items, container, false);
+    const filter = getActiveApiFilter(getHotTabConfig(tabKey));
+    const filterKey = filter?.key || 'default';
+    const filterState = getApiFilterState(getHotTabConfig(tabKey), filterKey);
+    renderHotApiCards(filterState.items, container, false);
 }
 
 async function loadHotApiTab(tab, isAppend = false, pageOverride = null) {
@@ -380,9 +467,12 @@ async function loadHotApiTab(tab, isAppend = false, pageOverride = null) {
     if (!container) return;
 
     const state = hotTabState[tab.key];
-    if (!state || state.isLoading) return;
+    const filter = getActiveApiFilter(tab);
+    const filterKey = filter?.key || 'default';
+    const filterState = getApiFilterState(tab, filterKey);
+    if (!state || filterState.isLoading) return;
 
-    state.isLoading = true;
+    filterState.isLoading = true;
 
     if (!isAppend) {
         container.innerHTML = `
@@ -401,27 +491,27 @@ async function loadHotApiTab(tab, isAppend = false, pageOverride = null) {
     }
 
     try {
-        const targetPage = pageOverride || (isAppend ? state.page + 1 : 1);
-        const response = await fetchHotSourceData(tab, targetPage);
+        const targetPage = pageOverride || (isAppend ? filterState.page + 1 : 1);
+        const response = await fetchHotSourceData(tab, targetPage, filterKey);
         const list = response?.list || [];
         const normalized = normalizeHotApiItems(list, tab);
 
         if (!isAppend) {
-            state.items = normalized;
+            filterState.items = normalized;
         } else {
-            state.items.push(...normalized);
+            filterState.items.push(...normalized);
         }
 
-        state.page = targetPage;
+        filterState.page = targetPage;
         const pageCount = response?.pagecount || 0;
         if (!response || normalized.length === 0) {
-            state.hasMore = false;
+            filterState.hasMore = false;
         } else {
-            state.hasMore = pageCount ? targetPage < pageCount : normalized.length >= HOT_API_PAGE_SIZE;
+            filterState.hasMore = pageCount ? targetPage < pageCount : normalized.length >= HOT_API_PAGE_SIZE;
         }
 
         if (infiniteLoader) infiniteLoader.classList.add('hidden');
-        renderHotApiCards(state.items, container, false);
+        renderHotApiCards(filterState.items, container, false);
     } catch (error) {
         console.error('获取热门数据失败：', error);
         if (infiniteLoader) infiniteLoader.classList.add('hidden');
@@ -433,15 +523,17 @@ async function loadHotApiTab(tab, isAppend = false, pageOverride = null) {
             `;
         }
     } finally {
-        state.isLoading = false;
+        filterState.isLoading = false;
     }
 }
 
-async function fetchHotSourceData(tab, page) {
+async function fetchHotSourceData(tab, page, filterKey) {
     if (!tab.sourceCode || !API_SITES?.[tab.sourceCode]) return null;
 
+    const filter = tab.filters?.find(item => item.key === filterKey);
+    const strategy = filter?.strategy || tab.strategy;
     const apiBase = API_SITES[tab.sourceCode].api;
-    const listUrl = buildHotListUrl(apiBase, tab.strategy, page);
+    const listUrl = buildHotListUrl(apiBase, strategy, page);
     const listData = await fetchHotApiData(listUrl);
 
     if (listData?.list?.length) {
@@ -803,15 +895,18 @@ function setupDoubanRefreshBtn() {
         }
 
         const state = hotTabState[tab.key];
-        if (state) {
+        const filter = getActiveApiFilter(tab);
+        const filterKey = filter?.key || 'default';
+        const filterState = getApiFilterState(tab, filterKey);
+        if (state && filterState) {
             const maxRandomPages = 5;
             let randomPage = Math.floor(Math.random() * maxRandomPages) + 1;
-            if (randomPage === state.page) {
+            if (randomPage === filterState.page) {
                 randomPage = (randomPage % maxRandomPages) + 1;
             }
-            state.page = randomPage;
-            state.items = [];
-            state.hasMore = true;
+            filterState.page = randomPage;
+            filterState.items = [];
+            filterState.hasMore = true;
             loadHotApiTab(tab, false, randomPage);
         }
     };
