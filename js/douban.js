@@ -392,25 +392,50 @@ function renderDoubanTags(tags) {
     });
 }
 
-// 设置换一批按钮点击重置到第一页
+// 设置换一批按钮点击随机重置页码，实现“换一批”效果
 function setupDoubanRefreshBtn() {
     const btn = document.getElementById('douban-refresh');
     if (!btn) return;
 
     btn.onclick = function () {
-        doubanPageStart = 0;
+        // 随机一个起点 (0, 20, 40, 60, 80, 100)，增加新鲜感
+        const maxRandomPages = 6;
+        let randomPage = Math.floor(Math.random() * maxRandomPages);
+        let newStart = randomPage * doubanPageSize;
+
+        // 简单防重复：如果随机到的和当前一样，就+1（如果溢出就归0）
+        if (newStart === doubanPageStart) {
+            randomPage = (randomPage + 1) % maxRandomPages;
+            newStart = randomPage * doubanPageSize;
+        }
+
+        doubanPageStart = newStart;
         hasMoreDouban = true;
+
         // 滚动回顶部
         const doubanArea = document.getElementById('doubanArea');
         if (doubanArea) {
             doubanArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
+
+        // 强制清空容器，避免 Masonry 布局残留干扰
+        const container = document.getElementById("douban-results");
+        if (container) {
+            container.innerHTML = '';
+            // 如果 Masonry 实例状态也需要重置，可以在这里处理
+            // 但 renderRecommend 会调用 initMasonryStructure 来处理
+        }
+
+        console.log(`执行换一批：随机偏移量设置为 ${doubanPageStart} (Random Page: ${randomPage})`);
+
+        // 稍微延迟一下调用，让清除操作视觉上生效（可选，这里直接调用）
         renderRecommend(doubanCurrentTag, doubanPageSize, doubanPageStart);
     };
 }
 
 function fetchDoubanTags() {
-    const movieTagsTarget = `https://movie.douban.com/j/search_tags?type=movie`
+    //同样加上时间戳防缓存
+    const movieTagsTarget = `https://movie.douban.com/j/search_tags?type=movie&_t=${Date.now()}`
     fetchDoubanData(movieTagsTarget)
         .then(data => {
             movieTags = data.tags;
@@ -421,7 +446,7 @@ function fetchDoubanTags() {
         .catch(error => {
             console.error("获取豆瓣热门电影标签失败：", error);
         });
-    const tvTagsTarget = `https://movie.douban.com/j/search_tags?type=tv`
+    const tvTagsTarget = `https://movie.douban.com/j/search_tags?type=tv&_t=${Date.now()}`
     fetchDoubanData(tvTagsTarget)
         .then(data => {
             tvTags = data.tags;
@@ -460,13 +485,14 @@ function renderRecommend(tag, pageLimit, pageStart, isAppend = false) {
         infiniteLoader.classList.remove('hidden');
     }
 
-    const target = `https://movie.douban.com/j/search_subjects?type=${doubanMovieTvCurrentSwitch}&tag=${tag}&sort=recommend&page_limit=${pageLimit}&page_start=${pageStart}`;
+    // 添加时间戳防止缓存
+    const target = `https://movie.douban.com/j/search_subjects?type=${doubanMovieTvCurrentSwitch}&tag=${tag}&sort=recommend&page_limit=${pageLimit}&page_start=${pageStart}&_t=${Date.now()}`;
 
     fetchDoubanData(target)
         .then(data => {
             if (infiniteLoader) infiniteLoader.classList.add('hidden');
 
-            // 判断是否还有更多内容
+            // 判断是否还有更多内容（修复：豆瓣API可能返回空 subjects）
             if (!data.subjects || data.subjects.length < doubanPageSize) {
                 hasMoreDouban = false;
                 if (isAppend && infiniteLoader) {

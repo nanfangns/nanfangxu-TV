@@ -826,6 +826,26 @@
     /* 移除 columns 属性 */
     columns: auto;
     column-gap: normal;
-    display: block;
     /* 实际上 JS 会插入 .masonry-container，这个 ID 可能保留在外层或者被 JS 处理 */
+    display: block;
+}
+
+/* 导航栏吸附效果 */
+.sticky-header {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    margin-left: -0.5rem;
+    margin-right: -0.5rem;
+    padding: 1rem 0.5rem;
+    background: rgba(2, 4, 8, 0.82);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.3s ease;
+}
+
+[data-theme="light"] .sticky-header {
+    background: rgba(248, 250, 252, 0.85);
+    border-bottom-color: rgba(15, 23, 42, 0.08);
 }
