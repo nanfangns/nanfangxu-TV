@@ -661,11 +661,19 @@ async function playFromHistory(url, title, episodeIndex, playbackPosition = 0) {
             playerUrl = playUrl.toString();
         }
 
-        showVideoPlayer(playerUrl);
+        if (typeof showVideoPlayer === 'function') {
+            showVideoPlayer(playerUrl);
+        } else {
+            window.location.href = playerUrl;
+        }
     } catch (e) {
         // console.error('从历史记录播放失败:', e);
         const simpleUrl = `player.html?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}&index=${episodeIndex}`;
-        showVideoPlayer(simpleUrl);
+        if (typeof showVideoPlayer === 'function') {
+            showVideoPlayer(simpleUrl);
+        } else {
+            window.location.href = simpleUrl;
+        }
     }
 }
 
