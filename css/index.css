@@ -66,6 +66,16 @@
 }
 
 /* 动画应用到包裹容器 */
+.corner-group {
+    transition: top 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+        left 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+        right 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+        gap 0.35s ease,
+        opacity 0.3s ease;
+    will-change: top, left, right, transform;
+}
+
 .corner-wrapper {
     opacity: 0;
     transform: scale(0) translateY(-20px);
@@ -114,6 +124,28 @@
 
 .top-corner-button:hover svg {
     transform: rotate(90deg);
+}
+
+@media (max-width: 768px) {
+    body.corner-buttons-side #historyCornerGroup {
+        top: 50%;
+        left: 0.75rem;
+        transform: translateY(-50%);
+    }
+
+    body.corner-buttons-side #topRightCornerGroup {
+        top: 50%;
+        right: 0.75rem;
+        transform: translateY(-50%);
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 0.75rem;
+    }
+
+    body.corner-buttons-side #topRightCornerGroup .corner-wrapper {
+        opacity: 1;
+        transform: none;
+    }
 }
 
 /* 搜索区域样式 */

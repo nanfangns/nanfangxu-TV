@@ -971,5 +971,49 @@ document.addEventListener('DOMContentLoaded', function () {
             }, index * 200); // 200ms 延迟，让两个按钮依次炸出来
         });
     });
-});
 
+    const mobileBreakpoint = 768;
+    const scrollThreshold = 72;
+    const scrollDelta = 12;
+    const body = document.body;
+    let lastScrollY = window.scrollY;
+    let isSideMode = false;
+
+    const isMobileViewport = () => window.innerWidth <= mobileBreakpoint;
+
+    const setSideMode = (enabled) => {
+        if (isSideMode === enabled) return;
+        isSideMode = enabled;
+        body.classList.toggle('corner-buttons-side', enabled);
+    };
+
+    const syncToViewport = () => {
+        lastScrollY = window.scrollY;
+        if (!isMobileViewport()) {
+            setSideMode(false);
+            return;
+        }
+        setSideMode(lastScrollY > scrollThreshold);
+    };
+
+    const handleScroll = () => {
+        if (!isMobileViewport()) return;
+
+        const currentY = window.scrollY;
+        const delta = currentY - lastScrollY;
+
+        if (currentY <= scrollThreshold) {
+            setSideMode(false);
+        } else if (delta > scrollDelta) {
+            setSideMode(true);
+        } else if (delta < -scrollDelta) {
+            setSideMode(false);
+        }
+
+        lastScrollY = currentY;
+    };
+
+    syncToViewport();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', syncToViewport);
+});

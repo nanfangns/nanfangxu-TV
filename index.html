@@ -51,7 +51,7 @@
 
 <body class="page-bg text-white">
     <!-- 将历史记录按钮移到左上角，并缩小尺寸 -->
-    <div class="fixed top-4 left-4 z-10 corner-wrapper">
+    <div id="historyCornerGroup" class="fixed top-4 left-4 z-40 corner-group corner-wrapper">
         <button onclick="toggleHistory(event)" class="top-corner-button flex items-center justify-center"
             aria-label="观看历史">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -62,7 +62,7 @@
     </div>
 
     <!-- 顶部右上角按钮组 -->
-    <div class="fixed top-4 right-4 z-40 flex gap-2">
+    <div id="topRightCornerGroup" class="fixed top-4 right-4 z-40 flex gap-2 corner-group">
         <!-- 收藏夹按钮 -->
         <div class="corner-wrapper" style="animation-delay: 0.05s;">
             <button onclick="toggleFavorites(event)" class="top-corner-button flex items-center justify-center"
