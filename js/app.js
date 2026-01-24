@@ -108,6 +108,13 @@ async function loadAdultIndexSources() {
     }
 }
 
+function updateAdultBulkActionsVisibility() {
+    const adultBulkActions = document.getElementById('adultBulkActions');
+    const yellowFilterToggle = document.getElementById('yellowFilterToggle');
+    if (!adultBulkActions || !yellowFilterToggle) return;
+    adultBulkActions.style.display = yellowFilterToggle.checked ? 'none' : '';
+}
+
 // 页面初始化
 document.addEventListener('DOMContentLoaded', async function () {
     await loadAdultIndexSources();
@@ -145,6 +152,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     if (yellowFilterToggle) {
         yellowFilterToggle.checked = localStorage.getItem('yellowFilterEnabled') === 'true';
     }
+    updateAdultBulkActionsVisibility();
 
     // 设置广告过滤开关初始状态
     const adFilterToggle = document.getElementById('adFilterToggle');
@@ -381,6 +389,8 @@ function checkAdultAPIsSelected() {
         localStorage.getItem('yellowFilterEnabled') === 'false') {
         addAdultAPI();
     }
+
+    updateAdultBulkActionsVisibility();
 }
 
 // 渲染自定义API列表
@@ -736,6 +746,8 @@ function setupEventListeners() {
                 // 添加成人API列表
                 addAdultAPI();
             }
+
+            updateAdultBulkActionsVisibility();
         });
     }
 
