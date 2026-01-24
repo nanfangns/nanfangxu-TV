@@ -1,6 +1,7 @@
 // 全局变量
 let selectedAPIs = JSON.parse(localStorage.getItem('selectedAPIs') || '["tyyszy", "bfzy", "ruyi", "liteapple"]'); // 默认选中资源
 let customAPIs = JSON.parse(localStorage.getItem('customAPIs') || '[]'); // 存储自定义API列表
+const ADULT_INDEX_STORAGE_PREFIX = 'adultIndexCache:';
 
 // 添加当前播放的集数索引
 let currentEpisodeIndex = 0;
@@ -11,8 +12,105 @@ let currentVideoTitle = '';
 // 全局变量用于倒序状态
 let episodesReversed = false;
 
+function slugifyKey(value) {
+    return String(value || '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/^_+|_+$/g, '') || 'site';
+}
+
+function getAdultIndexCacheKey(indexKey) {
+    return `${ADULT_INDEX_STORAGE_PREFIX}${indexKey}`;
+}
+
+function readAdultIndexCache(indexKey) {
+    try {
+        const cacheKey = getAdultIndexCacheKey(indexKey);
+        const raw = localStorage.getItem(cacheKey);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        const ttl = window.ADULT_INDEX_CACHE_TTL_MS || 0;
+        if (!parsed || !parsed.timestamp || !Array.isArray(parsed.sites)) return null;
+        if (ttl > 0 && (Date.now() - parsed.timestamp) > ttl) return null;
+        return parsed.sites;
+    } catch (error) {
+        console.warn('读取成人索引缓存失败:', error);
+        return null;
+    }
+}
+
+function writeAdultIndexCache(indexKey, sites) {
+    try {
+        const cacheKey = getAdultIndexCacheKey(indexKey);
+        localStorage.setItem(cacheKey, JSON.stringify({
+            timestamp: Date.now(),
+            sites
+        }));
+    } catch (error) {
+        console.warn('写入成人索引缓存失败:', error);
+    }
+}
+
+function normalizeAdultIndexSites(indexConfig, sites) {
+    const indexKey = slugifyKey(indexConfig.key);
+    const normalized = {};
+
+    sites.forEach((site, index) => {
+        if (!site || typeof site.api !== 'string') return;
+        const apiUrl = site.api.trim();
+        if (!/^https?:\/\//i.test(apiUrl)) return;
+        if (typeof site.type === 'number' && site.type === 3) return; // 跳过需要爬虫的源
+
+        const baseSlug = slugifyKey(site.key || site.name || `site_${index}`);
+        const uniqueKey = `${indexKey}_${baseSlug}_${index}`;
+        const name = `${site.name || site.key || '成人源'} · ${indexConfig.name}`;
+
+        normalized[uniqueKey] = {
+            api: apiUrl.replace(/\/$/, ''),
+            name,
+            adult: true,
+            fromIndex: indexConfig.key
+        };
+    });
+
+    return normalized;
+}
+
+async function loadAdultIndexSources() {
+    const indexSources = window.ADULT_INDEX_SOURCES || [];
+    if (indexSources.length === 0) return;
+
+    const mergedSites = {};
+
+    for (const indexConfig of indexSources) {
+        try {
+            const cachedSites = readAdultIndexCache(indexConfig.key);
+            let sites = cachedSites;
+
+            if (!sites) {
+                const response = await fetch(indexConfig.url);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                const data = await response.json();
+                sites = Array.isArray(data?.sites) ? data.sites : [];
+                writeAdultIndexCache(indexConfig.key, sites);
+            }
+
+            Object.assign(mergedSites, normalizeAdultIndexSites(indexConfig, sites));
+        } catch (error) {
+            console.warn(`加载成人索引源失败: ${indexConfig.name}`, error);
+        }
+    }
+
+    if (Object.keys(mergedSites).length > 0) {
+        extendAPISites(mergedSites);
+    }
+}
+
 // 页面初始化
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', async function () {
+    await loadAdultIndexSources();
     // 初始化API复选框
     initAPICheckboxes();
 
@@ -181,6 +279,7 @@ function initAPICheckboxes() {
 
 // 添加成人API列表
 function addAdultAPI() {
+    if (document.getElementById('adultdiv')) return;
     // 仅在隐藏设置为false时添加成人API组
     if (!HIDE_BUILTIN_ADULT_APIS && (localStorage.getItem('yellowFilterEnabled') === 'false')) {
         const container = document.getElementById('apiCheckboxes');
@@ -274,6 +373,13 @@ function checkAdultAPIsSelected() {
         if (existingTooltip) {
             existingTooltip.remove();
         }
+    }
+
+    // 当过滤已关闭但成人分组尚未渲染时，补充渲染
+    if (!document.getElementById('adultdiv') &&
+        !HIDE_BUILTIN_ADULT_APIS &&
+        localStorage.getItem('yellowFilterEnabled') === 'false') {
+        addAdultAPI();
     }
 }
 
@@ -432,14 +538,19 @@ function updateSelectedApiCount() {
     }
 }
 
-// 全选或取消全选API
-function selectAllAPIs(selectAll = true, excludeAdult = false) {
-    const checkboxes = document.querySelectorAll('#apiCheckboxes input[type="checkbox"]');
+// 全选或取消全选API（支持普通/成人分组）
+function selectAllAPIs(selectAll = true, group = 'all') {
+    const checkboxes = document.querySelectorAll(
+        '#apiCheckboxes input[type="checkbox"], #customApisList input[type="checkbox"]'
+    );
 
     checkboxes.forEach(checkbox => {
-        if (excludeAdult && checkbox.classList.contains('api-adult')) {
-            checkbox.checked = false;
-        } else {
+        const isAdult = checkbox.classList.contains('api-adult');
+        const shouldToggle = group === 'all' ||
+            (group === 'adult' && isAdult) ||
+            (group === 'normal' && !isAdult);
+
+        if (shouldToggle) {
             checkbox.checked = selectAll;
         }
     });
