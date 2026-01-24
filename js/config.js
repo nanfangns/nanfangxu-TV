@@ -174,6 +174,19 @@ function extendAPISites(newSites) {
 window.API_SITES = API_SITES;
 window.extendAPISites = extendAPISites;
 
+// CatVod 成人索引源配置
+const ADULT_INDEX_SOURCES = [
+    {
+        key: 'catvod_index18',
+        name: 'CatVod 成人索引',
+        url: 'https://raw.githubusercontent.com/bizhangjie/CatVodSpider/refs/heads/main/json/index18.json'
+    }
+];
+const ADULT_INDEX_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24小时缓存
+
+window.ADULT_INDEX_SOURCES = ADULT_INDEX_SOURCES;
+window.ADULT_INDEX_CACHE_TTL_MS = ADULT_INDEX_CACHE_TTL_MS;
+
 
 // 添加聚合搜索的配置选项
 const AGGREGATED_SEARCH_CONFIG = {
