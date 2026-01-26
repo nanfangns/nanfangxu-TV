@@ -1022,7 +1022,12 @@ document.addEventListener('DOMContentLoaded', function () {
     const updateStickySearchVisibility = () => {
         if (!stickyHeader || !stickySearch) return;
         const searchArea = document.getElementById('searchArea');
-        const searchAreaBottom = searchArea ? searchArea.getBoundingClientRect().bottom : 0;
+        if (!searchArea) {
+            stickyHeader.classList.remove('sticky-header--show-search');
+            stickySearch.setAttribute('aria-hidden', 'true');
+            return;
+        }
+        const searchAreaBottom = searchArea.getBoundingClientRect().bottom;
         const shouldShow = searchAreaBottom <= 0;
         stickyHeader.classList.toggle('sticky-header--show-search', shouldShow);
         stickySearch.setAttribute('aria-hidden', (!shouldShow).toString());
