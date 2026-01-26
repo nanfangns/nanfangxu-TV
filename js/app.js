@@ -699,11 +699,39 @@ async function sha256(message) {
 // 事件监听器
 function setupEventListeners() {
     // 回车搜索
-    document.getElementById('searchInput').addEventListener('keypress', function (e) {
-        if (e.key === 'Enter') {
-            search();
-        }
-    });
+    const searchInput = document.getElementById('searchInput');
+    const stickySearchInput = document.getElementById('stickySearchInput');
+
+    if (searchInput) {
+        searchInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                search();
+            }
+        });
+    }
+
+    if (searchInput && stickySearchInput) {
+        const syncSearchValue = (source, target) => {
+            if (target.value !== source.value) {
+                target.value = source.value;
+            }
+        };
+
+        searchInput.addEventListener('input', function () {
+            syncSearchValue(searchInput, stickySearchInput);
+        });
+
+        stickySearchInput.addEventListener('input', function () {
+            syncSearchValue(stickySearchInput, searchInput);
+            toggleClearButton();
+        });
+
+        stickySearchInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                search();
+            }
+        });
+    }
 
     // 点击外部关闭设置面板和历史记录面板
     document.addEventListener('click', function (e) {
@@ -1130,6 +1158,10 @@ function toggleClearButton() {
 function clearSearchInput() {
     const searchInput = document.getElementById('searchInput');
     searchInput.value = '';
+    const stickySearchInput = document.getElementById('stickySearchInput');
+    if (stickySearchInput) {
+        stickySearchInput.value = '';
+    }
     const clearButton = document.getElementById('clearSearchInput');
     clearButton.classList.add('hidden');
 }

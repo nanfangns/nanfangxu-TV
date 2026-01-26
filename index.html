@@ -423,8 +423,8 @@
                     <!-- 改进标题和标签区域布局 - 添加顶部吸附效果 -->
                     <div class="sticky-header mb-4">
                         <!-- 标题和刷新按钮一行 -->
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="flex items-center">
+                        <div class="flex items-center gap-4 mb-4">
+                            <div class="sticky-header-title-group flex items-center shrink-0">
                                 <h2 class="text-xl tech-gradient-text mr-4">豆瓣热门</h2>
                                 <!-- 添加电影/电视剧切换开关 -->
                                 <div class="flex items-center bg-[#222] rounded-full p-1">
@@ -434,7 +434,16 @@
                                         class="px-3 py-1 text-sm rounded-full text-gray-300 hover:text-white transition-colors">电视剧</button>
                                 </div>
                             </div>
-                            <button id="douban-refresh" class="tech-refresh-btn">
+                            <div class="sticky-header-search" aria-hidden="true">
+                                <div class="sticky-header-search-inner glass-panel">
+                                    <input type="text" id="stickySearchInput"
+                                        class="sticky-header-search-input search-input-premium focus:outline-none"
+                                        placeholder="探索无限精彩..." autocomplete="off" aria-label="顶部搜索框">
+                                    <button class="sticky-header-search-btn search-btn-premium" onclick="search()"
+                                        aria-label="顶部搜索按钮">搜索</button>
+                                </div>
+                            </div>
+                            <button id="douban-refresh" class="tech-refresh-btn shrink-0">
                                 <span>换一批</span>
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 refresh-icon" fill="none"
                                     viewBox="0 0 24 24" stroke="currentColor">

@@ -589,8 +589,9 @@ a:active {
     font-family: 'Orbitron', sans-serif;
     /* Tech font */
     transition: all 0.3s ease;
-    cursor: default;
+    cursor: grab;
     user-select: none;
+    touch-action: none;
 }
 
 .live-viewer-widget:hover {
@@ -599,6 +600,11 @@ a:active {
     box-shadow: 0 12px 40px rgba(15, 157, 88, 0.15);
     /* Green glow */
     border-color: rgba(15, 157, 88, 0.3);
+}
+
+.live-viewer-widget.is-dragging {
+    cursor: grabbing;
+    transition: none;
 }
 
 [data-theme="light"] .live-viewer-widget {
