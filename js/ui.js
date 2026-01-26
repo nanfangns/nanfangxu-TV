@@ -999,8 +999,6 @@ document.addEventListener('DOMContentLoaded', function () {
             setSideMode(false);
         } else if (delta > scrollDelta) {
             setSideMode(true);
-        } else if (delta < -scrollDelta) {
-            setSideMode(false);
         }
 
         updateStickySearchVisibility(isSideMode);
