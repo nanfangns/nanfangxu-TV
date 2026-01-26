@@ -700,6 +700,7 @@ async function sha256(message) {
 function setupEventListeners() {
     const mainSearchInput = document.getElementById('searchInput');
     const stickySearchInput = document.getElementById('stickySearchInput');
+    let stickySearchScheduled = false;
 
     // 回车搜索
     if (mainSearchInput) {
@@ -727,6 +728,18 @@ function setupEventListeners() {
             }
         });
     }
+
+    const handleStickySearchScroll = () => {
+        if (stickySearchScheduled) return;
+        stickySearchScheduled = true;
+        requestAnimationFrame(() => {
+            updateStickySearchVisibility();
+            stickySearchScheduled = false;
+        });
+    };
+
+    updateStickySearchVisibility();
+    window.addEventListener('scroll', handleStickySearchScroll, { passive: true });
 
     // 点击外部关闭设置面板和历史记录面板
     document.addEventListener('click', function (e) {
@@ -1159,6 +1172,11 @@ function clearSearchInput() {
     const clearButton = document.getElementById('clearSearchInput');
     clearButton.classList.add('hidden');
     updateStickySearchInput('');
+}
+
+function updateStickySearchVisibility() {
+    const shouldShow = window.scrollY > 120;
+    document.body.classList.toggle('sticky-search-visible', shouldShow);
 }
 
 function updateStickySearchInput(value) {

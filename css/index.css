@@ -877,6 +877,14 @@
     transition: all 0.3s ease;
 }
 
+.sticky-search-bar {
+    display: none;
+}
+
+body.sticky-search-visible .sticky-search-bar {
+    display: block;
+}
+
 [data-theme="light"] .sticky-header {
     background: rgba(248, 250, 252, 0.85);
     border-bottom-color: rgba(15, 23, 42, 0.08);
