@@ -897,12 +897,13 @@
 
 .sticky-header-search-inner {
     width: 100%;
-    max-width: 460px;
+    max-width: 420px;
     height: 2.5rem;
     padding: 0.25rem;
     border-radius: 0.75rem;
     display: flex;
     align-items: center;
+    gap: 0.5rem;
 }
 
 .sticky-header-search-input {
@@ -911,6 +912,15 @@
     padding: 0 0.75rem;
     border-radius: 0.55rem;
     font-size: 0.95rem;
+}
+
+.sticky-header-search-btn {
+    flex-shrink: 0;
+    height: 100%;
+    padding: 0 0.9rem;
+    border-radius: 0.55rem;
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
 }
 
 [data-theme="light"] .sticky-header {

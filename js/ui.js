@@ -1019,11 +1019,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const stickyHeader = document.querySelector('.sticky-header');
     const stickySearch = stickyHeader ? stickyHeader.querySelector('.sticky-header-search') : null;
-    const stickySearchThreshold = 160;
-
     const updateStickySearchVisibility = () => {
         if (!stickyHeader || !stickySearch) return;
-        const shouldShow = window.scrollY > stickySearchThreshold;
+        const searchArea = document.getElementById('searchArea');
+        const searchAreaBottom = searchArea ? searchArea.getBoundingClientRect().bottom : 0;
+        const shouldShow = searchAreaBottom <= 0;
         stickyHeader.classList.toggle('sticky-header--show-search', shouldShow);
         stickySearch.setAttribute('aria-hidden', (!shouldShow).toString());
     };
