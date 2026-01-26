@@ -698,12 +698,35 @@ async function sha256(message) {
 
 // 事件监听器
 function setupEventListeners() {
+    const mainSearchInput = document.getElementById('searchInput');
+    const stickySearchInput = document.getElementById('stickySearchInput');
+
     // 回车搜索
-    document.getElementById('searchInput').addEventListener('keypress', function (e) {
-        if (e.key === 'Enter') {
-            search();
-        }
-    });
+    if (mainSearchInput) {
+        mainSearchInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                search();
+            }
+        });
+        mainSearchInput.addEventListener('input', function () {
+            updateStickySearchInput();
+        });
+    }
+
+    if (stickySearchInput) {
+        stickySearchInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                search();
+            }
+        });
+
+        stickySearchInput.addEventListener('input', function () {
+            if (mainSearchInput) {
+                mainSearchInput.value = stickySearchInput.value;
+                if (typeof toggleClearButton === 'function') toggleClearButton();
+            }
+        });
+    }
 
     // 点击外部关闭设置面板和历史记录面板
     document.addEventListener('click', function (e) {
@@ -765,6 +788,8 @@ function resetSearchArea(skipPushState = false) {
     // 清理搜索结果
     document.getElementById('results').innerHTML = '';
     document.getElementById('searchInput').value = '';
+    updateStickySearchInput('');
+    if (typeof toggleClearButton === 'function') toggleClearButton();
 
     // 恢复搜索区域的样式
     document.getElementById('searchArea').classList.add('flex-1');
@@ -1124,6 +1149,7 @@ function toggleClearButton() {
     } else {
         clearButton.classList.add('hidden');
     }
+    updateStickySearchInput();
 }
 
 // 清空搜索框内容
@@ -1132,6 +1158,16 @@ function clearSearchInput() {
     searchInput.value = '';
     const clearButton = document.getElementById('clearSearchInput');
     clearButton.classList.add('hidden');
+    updateStickySearchInput('');
+}
+
+function updateStickySearchInput(value) {
+    const stickyInput = document.getElementById('stickySearchInput');
+    if (!stickyInput) return;
+    const mainValue = value !== undefined
+        ? value
+        : (document.getElementById('searchInput')?.value || '');
+    stickyInput.value = mainValue;
 }
 
 // 劫持搜索框的value属性以检测外部修改
