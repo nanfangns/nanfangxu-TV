@@ -923,6 +923,32 @@
     letter-spacing: 0.5px;
 }
 
+@media (max-width: 768px) {
+    .sticky-header {
+        padding: 0.75rem 0.4rem;
+    }
+
+    .sticky-header--show-search .sticky-header-title-group {
+        display: none;
+    }
+
+    .sticky-header-search-inner {
+        max-width: 100%;
+        height: 2.25rem;
+        padding: 0.2rem;
+        border-radius: 0.6rem;
+    }
+
+    .sticky-header-search-input {
+        font-size: 0.9rem;
+    }
+
+    .sticky-header-search-btn {
+        font-size: 0.75rem;
+        padding: 0 0.75rem;
+    }
+}
+
 [data-theme="light"] .sticky-header {
     background: rgba(248, 250, 252, 0.85);
     border-bottom-color: rgba(15, 23, 42, 0.08);
