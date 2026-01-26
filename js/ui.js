@@ -1016,4 +1016,19 @@ document.addEventListener('DOMContentLoaded', function () {
     syncToViewport();
     window.addEventListener('scroll', handleScroll, { passive: true });
     window.addEventListener('resize', syncToViewport);
+
+    const stickyHeader = document.querySelector('.sticky-header');
+    const stickySearch = stickyHeader ? stickyHeader.querySelector('.sticky-header-search') : null;
+    const stickySearchThreshold = 160;
+
+    const updateStickySearchVisibility = () => {
+        if (!stickyHeader || !stickySearch) return;
+        const shouldShow = window.scrollY > stickySearchThreshold;
+        stickyHeader.classList.toggle('sticky-header--show-search', shouldShow);
+        stickySearch.setAttribute('aria-hidden', (!shouldShow).toString());
+    };
+
+    updateStickySearchVisibility();
+    window.addEventListener('scroll', updateStickySearchVisibility, { passive: true });
+    window.addEventListener('resize', updateStickySearchVisibility);
 });
