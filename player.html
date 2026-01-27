@@ -144,20 +144,22 @@
                 <div id="player" class="player-placeholder">
                     <!-- Initial loading state before JavaScript loads -->
                     <div class="player-loading-overlay">
-                        <div class="flex items-center gap-4">
-                            <div class="manga-badge text-sm py-0.5">
-                                <span class="text-[10px] opacity-70">LIBRE</span>
-                                南方许
-                            </div>
-                            <div class="sys-stamp hidden sm:block">
-                                CREDITS: BESTZWEI / 2025
+                        <div class="loader-hud-container">
+                            <!-- Rotating Rings -->
+                            <div class="loader-hud-ring ring-1"></div>
+                            <div class="loader-hud-ring ring-2"></div>
+                            <div class="loader-hud-ring ring-3"></div>
+
+                            <!-- Center Content -->
+                            <div class="loader-content">
+                                <h1 class="logo-text glitch-effect" data-text="南方许">南方许</h1>
+                                <div class="loader-status">
+                                    <span class="status-text">SYSTEM INITIALIZING</span>
+                                    <span class="blinking-cursor">_</span>
+                                </div>
                             </div>
                         </div>
-                        <h1 class="logo-text">南方许</h1>
                     </div>
-                    <div class="player-loading-spinner"></div>
-                    <div class="player-loading-text">正在加载播放器...</div>
-                    <div id="player-loading-status" class="player-loading-status">准备视频数据中，请稍候...</div>
                 </div>
             </div>
             <div class="loading-container" id="player-loading" style="display: none;">
